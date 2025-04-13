@@ -13,6 +13,8 @@ import (
 	"gorm.io/gorm/logger"
 )
 
+const TestingPassword = "correcthorsebatterystaple"
+
 // TestEnvSetup sets environment variables for the tests. The tests assume the
 // relevant test database has been created. See `scripts/init_testing.sql` to
 // create the testing database.
