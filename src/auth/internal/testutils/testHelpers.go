@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -20,6 +21,9 @@ func TestEnvSetup() {
 	os.Setenv("DB", "host=localhost user=godiscauth_test password=godiscauth_test dbname=godiscauth_test port=5432 sslmode=disable TimeZone=UTC")
 
 	zerolog.SetGlobalLevel(zerolog.Disabled)
+
+	gin.SetMode(gin.TestMode)
+	gin.DefaultWriter = io.Discard
 }
 
 // TestDBSetup sets up a test database connection.
