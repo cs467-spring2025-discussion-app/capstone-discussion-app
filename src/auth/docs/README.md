@@ -15,19 +15,28 @@ go build -o auth ./main.go
 ├──  docs
 ├──  internal
 │   ├──  database
+│   ├──  models
+│   ├──  repository
+│   ├──  server
 │   └──  testutils
 ├──  pkg
+│   └──  apperrors
+│   └──  config
 │   └──  logger
 └──  scripts
 ```
 
-`docs`: Contains documentation files related to the authentication system
-`internal`: internal packages that are not meant to be used outside of the `auth` module
-
-- `database`: code related to database interactions for the authentication system
-- `testutils`: utility functions and types for testing the authentication system
+- `docs`: Contains documentation files related to the authentication system
+- `internal`: internal packages that are not meant to be used outside of the `auth` module
+    - `database`: code related to database interactions for the authentication system
+    - `models`: models for database tables `users` and `sessions`, automigrated
+    - `repository`: code to perform CRUD and other operations on `users` and `sessions` tables
+    - `server`: code to setup and run API server
+    - `testutils`: utility functions and types for testing the authentication system
 - `pkg`: packages that are meant to be used by other modules
-- `logger`: configuration and setup for logging
+    - `apperrors`: custom errors for testing and logging
+    - `config`: constants for configuring auth operations
+    - `logger`: configuration and setup for logging
 - `scripts`: utility scripts for local development and testing of the authentication system
 
 ## Dependencies
