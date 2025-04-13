@@ -211,6 +211,7 @@ func TestUserRepository_PermanentlyDeleteUser(t *testing.T) {
 		is.Equal(err, apperrors.ErrUserIdEmpty)
 	})
 
+	// Error on non-existing user lookup
 	t.Run("non-existing user", func(t *testing.T) {
 		randUUID := uuid.New()
 		rowsAffected, err := ur.PermanentlyDeleteUser(randUUID.String())
@@ -218,9 +219,69 @@ func TestUserRepository_PermanentlyDeleteUser(t *testing.T) {
 		is.NoErr(err)
 	})
 
+	// Success on existing-user lookup
 	t.Run("existing user", func(t *testing.T) {
 		rowsAffected, err := ur.PermanentlyDeleteUser(user.ID.String())
 		is.Equal(rowsAffected, int64(1))
 		is.NoErr(err)
+	})
+}
+
+func TestUserRepository_IncrementFailedLogins(t *testing.T) {
+	is := is.New(t)
+	testDB := testutils.TestDBSetup()
+
+	// Error on empty user ID
+	t.Run("empty user ID", func(t *testing.T) {
+		is := is.New(t)
+		tx := testDB.Begin()
+		defer tx.Rollback()
+		ur, err := repository.NewUserRepository(tx)
+		is.NoErr(err)
+
+		err = ur.IncrementFailedLogins("")
+		is.Equal(err, apperrors.ErrUserIdEmpty)
+	})
+
+	// Error on non-existing user lookup
+	t.Run("fails on non-existent user", func(t *testing.T) {
+		is := is.New(t)
+		tx := testDB.Begin()
+		defer tx.Rollback()
+		ur, err := repository.NewUserRepository(tx)
+		is.NoErr(err)
+
+		err = ur.IncrementFailedLogins(uuid.New().String())
+		is.Equal(err, apperrors.ErrUserNotFound)
+	})
+
+	// Increments failed login attempts on successful lookup
+	t.Run("increments FailedLoginAttempts", func(t *testing.T) {
+		is := is.New(t)
+		tx := testDB.Begin()
+		defer tx.Rollback()
+		ur, err := repository.NewUserRepository(tx)
+		is.NoErr(err)
+
+		// Register a user to fail logins with
+		email := "testHandleFailedLogin@test.com"
+		password := "password"
+		user := &models.User{
+			Email:    email,
+			Password: password,
+		}
+		err = ur.RegisterUser(user)
+		is.NoErr(err)
+
+		for i := range 10 {
+			// Does not err on non-empty string
+			err = ur.IncrementFailedLogins(user.ID.String())
+			is.NoErr(err)
+
+			// Increments on each call
+			user, err = ur.GetUserByEmail(user.Email)
+			is.NoErr(err)
+			is.Equal(user.FailedLoginAttempts, i+1)
+		}
 	})
 }
