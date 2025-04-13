@@ -7,6 +7,7 @@ import (
 var New = errors.New
 
 var (
+	ErrDuplicateEmail = New("Email already exists in database")
 	ErrEmailMaxLength = New("Email exceeds max length of 254 characters")
 
 	ErrDatabaseIsNil = New("Database is nil")

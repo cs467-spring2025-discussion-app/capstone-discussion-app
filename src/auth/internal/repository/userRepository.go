@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"strings"
+
 	"gorm.io/gorm"
 
 	"godiscauth/internal/models"
@@ -23,7 +25,6 @@ func NewUserRepository(db *gorm.DB) (*UserRepository, error) {
 
 // RegisterUser inserts a new user into the `users` table
 func (ur *UserRepository) RegisterUser(u *models.User) error {
-
 	// Validate user
 	if u == nil {
 		return apperrors.ErrUserIsNil
@@ -35,5 +36,9 @@ func (ur *UserRepository) RegisterUser(u *models.User) error {
 		return apperrors.ErrPasswordIsEmpty
 	}
 
-	return nil
+	err := ur.DB.Create(u).Error
+	if err != nil && strings.Contains(err.Error(), `duplicate key value violates unique constraint "users_pkey"`) {
+		return apperrors.ErrDuplicateEmail
+	}
+	return err
 }
