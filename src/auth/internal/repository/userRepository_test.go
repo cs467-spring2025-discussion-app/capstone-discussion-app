@@ -3,6 +3,7 @@ package repository_test
 import (
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/matryer/is"
 
 	"godiscauth/internal/models"
@@ -63,5 +64,29 @@ func TestUserRepository_RegisterUser(t *testing.T) {
 		}
 		err := ur.RegisterUser(user)
 		is.Equal(err, apperrors.ErrPasswordIsEmpty)
+	})
+
+	// Inserts user into db with complete User value
+	t.Run("registers user", func(t *testing.T) {
+		user := &models.User{
+			Email:    "testRegisterUser@test.com",
+			Password: "password",
+		}
+		err := ur.RegisterUser(user)
+		is.NoErr(err)
+
+		// Lookup expected user in the db
+		var dbUser models.User
+		tx.First(&dbUser, "ID = ?", user.ID)
+
+		// Sets given user values
+		is.True(dbUser.ID != uuid.UUID{})
+		is.Equal(dbUser.Email, "testRegisterUser@test.com")
+		is.Equal(dbUser.Password, "password")
+		// Sets default values
+		is.Equal(dbUser.LastLogin, nil)
+		is.Equal(dbUser.FailedLoginAttempts, 0)
+		is.True(!dbUser.AccountLocked)
+		is.Equal(dbUser.AccountLockedUntil, nil)
 	})
 }
