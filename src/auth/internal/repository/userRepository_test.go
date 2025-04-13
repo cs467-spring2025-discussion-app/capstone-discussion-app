@@ -10,6 +10,9 @@ import (
 	"godiscauth/pkg/apperrors"
 )
 
+
+// TestUserRepository_NewUserRepository tests creation of UserRepository
+// structs in the `repository` package
 func TestUserRepository_NewUserRepository(t *testing.T) {
 	is := is.New(t)
 
@@ -31,6 +34,8 @@ func TestUserRepository_NewUserRepository(t *testing.T) {
 	})
 }
 
+// TestUserRepository_RegisterUser tests insertion of new users into the
+// `users` table of the database
 func TestUserRepository_RegisterUser(t *testing.T) {
 	testDB := testutils.TestDBSetup()
 	is := is.New(t)
