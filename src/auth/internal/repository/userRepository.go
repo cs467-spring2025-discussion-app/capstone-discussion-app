@@ -4,6 +4,7 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 
 	"godiscauth/internal/models"
@@ -49,6 +50,25 @@ func (r *UserRepository) GetUserByEmail(email string) (*models.User, error) {
 	var user models.User
 
 	result := r.DB.First(&user, "email = ?", email)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil, apperrors.ErrUserNotFound
+		}
+		return nil, result.Error
+	}
+
+	return &user, nil
+}
+
+// GetUserByID gets a user in the database by user ID (uuid as string)
+func (r *UserRepository) GetUserByID(userID string) (*models.User, error) {
+	var user models.User
+	id, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	result := r.DB.First(&user, "id = ?", id)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, apperrors.ErrUserNotFound

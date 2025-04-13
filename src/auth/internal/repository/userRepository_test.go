@@ -91,8 +91,8 @@ func TestUserRepository_RegisterUser(t *testing.T) {
 	})
 }
 
-// TestUserRepository_LookupUser tests lookup of registered users in the database
-func TestUserRepository_LookupUser(t *testing.T) {
+// TestUserRepository_GetUserByEmail tests lookup of registered users in the database
+func TestUserRepository_GetUserByEmail(t *testing.T) {
 	testDB := testutils.TestDBSetup()
 	is := is.New(t)
 	tx := testDB.Begin()
@@ -109,7 +109,6 @@ func TestUserRepository_LookupUser(t *testing.T) {
 	err = ur.RegisterUser(user)
 	is.NoErr(err)
 
-
 	// Error on non-existing user lookup
 	t.Run("non-existing user", func(t *testing.T) {
 		dbUser, err := ur.GetUserByEmail("doesNotExist@test.com")
@@ -125,5 +124,47 @@ func TestUserRepository_LookupUser(t *testing.T) {
 		is.True(dbUser.ID != uuid.UUID{})
 		is.Equal(dbUser.Email, "testLookupUser@test.com")
 		is.Equal(dbUser.Password, "password")
+	})
+}
+
+// TestUserRepository_LookupUser tests lookup of registered users in the database
+func TestUserRepository_GetUserByID(t *testing.T) {
+	testDB := testutils.TestDBSetup()
+	is := is.New(t)
+	tx := testDB.Begin()
+	defer tx.Rollback()
+
+	ur, err := repository.NewUserRepository(tx)
+	is.NoErr(err)
+
+	email := "testGetUserByID@test.com"
+	password := "password"
+
+	// Register a user to look up
+	user := &models.User{
+		Email:    email,
+		Password: password,
+	}
+	err = ur.RegisterUser(user)
+	is.NoErr(err)
+
+	// Error on non-existing user lookup
+	t.Run("non-existing user", func(t *testing.T) {
+		randUUID := uuid.New()
+
+		dbUser, err := ur.GetUserByID(randUUID.String())
+		is.Equal(dbUser, nil)
+		is.Equal(err, apperrors.ErrUserNotFound)
+	})
+
+	// Success on existing-user lookup
+	t.Run("existing user", func(t *testing.T) {
+		dbUser, err := ur.GetUserByID(user.ID.String())
+		is.NoErr(err)
+
+		is.True(dbUser.ID != uuid.UUID{})
+		is.Equal(dbUser.Email, email)
+		is.Equal(dbUser.Password, password)
+		is.Equal(dbUser.ID, user.ID)
 	})
 }
