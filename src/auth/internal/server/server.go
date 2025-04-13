@@ -16,8 +16,12 @@ type APIServer struct {
 
 // NewAPIServer initializes a new API server with the gin engine as the router.
 func NewAPIServer(db *gorm.DB) *APIServer {
+	router := gin.New()
+	router.Use(gin.Logger())
+	router.Use(gin.Recovery())
+
 	server := &APIServer{
-		Router: gin.Default(),
+		Router: router,
 	}
 	return server
 }
