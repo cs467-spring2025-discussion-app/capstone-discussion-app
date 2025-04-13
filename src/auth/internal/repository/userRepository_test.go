@@ -112,14 +112,14 @@ func TestUserRepository_LookupUser(t *testing.T) {
 
 	// Error on non-existing user lookup
 	t.Run("non-existing user", func(t *testing.T) {
-		dbUser, err := ur.LookupUser("doesNotExist@test.com")
+		dbUser, err := ur.GetUserByEmail("doesNotExist@test.com")
 		is.Equal(dbUser, nil)
 		is.Equal(err, apperrors.ErrUserNotFound)
 	})
 
 	// Success on existing-user lookup
 	t.Run("existing user", func(t *testing.T) {
-		dbUser, err := ur.LookupUser(user.Email)
+		dbUser, err := ur.GetUserByEmail(user.Email)
 		is.NoErr(err)
 
 		is.True(dbUser.ID != uuid.UUID{})

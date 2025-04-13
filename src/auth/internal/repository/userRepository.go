@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"errors"
 	"strings"
 
 	"gorm.io/gorm"
@@ -43,6 +44,17 @@ func (ur *UserRepository) RegisterUser(u *models.User) error {
 	return err
 }
 
-func (r *UserRepository) LookupUser(email string) (*models.User, error) {
-	return nil, nil
+// GetUserByEmail gets a user in the database by email
+func (r *UserRepository) GetUserByEmail(email string) (*models.User, error) {
+	var user models.User
+
+	result := r.DB.First(&user, "email = ?", email)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil, apperrors.ErrUserNotFound
+		}
+		return nil, result.Error
+	}
+
+	return &user, nil
 }
