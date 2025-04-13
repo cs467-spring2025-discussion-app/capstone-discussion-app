@@ -23,8 +23,17 @@ func NewUserRepository(db *gorm.DB) (*UserRepository, error) {
 
 // RegisterUser inserts a new user into the `users` table
 func (ur *UserRepository) RegisterUser(u *models.User) error {
+
+	// Validate user
 	if u == nil {
 		return apperrors.ErrUserIsNil
 	}
+	if u.Email == "" {
+		return apperrors.ErrEmailIsEmpty
+	}
+	if u.Password == "" {
+		return apperrors.ErrPasswordIsEmpty
+	}
+
 	return nil
 }

@@ -12,7 +12,9 @@ var (
 	ErrDatabaseIsNil = New("Database is nil")
 	ErrUserIsNil     = New("User is nil")
 
+	ErrEmailIsEmpty     = New("Email is empty")
 	ErrExpiresAtIsEmpty = New("Expiration time is empty")
+	ErrPasswordIsEmpty  = New("Password is empty")
 	ErrTokenIsEmpty     = New("Token is empty")
 	ErrUserIdEmpty      = New("User ID is empty")
 )

@@ -5,11 +5,11 @@ import (
 
 	"github.com/matryer/is"
 
+	"godiscauth/internal/models"
 	"godiscauth/internal/repository"
 	"godiscauth/internal/testutils"
 	"godiscauth/pkg/apperrors"
 )
-
 
 // TestUserRepository_NewUserRepository tests creation of UserRepository
 // structs in the `repository` package
@@ -45,8 +45,23 @@ func TestUserRepository_RegisterUser(t *testing.T) {
 	ur, err := repository.NewUserRepository(tx)
 	is.NoErr(err)
 
+	// Validates user before registration
 	t.Run("fails on nil user", func(t *testing.T) {
 		err := ur.RegisterUser(nil)
 		is.Equal(err, apperrors.ErrUserIsNil)
+	})
+	t.Run("fails on missing email", func(t *testing.T) {
+		user := &models.User{
+			Password: "password",
+		}
+		err := ur.RegisterUser(user)
+		is.Equal(err, apperrors.ErrEmailIsEmpty)
+	})
+	t.Run("fails on missing password", func(t *testing.T) {
+		user := &models.User{
+			Email: "testRegisterUser@test.com",
+		}
+		err := ur.RegisterUser(user)
+		is.Equal(err, apperrors.ErrPasswordIsEmpty)
 	})
 }
