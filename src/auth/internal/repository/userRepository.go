@@ -47,6 +47,10 @@ func (ur *UserRepository) RegisterUser(u *models.User) error {
 
 // GetUserByEmail gets a user in the database by email
 func (r *UserRepository) GetUserByEmail(email string) (*models.User, error) {
+	if email == "" {
+		return nil, apperrors.ErrEmailIsEmpty
+	}
+
 	var user models.User
 
 	result := r.DB.First(&user, "email = ?", email)
@@ -62,6 +66,10 @@ func (r *UserRepository) GetUserByEmail(email string) (*models.User, error) {
 
 // GetUserByID gets a user in the database by user ID (uuid as string)
 func (r *UserRepository) GetUserByID(userID string) (*models.User, error) {
+	if userID == "" {
+		return nil, apperrors.ErrUserIdEmpty
+	}
+
 	var user models.User
 	id, err := uuid.Parse(userID)
 	if err != nil {
@@ -77,4 +85,13 @@ func (r *UserRepository) GetUserByID(userID string) (*models.User, error) {
 	}
 
 	return &user, nil
+}
+
+// PermanentlyDeleteUser removes existing users from the database by ID
+func (r *UserRepository) PermanentlyDeleteUser(userID string) (int64, error) {
+	if userID == "" {
+		return 0, apperrors.ErrUserIdEmpty
+	}
+	result := r.DB.Unscoped().Where("id = ?", userID).Delete(&models.User{})
+	return result.RowsAffected, result.Error
 }
