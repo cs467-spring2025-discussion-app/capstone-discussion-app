@@ -50,5 +50,17 @@ func TestNewUser(t *testing.T) {
 		})
 	}
 
-	// TODO: test password complexity
+	invalidPasswords := map[string]string{
+		"emptyString": "",
+		"tooShort":    "short",
+		"sequential":  "12345678",
+		"repeating":   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+	}
+
+	for name, password := range invalidPasswords {
+		t.Run(name, func(t *testing.T) {
+			_, err := models.NewUser(validEmail, password)
+			is.True(err != nil)
+		})
+	}
 }
