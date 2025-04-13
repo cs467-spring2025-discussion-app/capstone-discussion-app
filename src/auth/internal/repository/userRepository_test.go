@@ -90,3 +90,40 @@ func TestUserRepository_RegisterUser(t *testing.T) {
 		is.Equal(dbUser.AccountLockedUntil, nil)
 	})
 }
+
+// TestUserRepository_LookupUser tests lookup of registered users in the database
+func TestUserRepository_LookupUser(t *testing.T) {
+	testDB := testutils.TestDBSetup()
+	is := is.New(t)
+	tx := testDB.Begin()
+	defer tx.Rollback()
+
+	ur, err := repository.NewUserRepository(tx)
+	is.NoErr(err)
+
+	// Register a user to look up
+	user := &models.User{
+		Email:    "testLookupUser@test.com",
+		Password: "password",
+	}
+	err = ur.RegisterUser(user)
+	is.NoErr(err)
+
+
+	// Error on non-existing user lookup
+	t.Run("non-existing user", func(t *testing.T) {
+		dbUser, err := ur.LookupUser("doesNotExist@test.com")
+		is.Equal(dbUser, nil)
+		is.Equal(err, apperrors.ErrUserNotFound)
+	})
+
+	// Success on existing-user lookup
+	t.Run("existing user", func(t *testing.T) {
+		dbUser, err := ur.LookupUser(user.Email)
+		is.NoErr(err)
+
+		is.True(dbUser.ID != uuid.UUID{})
+		is.Equal(dbUser.Email, "testLookupUser@test.com")
+		is.Equal(dbUser.Password, "password")
+	})
+}

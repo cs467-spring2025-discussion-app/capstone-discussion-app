@@ -18,4 +18,6 @@ var (
 	ErrPasswordIsEmpty  = New("Password is empty")
 	ErrTokenIsEmpty     = New("Token is empty")
 	ErrUserIdEmpty      = New("User ID is empty")
+
+	ErrUserNotFound = New("User not found")
 )

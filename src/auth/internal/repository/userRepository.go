@@ -42,3 +42,7 @@ func (ur *UserRepository) RegisterUser(u *models.User) error {
 	}
 	return err
 }
+
+func (r *UserRepository) LookupUser(email string) (*models.User, error) {
+	return nil, nil
+}
