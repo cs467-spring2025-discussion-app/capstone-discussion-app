@@ -7,6 +7,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"godiscauth/internal/database"
+	"godiscauth/internal/server"
 	"godiscauth/pkg/logger"
 )
 
@@ -17,11 +18,13 @@ import (
 // - PORT: The port on which the service will run.
 func main() {
 	logger.SetupLogger()
-	_, err := database.NewDB()
+	db, err := database.NewDB()
 	if err != nil {
 		log.Fatal().Err(err).Msg("Error connecting to database")
 	}
 
 	log.Info().Msg(fmt.Sprintf("Connected to database: %s", os.Getenv("DB")))
 	log.Info().Str("PORT", os.Getenv("PORT")).Msg("Starting server")
+	apiServer := server.NewAPIServer(db)
+	apiServer.Run()
 }
