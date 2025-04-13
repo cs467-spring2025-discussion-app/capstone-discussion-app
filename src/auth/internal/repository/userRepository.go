@@ -3,12 +3,14 @@ package repository
 import (
 	"errors"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
 	"godiscauth/internal/models"
 	"godiscauth/pkg/apperrors"
+	"godiscauth/pkg/config"
 )
 
 // UserRepository represents the entry point into the database for managing
@@ -120,6 +122,29 @@ func (r *UserRepository) IncrementFailedLogins(userID string) error {
 	if result.RowsAffected == 0 {
 		// Unsure under what circumstances this could happen, but handle the case anyway
 		return apperrors.ErrCouldNotIncrementFailedLogins
+	}
+
+	return nil
+}
+
+// LockAccount locks a user account until the time spec'd in `config`
+func (r *UserRepository) LockAccount(userID string) error {
+	// Validate user ID
+	if userID == "" {
+		return apperrors.ErrUserIdEmpty
+	}
+
+	result := r.DB.Model(&models.User{}).Where("id = ?", userID).
+		Updates(map[string]any{
+			"account_locked":       true,
+			"account_locked_until": time.Now().Add(config.AccountLockoutLength * time.Minute),
+		})
+
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return apperrors.ErrUserNotFound
 	}
 
 	return nil

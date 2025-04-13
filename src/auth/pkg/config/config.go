@@ -7,3 +7,6 @@ const MinEntropyBits = 64
 // before their account is temporarily locked
 const MaxLoginAttempts = 5
 
+// AccountLockoutLength is the time in seconds that an account will be locked
+const AccountLockoutLength = 60 * 15
+

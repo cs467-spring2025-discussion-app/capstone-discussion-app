@@ -2,6 +2,7 @@ package repository_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/matryer/is"
@@ -10,6 +11,7 @@ import (
 	"godiscauth/internal/repository"
 	"godiscauth/internal/testutils"
 	"godiscauth/pkg/apperrors"
+	"godiscauth/pkg/config"
 )
 
 // TestUserRepository_NewUserRepository tests creation of UserRepository
@@ -282,5 +284,48 @@ func TestUserRepository_IncrementFailedLogins(t *testing.T) {
 			is.NoErr(err)
 			is.Equal(user.FailedLoginAttempts, i+1)
 		}
+	})
+}
+
+func TestUserRepository_LockAccount(t *testing.T) {
+	testDB := testutils.TestDBSetup()
+
+	t.Run("locks on existing user", func(t *testing.T) {
+		is := is.New(t)
+		tx := testDB.Begin()
+		defer tx.Rollback()
+		ur, err := repository.NewUserRepository(tx)
+		is.NoErr(err)
+
+		// Register test user
+		email := "testLockAccount@test.com"
+		password := "password"
+		user := &models.User{
+			Email:    email,
+			Password: password,
+		}
+		err = ur.RegisterUser(user)
+		is.NoErr(err)
+
+		// Lock account
+		err = ur.LockAccount(user.ID.String())
+		user, err = ur.GetUserByEmail(user.Email)
+		is.NoErr(err)
+
+		is.True(user.AccountLocked)
+		// HACK: assumes test won't be blocked for 2 seconds, unlock time is > 2 seconds from now
+		approxLockMax := time.Now().Add(config.AccountLockoutLength * time.Second - 2)
+		is.True(user.AccountLockedUntil.After(approxLockMax))
+	})
+
+	t.Run("fails on non-existent user", func(t *testing.T) {
+		is := is.New(t)
+		tx := testDB.Begin()
+		defer tx.Rollback()
+		ur, err := repository.NewUserRepository(tx)
+		is.NoErr(err)
+
+		err = ur.LockAccount(uuid.New().String())
+		is.Equal(err, apperrors.ErrUserNotFound)
 	})
 }
