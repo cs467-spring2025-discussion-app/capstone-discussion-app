@@ -23,12 +23,15 @@ type User struct {
 	AccountLockedUntil  *time.Time `gorm:"type:timestamp"`
 }
 
+// NewUser creates a new User value from an email and password.
 func NewUser(email string, password string) (*User, error) {
+	// Hash password
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, err
 	}
 
+	// Validate email
 	if _, err := mail.ParseAddress(email); err != nil {
 		return nil, err
 	}
@@ -37,6 +40,7 @@ func NewUser(email string, password string) (*User, error) {
 		return nil, apperrors.ErrEmailMaxLength
 	}
 
+	// Enforce minimum password complexity
 	if err = passwordvalidator.Validate(password, config.MinEntropyBits); err != nil {
 		return nil, err
 	}

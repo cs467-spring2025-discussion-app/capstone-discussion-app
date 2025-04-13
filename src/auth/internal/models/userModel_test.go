@@ -11,9 +11,11 @@ import (
 	"godiscauth/pkg/apperrors"
 )
 
+// TestNewUser tests new user creation in the `models` package.
 func TestNewUser(t *testing.T) {
 	is := is.New(t)
 
+	// Valid email and password should return nil err, non-nil user value
 	validEmail := "test@newuser.com"
 	validPassword := testutils.TestingPassword
 	t.Run("valid email and password", func(t *testing.T) {
@@ -28,6 +30,8 @@ func TestNewUser(t *testing.T) {
 
 	})
 
+	// Emails should not exceed 254 chars per RFC3696
+	// Long emails should return error, nil user value
 	t.Run("email exceeds 254 chars", func(t *testing.T) {
 		exceeds254Chars := "example@"
 		for range 256 {
@@ -35,10 +39,12 @@ func TestNewUser(t *testing.T) {
 		}
 		exceeds254Chars += ".com"
 
-		_, err := models.NewUser(exceeds254Chars, validPassword)
+		user, err := models.NewUser(exceeds254Chars, validPassword)
+		is.Equal(user, nil)
 		is.True(err == apperrors.ErrEmailMaxLength)
 	})
 
+	// Invalid email formats should return error, nil user value
 	invalidFormats := map[string]string{
 		"emptyString":     "",
 		"missingAt":       "example.com",
@@ -53,11 +59,13 @@ func TestNewUser(t *testing.T) {
 
 	for name, email := range invalidFormats {
 		t.Run(name, func(t *testing.T) {
-			_, err := models.NewUser(email, validPassword)
+			user, err := models.NewUser(email, validPassword)
+			is.Equal(user, nil)
 			is.True(err != nil)
 		})
 	}
 
+	// Insufficiently complex passwords should return error, nil user value
 	invalidPasswords := map[string]string{
 		"emptyString": "",
 		"tooShort":    "short",

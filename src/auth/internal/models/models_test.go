@@ -7,6 +7,7 @@ import (
 	"godiscauth/internal/testutils"
 )
 
+// TestMain sets up the test environment for all tests in the `models_test` package.
 func TestMain(m *testing.M) {
 	testutils.TestEnvSetup()
 

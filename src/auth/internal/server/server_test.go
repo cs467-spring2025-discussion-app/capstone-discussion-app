@@ -18,6 +18,7 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
+// TestPingRoute tests the `/ping` route of the API server.
 func TestPingRoute(t *testing.T) {
 	is := is.New(t)
 
