@@ -5,6 +5,7 @@
 # - just https://github.com/casey/just?tab=readme-ov-file
 # - psql https://archlinux.org/packages/?name=postgresql
 # - rainfrog https://github.com/achristmascarl/rainfrog
+# - gotestfmt https://github.com/GoTestTools/gotestfmt
 
 PROJECT := "godiscauth"
 
@@ -28,6 +29,15 @@ INITTESTDB := "scripts/init_testing.sql"
 
 default:
     @just --list
+
+# go test {{path}} and format the output
+test path="":
+    #!/usr/bin/env sh
+    if [ -z "{{path}}" ]; then
+        go test -v -json ./... | gotestfmt
+    else
+        go test -v -json ./internal/{{path}} | gotestfmt
+    fi
 
 # Initialize auth development database
 init env="":
