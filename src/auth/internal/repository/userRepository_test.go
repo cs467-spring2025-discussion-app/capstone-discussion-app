@@ -273,12 +273,11 @@ func TestUserRepository_IncrementFailedLogins(t *testing.T) {
 		err = ur.RegisterUser(user)
 		is.NoErr(err)
 
+		// Increment login attempts
 		for i := range 10 {
-			// Does not err on non-empty string
 			err = ur.IncrementFailedLogins(user.ID.String())
 			is.NoErr(err)
 
-			// Increments on each call
 			user, err = ur.GetUserByEmail(user.Email)
 			is.NoErr(err)
 			is.Equal(user.FailedLoginAttempts, i+1)

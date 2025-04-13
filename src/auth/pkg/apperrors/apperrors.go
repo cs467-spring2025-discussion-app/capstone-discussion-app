@@ -20,4 +20,6 @@ var (
 	ErrUserIdEmpty      = New("User ID is empty")
 
 	ErrUserNotFound = New("User not found")
+
+	ErrCouldNotIncrementFailedLogins = New("Could not increment users.failed_login_attempts")
 )

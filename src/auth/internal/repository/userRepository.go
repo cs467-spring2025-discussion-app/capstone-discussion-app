@@ -95,3 +95,32 @@ func (r *UserRepository) PermanentlyDeleteUser(userID string) (int64, error) {
 	result := r.DB.Unscoped().Where("id = ?", userID).Delete(&models.User{})
 	return result.RowsAffected, result.Error
 }
+
+// IncrementFailedLogins increments failed login attempts and locks account every
+// `config.MaxLoginAttempts` failed attempts.
+func (r *UserRepository) IncrementFailedLogins(userID string) error {
+	// Validate user ID
+	if userID == "" {
+		return apperrors.ErrUserIdEmpty
+	}
+
+	// Lookup user
+	user, err := r.GetUserByID(userID)
+	if err != nil {
+		return apperrors.ErrUserNotFound
+	}
+
+	// Increment login attempts
+	result := r.DB.Model(&models.User{}).Where("id = ?", user.ID).
+		Updates(map[string]any{"failed_login_attempts": user.FailedLoginAttempts + 1})
+
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		// Unsure under what circumstances this could happen, but handle the case anyway
+		return apperrors.ErrCouldNotIncrementFailedLogins
+	}
+
+	return nil
+}
