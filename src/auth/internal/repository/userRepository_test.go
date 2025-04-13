@@ -30,3 +30,18 @@ func TestUserRepository_NewUserRepository(t *testing.T) {
 		is.Equal(err, apperrors.ErrDatabaseIsNil)
 	})
 }
+
+func TestUserRepository_RegisterUser(t *testing.T) {
+	testDB := testutils.TestDBSetup()
+	is := is.New(t)
+	tx := testDB.Begin()
+	defer tx.Rollback()
+
+	ur, err := repository.NewUserRepository(tx)
+	is.NoErr(err)
+
+	t.Run("fails on nil user", func(t *testing.T) {
+		err := ur.RegisterUser(nil)
+		is.Equal(err, apperrors.ErrUserIsNil)
+	})
+}
