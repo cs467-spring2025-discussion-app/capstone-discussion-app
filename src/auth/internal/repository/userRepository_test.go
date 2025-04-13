@@ -109,6 +109,13 @@ func TestUserRepository_GetUserByEmail(t *testing.T) {
 	err = ur.RegisterUser(user)
 	is.NoErr(err)
 
+	// Error on empty email
+	t.Run("empty email", func(t *testing.T) {
+		dbUser, err := ur.GetUserByEmail("")
+		is.Equal(dbUser, nil)
+		is.Equal(err, apperrors.ErrEmailIsEmpty)
+	})
+
 	// Error on non-existing user lookup
 	t.Run("non-existing user", func(t *testing.T) {
 		dbUser, err := ur.GetUserByEmail("doesNotExist@test.com")
@@ -148,6 +155,13 @@ func TestUserRepository_GetUserByID(t *testing.T) {
 	err = ur.RegisterUser(user)
 	is.NoErr(err)
 
+	// Error on empty user ID
+	t.Run("empty user ID", func(t *testing.T) {
+		dbUser, err := ur.GetUserByID("")
+		is.Equal(dbUser, nil)
+		is.Equal(err, apperrors.ErrUserIdEmpty)
+	})
+
 	// Error on non-existing user lookup
 	t.Run("non-existing user", func(t *testing.T) {
 		randUUID := uuid.New()
@@ -166,5 +180,47 @@ func TestUserRepository_GetUserByID(t *testing.T) {
 		is.Equal(dbUser.Email, email)
 		is.Equal(dbUser.Password, password)
 		is.Equal(dbUser.ID, user.ID)
+	})
+}
+
+// TestUserRepository_PermanentlyDeleteUser tests deletion of existing users in database
+func TestUserRepository_PermanentlyDeleteUser(t *testing.T) {
+	testDB := testutils.TestDBSetup()
+	is := is.New(t)
+	tx := testDB.Begin()
+	defer tx.Rollback()
+
+	ur, err := repository.NewUserRepository(tx)
+	is.NoErr(err)
+
+	email := "testPermanentlyDeleteUser@test.com"
+	password := "password"
+
+	// Register a user to delete
+	user := &models.User{
+		Email:    email,
+		Password: password,
+	}
+	err = ur.RegisterUser(user)
+	is.NoErr(err)
+
+	// Error on empty user ID
+	t.Run("empty user ID", func(t *testing.T) {
+		rowsAffected, err := ur.PermanentlyDeleteUser("")
+		is.Equal(rowsAffected, int64(0))
+		is.Equal(err, apperrors.ErrUserIdEmpty)
+	})
+
+	t.Run("non-existing user", func(t *testing.T) {
+		randUUID := uuid.New()
+		rowsAffected, err := ur.PermanentlyDeleteUser(randUUID.String())
+		is.Equal(rowsAffected, int64(0))
+		is.NoErr(err)
+	})
+
+	t.Run("existing user", func(t *testing.T) {
+		rowsAffected, err := ur.PermanentlyDeleteUser(user.ID.String())
+		is.Equal(rowsAffected, int64(1))
+		is.NoErr(err)
 	})
 }
