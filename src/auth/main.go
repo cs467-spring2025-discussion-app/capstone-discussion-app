@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/rs/zerolog/log"
 
@@ -16,5 +17,6 @@ func main() {
 		log.Fatal().Err(err).Msg("Error connecting to database")
 	}
 
-	log.Info().Msg(fmt.Sprintf("Connected to DB"))
+	log.Info().Msg(fmt.Sprintf("Connected to database: %s", os.Getenv("DB")))
+	log.Info().Str("PORT", os.Getenv("PORT")).Msg("Starting server")
 }
