@@ -2,12 +2,13 @@ package database
 
 import (
 	"os"
+
 	"github.com/rs/zerolog/log"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-
+// NewDB creates a new database connection using GORM and PostgreSQL.
 func NewDB() (*gorm.DB, error) {
 	var db *gorm.DB
 	dsn := os.Getenv("DB")
@@ -19,4 +20,3 @@ func NewDB() (*gorm.DB, error) {
 	}
 	return db, nil
 }
-

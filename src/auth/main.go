@@ -10,6 +10,11 @@ import (
 	"godiscauth/pkg/logger"
 )
 
+// main is the entry point for the auth service and sets up the logger, connects to the database,
+// and starts the server.
+// The service expects the following environment variables:
+// - DB: The connection string to the database.
+// - PORT: The port on which the service will run.
 func main() {
 	logger.SetupLogger()
 	_, err := database.NewDB()

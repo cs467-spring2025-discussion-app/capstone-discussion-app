@@ -8,6 +8,7 @@ import (
 	"godiscauth/internal/database"
 )
 
+// TestConnectToDB tests the connection to the database.
 func TestConnectToDB(t *testing.T) {
 	is := is.New(t)
 	t.Run("connects", func(t *testing.T) {
