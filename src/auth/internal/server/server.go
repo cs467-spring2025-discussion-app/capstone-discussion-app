@@ -19,6 +19,7 @@ func NewAPIServer(db *gorm.DB) *APIServer {
 	router := gin.New()
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
+	router.SetTrustedProxies([]string{"127.0.0.1"})
 
 	server := &APIServer{
 		Router: router,
