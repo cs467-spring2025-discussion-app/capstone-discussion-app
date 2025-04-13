@@ -7,6 +7,7 @@ import (
 
 	"godiscauth/internal/models"
 	"godiscauth/internal/testutils"
+	"godiscauth/pkg/apperrors"
 )
 
 func TestNewUser(t *testing.T) {
@@ -20,9 +21,14 @@ func TestNewUser(t *testing.T) {
 	})
 
 	t.Run("email exceeds 254 chars", func(t *testing.T) {
-		exceeds254Chars := "a" + string(make([]byte, 253)) + "@example.com"
+		exceeds254Chars := "example@"
+		for range 256 {
+			exceeds254Chars += "a"
+		}
+		exceeds254Chars += ".com"
+
 		_, err := models.NewUser(exceeds254Chars, validPassword)
-		is.True(err != nil)
+		is.True(err == apperrors.ErrEmailMaxLength)
 	})
 
 	invalidFormats := map[string]string{

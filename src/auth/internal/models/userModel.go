@@ -1,12 +1,13 @@
 package models
 
 import (
-	"errors"
 	"net/mail"
 	"time"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
+
+	"godiscauth/pkg/apperrors"
 )
 
 // User represents a user in the `users` table.
@@ -31,7 +32,7 @@ func NewUser(email string, password string) (*User, error) {
 	}
 
 	if len(email) > 254 {
-		return nil, errors.New("email address is too long") // TODO: add custom error
+		return nil, apperrors.ErrEmailMaxLength
 	}
 
 	// TODO: add password complexity check
