@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/matryer/is"
+	"golang.org/x/crypto/bcrypt"
 
 	"godiscauth/internal/models"
 	"godiscauth/internal/testutils"
@@ -16,8 +17,15 @@ func TestNewUser(t *testing.T) {
 	validEmail := "test@newuser.com"
 	validPassword := testutils.TestingPassword
 	t.Run("valid email and password", func(t *testing.T) {
-		_, err := models.NewUser(validEmail, validPassword)
+		user, err := models.NewUser(validEmail, validPassword)
+		is.True(user != nil)
 		is.NoErr(err)
+
+		// User value holds passed email and password
+		is.Equal(user.Email, validEmail)
+		err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(validPassword))
+		is.NoErr(err)
+
 	})
 
 	t.Run("email exceeds 254 chars", func(t *testing.T) {
