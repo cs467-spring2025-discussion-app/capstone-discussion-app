@@ -6,6 +6,7 @@
 # - psql https://archlinux.org/packages/?name=postgresql
 # - rainfrog https://github.com/achristmascarl/rainfrog
 # - gotestfmt https://github.com/GoTestTools/gotestfmt
+# - CompileDaemon https://github.com/githubnemo/CompileDaemon
 
 PROJECT := "godiscauth"
 
@@ -29,6 +30,16 @@ INITTESTDB := "scripts/init_testing.sql"
 
 default:
     @just --list
+
+# Run the application and watch for changes, recompile/restart on changes
+watch:
+    #!/usr/bin/env sh
+    export PORT={{PORT}}
+    export DB="{{DRIVER}}://{{DEV_USER}}:{{DEV_PASS}}@{{HOST}}:{{DB_PORT}}/{{DEV_DB}}"
+    echo "Using DB: $DB"
+    CompileDaemon \
+    --build="go build -o {{PROJECT}} ./main.go" \
+    --command="./{{PROJECT}}"
 
 # go test {{path}} and format the output
 test path="":
