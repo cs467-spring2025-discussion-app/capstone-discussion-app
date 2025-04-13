@@ -11,6 +11,8 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+
+	"godiscauth/internal/database"
 )
 
 const TestingPassword = "correcthorsebatterystaple"
@@ -49,5 +51,9 @@ func TestDBSetup() *gorm.DB {
 		log.Fatalf("Error connecting to database: %v", err)
 	}
 
+	err = database.Migrate(db)
+	if err != nil {
+		log.Fatalf("Error migrating database: %v", err)
+	}
 	return db
 }
