@@ -7,6 +7,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/matryer/is v1.4.1
 	github.com/rs/zerolog v1.34.0
+	github.com/wagslane/go-password-validator v0.3.0
 	golang.org/x/crypto v0.23.0
 	gorm.io/driver/postgres v1.5.11
 	gorm.io/gorm v1.25.12

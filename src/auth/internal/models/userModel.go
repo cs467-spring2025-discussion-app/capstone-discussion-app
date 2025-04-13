@@ -5,9 +5,11 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	passwordvalidator "github.com/wagslane/go-password-validator"
 	"golang.org/x/crypto/bcrypt"
 
 	"godiscauth/pkg/apperrors"
+	"godiscauth/pkg/config"
 )
 
 // User represents a user in the `users` table.
@@ -35,7 +37,9 @@ func NewUser(email string, password string) (*User, error) {
 		return nil, apperrors.ErrEmailMaxLength
 	}
 
-	// TODO: add password complexity check
+	if err = passwordvalidator.Validate(password, config.MinEntropyBits); err != nil {
+		return nil, err
+	}
 
 	return &User{Email: email, Password: string(hash)}, err
 }
