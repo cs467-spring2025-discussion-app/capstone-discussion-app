@@ -10,8 +10,9 @@ import (
 
 func TestConnectToDB(t *testing.T) {
 	is := is.New(t)
-	testDB := database.NewDB()
 	t.Run("connects", func(t *testing.T) {
+		testDB, err := database.NewDB()
+		is.NoErr(err)
 		is.True(testDB != nil)
 	})
 }
