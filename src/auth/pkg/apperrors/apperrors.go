@@ -7,6 +7,11 @@ import (
 var New = errors.New
 
 var (
+	// Authentication errors
+	ErrAccountIsLocked = New("Account is locked")
+	ErrInvalidLogin    = New("Invalid login credentials")
+	ErrTokenGeneration = New("Could not generate token")
+
 	// User registration errors
 	ErrDuplicateEmail = New("Email already exists in database")
 	ErrEmailIsEmpty   = New("Email is empty")
@@ -16,11 +21,11 @@ var (
 	ErrSessionAlreadyExists = New("Session already exists")
 
 	// Nil reference argument errors
-	ErrDatabaseIsNil = New("Database is nil")
-	ErrSessionIsNil  = New("Session is nil")
-	ErrUserIsNil     = New("User is nil")
+	ErrDatabaseIsNil    = New("Database is nil")
+	ErrSessionIsNil     = New("Session is nil")
+	ErrUserIsNil        = New("User is nil")
 	ErrSessionRepoIsNil = New("Session repo is nil")
-	ErrUserRepoIsNil = New("User repo is nil")
+	ErrUserRepoIsNil    = New("User repo is nil")
 
 	// Empty string argument errors
 	ErrExpiresAtIsEmpty = New("Expiration time is empty")
