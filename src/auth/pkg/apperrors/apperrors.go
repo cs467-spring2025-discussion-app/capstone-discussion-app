@@ -19,6 +19,8 @@ var (
 	ErrDatabaseIsNil = New("Database is nil")
 	ErrSessionIsNil  = New("Session is nil")
 	ErrUserIsNil     = New("User is nil")
+	ErrSessionRepoIsNil = New("Session repo is nil")
+	ErrUserRepoIsNil = New("User repo is nil")
 
 	// Empty string argument errors
 	ErrExpiresAtIsEmpty = New("Expiration time is empty")
