@@ -229,6 +229,86 @@ func TestUserRepository_PermanentlyDeleteUser(t *testing.T) {
 	})
 }
 
+// TestUserRepository_UpdateUser test user updates into the database
+func TestUserRepository_UpdateUser(t *testing.T) {
+	is := is.New(t)
+	testDB := testutils.TestDBSetup()
+
+	// Error on empty user ID
+	t.Run("empty user ID", func(t *testing.T) {
+		tx := testDB.Begin()
+		defer tx.Rollback()
+		ur, err := repository.NewUserRepository(tx)
+		is.NoErr(err)
+
+		err = ur.UpdateUser("", map[string]any{})
+		is.Equal(err, apperrors.ErrUserIdEmpty)
+	})
+
+	// Error on non-existent user
+	t.Run("non-existent user", func(t *testing.T) {
+		tx := testDB.Begin()
+		defer tx.Rollback()
+		ur, err := repository.NewUserRepository(tx)
+		is.NoErr(err)
+
+		err = ur.UpdateUser("doesNotExist", map[string]any{})
+		is.Equal(err, apperrors.ErrUserNotFound)
+	})
+
+	// Can update user
+	t.Run("can update user", func(t *testing.T) {
+		tx := testDB.Begin()
+		defer tx.Rollback()
+		ur, err := repository.NewUserRepository(tx)
+		is.NoErr(err)
+
+		// Register a user to update
+		email := "testUpdateUser@test.com"
+		password := "password"
+		user := &models.User{
+			Email:    email,
+			Password: password,
+		}
+		err = ur.RegisterUser(user)
+		is.NoErr(err)
+
+		// Update user
+		referenceTime := time.Now().Add(time.Hour * 24).UTC().Truncate(time.Second)
+		err = ur.UpdateUser(user.ID.String(), map[string]any{
+			"email":                 "newUserName@test.com",
+			"password":              "newpassword",
+			"last_login":            referenceTime,
+			"failed_login_attempts": 99,
+			"account_locked":        true,
+			"account_locked_until":  referenceTime,
+		})
+		is.NoErr(err)
+
+		// Get updated user and check for updated fields
+		user, err = ur.GetUserByID(user.ID.String())
+		is.NoErr(err)
+		t.Run("updates email", func(t *testing.T) {
+			is.Equal(user.Email, "newUserName@test.com")
+		})
+		t.Run("updates password", func(t *testing.T) {
+			is.Equal(user.Password, "newpassword")
+		})
+		t.Run("updates last_login", func(t *testing.T) {
+			is.Equal(user.LastLogin, &referenceTime)
+		})
+		t.Run("updates failed_login_attempts", func(t *testing.T) {
+			is.Equal(user.FailedLoginAttempts, 99)
+		})
+		t.Run("updates account_locked", func(t *testing.T) {
+			is.True(user.AccountLocked)
+		})
+		t.Run("updates account_locked_until", func(t *testing.T) {
+			is.Equal(user.LastLogin, &referenceTime)
+		})
+	})
+}
+
 func TestUserRepository_IncrementFailedLogins(t *testing.T) {
 	is := is.New(t)
 	testDB := testutils.TestDBSetup()
@@ -314,7 +394,7 @@ func TestUserRepository_LockAccount(t *testing.T) {
 
 		is.True(user.AccountLocked)
 		// HACK: assumes test won't be blocked for 2 seconds, unlock time is > 2 seconds from now
-		approxLockMax := time.Now().Add(config.AccountLockoutLength * time.Second - 2)
+		approxLockMax := time.Now().Add(config.AccountLockoutLength*time.Second - 2)
 		is.True(user.AccountLockedUntil.After(approxLockMax))
 	})
 
