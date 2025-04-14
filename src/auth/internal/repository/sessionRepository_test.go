@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/matryer/is"
+	"gorm.io/gorm"
 
 	"godiscauth/internal/models"
 	"godiscauth/internal/repository"
@@ -107,7 +108,6 @@ func TestSessionRepository_CreateSession(t *testing.T) {
 	})
 }
 
-
 func TestSessionRepository_GetSessionByToken(t *testing.T) {
 	testDB := testutils.TestDBSetup()
 	is := is.New(t)
@@ -121,5 +121,16 @@ func TestSessionRepository_GetSessionByToken(t *testing.T) {
 		session, err := sr.GetUnexpiredSessionByToken("")
 		is.Equal(session, nil)
 		is.Equal(err, apperrors.ErrTokenIsEmpty)
+	})
+
+	t.Run("fails on non-existing token", func(t *testing.T) {
+		tx := testDB.Begin()
+		defer tx.Rollback()
+		sr, err := repository.NewSessionRepository(tx)
+		is.NoErr(err)
+
+		session, err := sr.GetUnexpiredSessionByToken(uuid.New().String())
+		is.Equal(session, nil)
+		is.Equal(err, gorm.ErrRecordNotFound)
 	})
 }
