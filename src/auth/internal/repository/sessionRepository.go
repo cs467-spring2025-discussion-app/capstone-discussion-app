@@ -70,7 +70,7 @@ func (sr *SessionRepository) DeleteSessionByToken(token string) error {
 
 
 // DeleteSessionsByUserID deletes all sessions associated with a userID from the database
-func (sr *SessionRepository) DeleteSessionByUserID(userID string) error {
+func (sr *SessionRepository) DeleteSessionsByUserID(userID string) error {
 	if userID == "" {
 		return apperrors.ErrUserIdEmpty
 	}
