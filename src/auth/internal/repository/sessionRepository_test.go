@@ -70,4 +70,39 @@ func TestSessionRepository_CreateSession(t *testing.T) {
 		err = sr.CreateSession(session)
 		is.NoErr(err)
 	})
+
+	t.Run("fails on duplicate session", func(t *testing.T) {
+		tx := testDB.Begin()
+		defer tx.Rollback()
+		sr, err := repository.NewSessionRepository(tx)
+		is.NoErr(err)
+
+		// Register test user
+		user := &models.User{
+			Email:    "testCreatesSession@test.com",
+			Password: "password",
+		}
+		err = tx.Create(user).Error
+		is.NoErr(err)
+
+		tokenStr := uuid.New().String()
+
+		// Insert first session
+		sessionOne, err := models.NewSession(user.ID, tokenStr, time.Now().Add(1*time.Hour))
+		is.NoErr(err)
+
+		err = sr.CreateSession(sessionOne)
+		is.NoErr(err)
+
+		// Insert second session with same token (expect error)
+		sessionTwo, err := models.NewSession(
+			user.ID,
+			tokenStr,
+			time.Now().Add(1*time.Hour),
+		)
+		is.NoErr(err)
+
+		err = sr.CreateSession(sessionTwo)
+		is.Equal(err, apperrors.ErrSessionAlreadyExists)
+	})
 }
