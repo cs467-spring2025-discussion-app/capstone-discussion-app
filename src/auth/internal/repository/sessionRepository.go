@@ -67,3 +67,16 @@ func (sr *SessionRepository) DeleteSessionByToken(token string) error {
 	}
 	return result.Error
 }
+
+
+// DeleteSessionsByUserID deletes all sessions associated with a userID from the database
+func (sr *SessionRepository) DeleteSessionByUserID(userID string) error {
+	if userID == "" {
+		return apperrors.ErrUserIdEmpty
+	}
+	result := sr.DB.Where("user_id = ?", userID).Delete(&models.Session{})
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return result.Error
+}
