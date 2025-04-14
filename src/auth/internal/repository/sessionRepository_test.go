@@ -237,4 +237,46 @@ func TestSessionRepository_DeleteSessionsByUserID(t *testing.T) {
 		err = sr.DeleteSessionsByUserID("")
 		is.Equal(err, apperrors.ErrUserIdEmpty)
 	})
+
+	t.Run("deletes session by user ID", func(t *testing.T) {
+		sr, err := repository.NewSessionRepository(tx)
+		is.NoErr(err)
+
+		// Register test user
+		user := &models.User{
+			Email:    "testDeleteSessionsByUserID@test.com",
+			Password: "password",
+		}
+		err = tx.Create(user).Error
+		is.NoErr(err)
+		is.NoErr(err)
+
+		// Insert first session associated with user
+		sessionOne, err := models.NewSession(user.ID, uuid.New().String(), time.Now().Add(1*time.Hour))
+		is.NoErr(err)
+		err = sr.CreateSession(sessionOne)
+		is.NoErr(err)
+
+		// Insert second session associated with user
+		sessionTwo, err := models.NewSession(user.ID, uuid.New().String(), time.Now().Add(1*time.Hour))
+		is.NoErr(err)
+		err = sr.CreateSession(sessionTwo)
+		is.NoErr(err)
+
+		// Delete both sessions
+		err = sr.DeleteSessionsByUserID(user.ID.String())
+		is.NoErr(err)
+
+		// Attempt to retrieve both sessions
+		for _, session := range []*models.Session{sessionOne, sessionTwo} {
+			retrievedSession, err := sr.GetUnexpiredSessionByToken(session.Token)
+			if session.UserID == user.ID {
+				is.Equal(retrievedSession, nil)
+				is.Equal(err, gorm.ErrRecordNotFound)
+			} else {
+				is.NoErr(err)
+				is.Equal(retrievedSession.UserID, user.ID)
+			}
+		}
+	})
 }
