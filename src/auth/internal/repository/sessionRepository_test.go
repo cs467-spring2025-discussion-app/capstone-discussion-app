@@ -2,9 +2,12 @@ package repository_test
 
 import (
 	"testing"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/matryer/is"
 
+	"godiscauth/internal/models"
 	"godiscauth/internal/repository"
 	"godiscauth/internal/testutils"
 	"godiscauth/pkg/apperrors"
@@ -45,5 +48,26 @@ func TestSessionRepository_CreateSession(t *testing.T) {
 
 		err = sr.CreateSession(nil)
 		is.Equal(err, apperrors.ErrSessionIsNil)
+	})
+
+	t.Run("creates session", func(t *testing.T) {
+		tx := testDB.Begin()
+		defer tx.Rollback()
+		sr, err := repository.NewSessionRepository(tx)
+		is.NoErr(err)
+
+		// Register test user
+		user := &models.User{
+			Email:    "testCreatesSession@test.com",
+			Password: "password",
+		}
+		err = tx.Create(user).Error
+		is.NoErr(err)
+
+		session, err := models.NewSession(user.ID, uuid.New().String(), time.Now().Add(1*time.Hour))
+		is.NoErr(err)
+
+		err = sr.CreateSession(session)
+		is.NoErr(err)
 	})
 }
