@@ -38,31 +38,24 @@ func TestSessionRepository_NewSessionRepository(t *testing.T) {
 }
 
 func TestSessionRepository_CreateSession(t *testing.T) {
-	testDB := testutils.TestDBSetup()
 	is := is.New(t)
 
 	t.Run("fails on nil session", func(t *testing.T) {
-		tx := testDB.Begin()
-		defer tx.Rollback()
-		sr, err := repository.NewSessionRepository(tx)
-		is.NoErr(err)
+		sr := setupSessionRepository(t)
 
-		err = sr.CreateSession(nil)
+		err := sr.CreateSession(nil)
 		is.Equal(err, apperrors.ErrSessionIsNil)
 	})
 
 	t.Run("creates session", func(t *testing.T) {
-		tx := testDB.Begin()
-		defer tx.Rollback()
-		sr, err := repository.NewSessionRepository(tx)
-		is.NoErr(err)
+		sr := setupSessionRepository(t)
 
 		// Register test user
 		user := &models.User{
 			Email:    "testCreatesSession@test.com",
 			Password: "password",
 		}
-		err = tx.Create(user).Error
+		err := sr.DB.Create(user).Error
 		is.NoErr(err)
 
 		session, err := models.NewSession(user.ID, uuid.New().String(), time.Now().Add(1*time.Hour))
@@ -73,17 +66,14 @@ func TestSessionRepository_CreateSession(t *testing.T) {
 	})
 
 	t.Run("fails on duplicate session", func(t *testing.T) {
-		tx := testDB.Begin()
-		defer tx.Rollback()
-		sr, err := repository.NewSessionRepository(tx)
-		is.NoErr(err)
+		sr := setupSessionRepository(t)
 
 		// Register test user
 		user := &models.User{
 			Email:    "testCreatesSession@test.com",
 			Password: "password",
 		}
-		err = tx.Create(user).Error
+		err := sr.DB.Create(user).Error
 		is.NoErr(err)
 
 		tokenStr := uuid.New().String()
@@ -109,14 +99,10 @@ func TestSessionRepository_CreateSession(t *testing.T) {
 }
 
 func TestSessionRepository_GetSessionByToken(t *testing.T) {
-	testDB := testutils.TestDBSetup()
 	is := is.New(t)
 
 	t.Run("fails on empty token", func(t *testing.T) {
-		tx := testDB.Begin()
-		defer tx.Rollback()
-		sr, err := repository.NewSessionRepository(tx)
-		is.NoErr(err)
+		sr := setupSessionRepository(t)
 
 		session, err := sr.GetUnexpiredSessionByToken("")
 		is.Equal(session, nil)
@@ -124,10 +110,7 @@ func TestSessionRepository_GetSessionByToken(t *testing.T) {
 	})
 
 	t.Run("fails on non-existing token", func(t *testing.T) {
-		tx := testDB.Begin()
-		defer tx.Rollback()
-		sr, err := repository.NewSessionRepository(tx)
-		is.NoErr(err)
+		sr := setupSessionRepository(t)
 
 		session, err := sr.GetUnexpiredSessionByToken(uuid.New().String())
 		is.Equal(session, nil)
@@ -136,17 +119,14 @@ func TestSessionRepository_GetSessionByToken(t *testing.T) {
 
 	// Valid session in db can be retrieved
 	t.Run("retrieves session by token", func(t *testing.T) {
-		tx := testDB.Begin()
-		defer tx.Rollback()
-		sr, err := repository.NewSessionRepository(tx)
-		is.NoErr(err)
+		sr := setupSessionRepository(t)
 
 		// Register test user
 		user := &models.User{
 			Email:    "testGetUnexpiredSessionByToken@test.com",
 			Password: "password",
 		}
-		err = tx.Create(user).Error
+		err := sr.DB.Create(user).Error
 		is.NoErr(err)
 
 		// Insert associated session
@@ -164,41 +144,31 @@ func TestSessionRepository_GetSessionByToken(t *testing.T) {
 }
 
 func TestSessionRepository_DeleteSessionByToken(t *testing.T) {
-	testDB := testutils.TestDBSetup()
 	is := is.New(t)
 
 	t.Run("fails on empty token", func(t *testing.T) {
-		tx := testDB.Begin()
-		defer tx.Rollback()
-		sr, err := repository.NewSessionRepository(tx)
-		is.NoErr(err)
+		sr := setupSessionRepository(t)
 
-		err = sr.DeleteSessionByToken("")
+		err := sr.DeleteSessionByToken("")
 		is.Equal(err, apperrors.ErrTokenIsEmpty)
 	})
 
 	t.Run("fails on non-existing token", func(t *testing.T) {
-		tx := testDB.Begin()
-		defer tx.Rollback()
-		sr, err := repository.NewSessionRepository(tx)
-		is.NoErr(err)
+		sr := setupSessionRepository(t)
 
-		err = sr.DeleteSessionByToken(uuid.New().String())
+		err := sr.DeleteSessionByToken(uuid.New().String())
 		is.Equal(err, gorm.ErrRecordNotFound)
 	})
 
 	t.Run("deletes session by token", func(t *testing.T) {
-		tx := testDB.Begin()
-		defer tx.Rollback()
-		sr, err := repository.NewSessionRepository(tx)
-		is.NoErr(err)
+		sr := setupSessionRepository(t)
 
 		// Register test user
 		user := &models.User{
 			Email:    "testDeleteSessionByToken@test.com",
 			Password: "password",
 		}
-		err = tx.Create(user).Error
+		err := sr.DB.Create(user).Error
 		is.NoErr(err)
 
 		// Insert session to delete
@@ -219,36 +189,31 @@ func TestSessionRepository_DeleteSessionByToken(t *testing.T) {
 }
 
 func TestSessionRepository_DeleteSessionsByUserID(t *testing.T) {
-	testDB := testutils.TestDBSetup()
 	is := is.New(t)
-	tx := testDB.Begin()
-	defer tx.Rollback()
 
 	t.Run("fails on non-existing user ID", func(t *testing.T) {
-		sr, err := repository.NewSessionRepository(tx)
-		is.NoErr(err)
-		err = sr.DeleteSessionsByUserID(uuid.New().String())
+		sr := setupSessionRepository(t)
+
+		err := sr.DeleteSessionsByUserID(uuid.New().String())
 		is.Equal(err, gorm.ErrRecordNotFound)
 	})
 
 	t.Run("fails on empty user ID", func(t *testing.T) {
-		sr, err := repository.NewSessionRepository(tx)
-		is.NoErr(err)
-		err = sr.DeleteSessionsByUserID("")
+		sr := setupSessionRepository(t)
+
+		err := sr.DeleteSessionsByUserID("")
 		is.Equal(err, apperrors.ErrUserIdEmpty)
 	})
 
 	t.Run("deletes session by user ID", func(t *testing.T) {
-		sr, err := repository.NewSessionRepository(tx)
-		is.NoErr(err)
+		sr := setupSessionRepository(t)
 
 		// Register test user
 		user := &models.User{
 			Email:    "testDeleteSessionsByUserID@test.com",
 			Password: "password",
 		}
-		err = tx.Create(user).Error
-		is.NoErr(err)
+		err := sr.DB.Create(user).Error
 		is.NoErr(err)
 
 		// Insert first session associated with user
@@ -279,4 +244,18 @@ func TestSessionRepository_DeleteSessionsByUserID(t *testing.T) {
 			}
 		}
 	})
+}
+
+func setupSessionRepository(t *testing.T) *repository.SessionRepository {
+	t.Helper()
+
+	testDB := testutils.TestDBSetup()
+	tx := testDB.Begin()
+	t.Cleanup(func() { tx.Rollback() })
+
+	sr, err := repository.NewSessionRepository(tx)
+	if err != nil {
+		t.Fatalf("failed to create session repository: %v", err)
+	}
+	return sr
 }

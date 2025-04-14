@@ -85,7 +85,7 @@ func TestUserService_RegisterUser(t *testing.T) {
 }
 
 // TestUserService_UpdateUser test user updates into the database
-func TestUserSErvice_UpdateUser(t *testing.T) {
+func TestUserService_UpdateUser(t *testing.T) {
 	is := is.New(t)
 
 	// Error on empty user ID
@@ -108,6 +108,7 @@ func TestUserSErvice_UpdateUser(t *testing.T) {
 		email := "testUpdateUser@test.com"
 		password := testutils.TestingPassword
 		us := setupUserService(t)
+
 		err := us.RegisterUser(email, password)
 		is.NoErr(err)
 
@@ -155,9 +156,12 @@ func TestUserSErvice_UpdateUser(t *testing.T) {
 }
 
 func setupUserService(t *testing.T) *services.UserService {
+	t.Helper()
+
 	testDB := testutils.TestDBSetup()
 	tx := testDB.Begin()
 	t.Cleanup(func() { tx.Rollback() })
+
 	ur, err := repository.NewUserRepository(tx)
 	if err != nil {
 		t.Fatalf("failed to create user repository: %v", err)
