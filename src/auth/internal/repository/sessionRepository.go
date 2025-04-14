@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"time"
+
 	"gorm.io/gorm"
 
 	"godiscauth/internal/models"
@@ -21,6 +23,7 @@ func NewSessionRepository(db *gorm.DB) (*SessionRepository, error) {
 	return &SessionRepository{DB: db}, nil
 }
 
+// CreateSession inserts a new session into the `sessions` table
 func (sr *SessionRepository) CreateSession(session *models.Session) error {
 	if session == nil {
 		return apperrors.ErrSessionIsNil
@@ -36,4 +39,18 @@ func (sr *SessionRepository) CreateSession(session *models.Session) error {
 		return result.Error
 	}
 	return sr.DB.Create(session).Error
+}
+
+// GetUnexpiredSessionByToken retrieves a session from the database by token, but ignores any
+// expired tokens
+func (sr *SessionRepository) GetUnexpiredSessionByToken(token string) (*models.Session, error) {
+	if token == "" {
+		return nil, apperrors.ErrTokenIsEmpty
+	}
+	var session models.Session
+	result := sr.DB.Where("token = ? AND expires_at > ?", token, time.Now()).First(&session)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &session, nil
 }
