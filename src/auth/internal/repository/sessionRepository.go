@@ -54,3 +54,16 @@ func (sr *SessionRepository) GetUnexpiredSessionByToken(token string) (*models.S
 	}
 	return &session, nil
 }
+
+
+// DeleteSessionByToken deletes a single session from the database by token
+func (sr *SessionRepository) DeleteSessionByToken(token string) error {
+	if token == "" {
+		return apperrors.ErrTokenIsEmpty
+	}
+	result := sr.DB.Where("token = ?", token).Delete(&models.Session{})
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return result.Error
+}
