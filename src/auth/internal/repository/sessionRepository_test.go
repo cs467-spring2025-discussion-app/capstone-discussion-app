@@ -162,3 +162,28 @@ func TestSessionRepository_GetSessionByToken(t *testing.T) {
 		is.Equal(retrievedSession.Token, session.Token)
 	})
 }
+
+func TestSessionRepository_DeleteSessionByToken(t *testing.T) {
+	testDB := testutils.TestDBSetup()
+	is := is.New(t)
+
+	t.Run("fails on empty token", func(t *testing.T) {
+		tx := testDB.Begin()
+		defer tx.Rollback()
+		sr, err := repository.NewSessionRepository(tx)
+		is.NoErr(err)
+
+		err = sr.DeleteSessionByToken("")
+		is.Equal(err, apperrors.ErrTokenIsEmpty)
+	})
+
+	t.Run("fails on non-existing token", func(t *testing.T) {
+		tx := testDB.Begin()
+		defer tx.Rollback()
+		sr, err := repository.NewSessionRepository(tx)
+		is.NoErr(err)
+
+		err = sr.DeleteSessionByToken(uuid.New().String())
+		is.Equal(err, gorm.ErrRecordNotFound)
+	})
+}
