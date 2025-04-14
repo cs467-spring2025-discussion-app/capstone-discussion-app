@@ -25,5 +25,15 @@ func (sr *SessionRepository) CreateSession(session *models.Session) error {
 	if session == nil {
 		return apperrors.ErrSessionIsNil
 	}
-	return nil
+	// Lookup existing session by token
+	var existingSession models.Session
+	result := sr.DB.Where("token = ?", session.Token).First(&existingSession)
+	if result.Error == nil {
+		// Session already exists
+		return apperrors.ErrSessionAlreadyExists
+	} else if result.Error != gorm.ErrRecordNotFound { // RecordNotFound is what we want
+		// Some other error
+		return result.Error
+	}
+	return sr.DB.Create(session).Error
 }
