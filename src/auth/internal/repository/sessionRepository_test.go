@@ -133,4 +133,32 @@ func TestSessionRepository_GetSessionByToken(t *testing.T) {
 		is.Equal(session, nil)
 		is.Equal(err, gorm.ErrRecordNotFound)
 	})
+
+	// Valid session in db can be retrieved
+	t.Run("retrieves session by token", func(t *testing.T) {
+		tx := testDB.Begin()
+		defer tx.Rollback()
+		sr, err := repository.NewSessionRepository(tx)
+		is.NoErr(err)
+
+		// Register test user
+		user := &models.User{
+			Email:    "testGetUnexpiredSessionByToken@test.com",
+			Password: "password",
+		}
+		err = tx.Create(user).Error
+		is.NoErr(err)
+
+		// Insert associated session
+		session, err := models.NewSession(user.ID, uuid.New().String(), time.Now().Add(1*time.Hour))
+		is.NoErr(err)
+		err = sr.CreateSession(session)
+		is.NoErr(err)
+
+		// Retrieved session has same values we passed in
+		retrievedSession, err := sr.GetUnexpiredSessionByToken(session.Token)
+		is.NoErr(err)
+		is.Equal(retrievedSession.UserID, session.UserID)
+		is.Equal(retrievedSession.Token, session.Token)
+	})
 }
