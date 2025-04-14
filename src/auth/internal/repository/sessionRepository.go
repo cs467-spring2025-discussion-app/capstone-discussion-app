@@ -3,6 +3,7 @@ package repository
 import (
 	"gorm.io/gorm"
 
+	"godiscauth/internal/models"
 	"godiscauth/pkg/apperrors"
 )
 
@@ -18,4 +19,11 @@ func NewSessionRepository(db *gorm.DB) (*SessionRepository, error) {
 		return nil, apperrors.ErrDatabaseIsNil
 	}
 	return &SessionRepository{DB: db}, nil
+}
+
+func (sr *SessionRepository) CreateSession(session *models.Session) error {
+	if session == nil {
+		return apperrors.ErrSessionIsNil
+	}
+	return nil
 }

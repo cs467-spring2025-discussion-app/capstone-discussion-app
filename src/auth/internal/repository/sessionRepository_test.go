@@ -32,3 +32,18 @@ func TestSessionRepository_NewSessionRepository(t *testing.T) {
 		is.Equal(err, apperrors.ErrDatabaseIsNil)
 	})
 }
+
+func TestSessionRepository_CreateSession(t *testing.T) {
+	testDB := testutils.TestDBSetup()
+	is := is.New(t)
+
+	t.Run("fails on nil session", func(t *testing.T) {
+		tx := testDB.Begin()
+		defer tx.Rollback()
+		sr, err := repository.NewSessionRepository(tx)
+		is.NoErr(err)
+
+		err = sr.CreateSession(nil)
+		is.Equal(err, apperrors.ErrSessionIsNil)
+	})
+}
