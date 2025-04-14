@@ -186,4 +186,34 @@ func TestSessionRepository_DeleteSessionByToken(t *testing.T) {
 		err = sr.DeleteSessionByToken(uuid.New().String())
 		is.Equal(err, gorm.ErrRecordNotFound)
 	})
+
+	t.Run("deletes session by token", func(t *testing.T) {
+		tx := testDB.Begin()
+		defer tx.Rollback()
+		sr, err := repository.NewSessionRepository(tx)
+		is.NoErr(err)
+
+		// Register test user
+		user := &models.User{
+			Email:    "testDeleteSessionByToken@test.com",
+			Password: "password",
+		}
+		err = tx.Create(user).Error
+		is.NoErr(err)
+
+		// Insert session to delete
+		session, err := models.NewSession(user.ID, uuid.New().String(), time.Now().Add(1*time.Hour))
+		is.NoErr(err)
+		err = sr.CreateSession(session)
+		is.NoErr(err)
+
+		// Delete session
+		err = sr.DeleteSessionByToken(session.Token)
+		is.NoErr(err)
+
+		// Attempt to retrieve deleted session
+		retrievedSession, err := sr.GetUnexpiredSessionByToken(session.Token)
+		is.Equal(retrievedSession, nil)
+		is.Equal(err, gorm.ErrRecordNotFound)
+	})
 }
