@@ -32,4 +32,6 @@ var (
 	ErrUserNotFound = New("User not found")
 
 	ErrCouldNotIncrementFailedLogins = New("Could not increment users.failed_login_attempts")
+	ErrCouldNotUpdateUser            = New("Tried to update user but no changes were made")
+
 )

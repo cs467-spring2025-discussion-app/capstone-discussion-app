@@ -98,6 +98,29 @@ func (r *UserRepository) PermanentlyDeleteUser(userID string) (int64, error) {
 	return result.RowsAffected, result.Error
 }
 
+// UpdateUser updates a user in the database by usedID, expecting a decoded request to pass updated fields
+func (r *UserRepository) UpdateUser(userID string, request map[string]any) error {
+	if userID == "" {
+		return apperrors.ErrUserIdEmpty
+	}
+	var exists bool
+	r.DB.Model(&models.User{}).Select("1").Where("id = ?", userID).First(&exists)
+	if !exists {
+		return apperrors.ErrUserNotFound
+	}
+
+	result := r.DB.Model(&models.User{}).Where("id = ?", userID).Updates(request)
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return apperrors.ErrCouldNotUpdateUser
+	}
+
+	return nil
+}
+
 // IncrementFailedLogins increments failed login attempts and locks account every
 // `config.MaxLoginAttempts` failed attempts.
 func (r *UserRepository) IncrementFailedLogins(userID string) error {
