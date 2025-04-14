@@ -217,3 +217,24 @@ func TestSessionRepository_DeleteSessionByToken(t *testing.T) {
 		is.Equal(err, gorm.ErrRecordNotFound)
 	})
 }
+
+func TestSessionRepository_DeleteSessionsByUserID(t *testing.T) {
+	testDB := testutils.TestDBSetup()
+	is := is.New(t)
+	tx := testDB.Begin()
+	defer tx.Rollback()
+
+	t.Run("fails on non-existing user ID", func(t *testing.T) {
+		sr, err := repository.NewSessionRepository(tx)
+		is.NoErr(err)
+		err = sr.DeleteSessionsByUserID(uuid.New().String())
+		is.Equal(err, gorm.ErrRecordNotFound)
+	})
+
+	t.Run("fails on empty user ID", func(t *testing.T) {
+		sr, err := repository.NewSessionRepository(tx)
+		is.NoErr(err)
+		err = sr.DeleteSessionsByUserID("")
+		is.Equal(err, apperrors.ErrUserIdEmpty)
+	})
+}
