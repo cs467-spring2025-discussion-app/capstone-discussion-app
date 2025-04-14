@@ -40,46 +40,52 @@ func TestUserRepository_NewUserRepository(t *testing.T) {
 // TestUserRepository_RegisterUser tests insertion of new users into the
 // `users` table of the database
 func TestUserRepository_RegisterUser(t *testing.T) {
-	testDB := testutils.TestDBSetup()
 	is := is.New(t)
-	tx := testDB.Begin()
-	defer tx.Rollback()
-
-	ur, err := repository.NewUserRepository(tx)
-	is.NoErr(err)
 
 	// Validates user before registration
 	t.Run("fails on nil user", func(t *testing.T) {
-		err := ur.RegisterUser(nil)
+		ur, err := setupUserRepository(t)
+		is.NoErr(err)
+
+		err = ur.RegisterUser(nil)
 		is.Equal(err, apperrors.ErrUserIsNil)
 	})
 	t.Run("fails on missing email", func(t *testing.T) {
+		ur, err := setupUserRepository(t)
+		is.NoErr(err)
+
 		user := &models.User{
 			Password: "password",
 		}
-		err := ur.RegisterUser(user)
+		err = ur.RegisterUser(user)
 		is.Equal(err, apperrors.ErrEmailIsEmpty)
 	})
 	t.Run("fails on missing password", func(t *testing.T) {
+		ur, err := setupUserRepository(t)
+		is.NoErr(err)
+
 		user := &models.User{
 			Email: "testRegisterUser@test.com",
 		}
-		err := ur.RegisterUser(user)
+		err = ur.RegisterUser(user)
 		is.Equal(err, apperrors.ErrPasswordIsEmpty)
 	})
 
 	// Inserts user into db with complete User value
 	t.Run("registers user", func(t *testing.T) {
+		ur, err := setupUserRepository(t)
+		is.NoErr(err)
+
 		user := &models.User{
 			Email:    "testRegisterUser@test.com",
 			Password: "password",
 		}
-		err := ur.RegisterUser(user)
+		err = ur.RegisterUser(user)
 		is.NoErr(err)
 
 		// Lookup expected user in the db
 		var dbUser models.User
-		tx.First(&dbUser, "ID = ?", user.ID)
+		ur.DB.First(&dbUser, "ID = ?", user.ID)
 
 		// Sets given user values
 		is.True(dbUser.ID != uuid.UUID{})
@@ -95,24 +101,13 @@ func TestUserRepository_RegisterUser(t *testing.T) {
 
 // TestUserRepository_GetUserByEmail tests lookup of registered users in the database
 func TestUserRepository_GetUserByEmail(t *testing.T) {
-	testDB := testutils.TestDBSetup()
 	is := is.New(t)
-	tx := testDB.Begin()
-	defer tx.Rollback()
-
-	ur, err := repository.NewUserRepository(tx)
-	is.NoErr(err)
-
-	// Register a user to look up
-	user := &models.User{
-		Email:    "testLookupUser@test.com",
-		Password: "password",
-	}
-	err = ur.RegisterUser(user)
-	is.NoErr(err)
 
 	// Error on empty email
 	t.Run("empty email", func(t *testing.T) {
+		ur, err := setupUserRepository(t)
+		is.NoErr(err)
+
 		dbUser, err := ur.GetUserByEmail("")
 		is.Equal(dbUser, nil)
 		is.Equal(err, apperrors.ErrEmailIsEmpty)
@@ -120,6 +115,9 @@ func TestUserRepository_GetUserByEmail(t *testing.T) {
 
 	// Error on non-existing user lookup
 	t.Run("non-existing user", func(t *testing.T) {
+		ur, err := setupUserRepository(t)
+		is.NoErr(err)
+
 		dbUser, err := ur.GetUserByEmail("doesNotExist@test.com")
 		is.Equal(dbUser, nil)
 		is.Equal(err, apperrors.ErrUserNotFound)
@@ -127,23 +125,31 @@ func TestUserRepository_GetUserByEmail(t *testing.T) {
 
 	// Success on existing-user lookup
 	t.Run("existing user", func(t *testing.T) {
+		ur, err := setupUserRepository(t)
+		is.NoErr(err)
+
+		// Register a user to look up
+		user := &models.User{
+			Email:    "testGetUserByEmail@test.com",
+			Password: "password",
+		}
+		err = ur.RegisterUser(user)
+		is.NoErr(err)
+
 		dbUser, err := ur.GetUserByEmail(user.Email)
 		is.NoErr(err)
 
 		is.True(dbUser.ID != uuid.UUID{})
-		is.Equal(dbUser.Email, "testLookupUser@test.com")
+		is.Equal(dbUser.Email, "testGetUserByEmail@test.com")
 		is.Equal(dbUser.Password, "password")
 	})
 }
 
 // TestUserRepository_LookupUser tests lookup of registered users in the database
 func TestUserRepository_GetUserByID(t *testing.T) {
-	testDB := testutils.TestDBSetup()
 	is := is.New(t)
-	tx := testDB.Begin()
-	defer tx.Rollback()
 
-	ur, err := repository.NewUserRepository(tx)
+	ur, err := setupUserRepository(t)
 	is.NoErr(err)
 
 	email := "testGetUserByID@test.com"
@@ -187,12 +193,9 @@ func TestUserRepository_GetUserByID(t *testing.T) {
 
 // TestUserRepository_PermanentlyDeleteUser tests deletion of existing users in database
 func TestUserRepository_PermanentlyDeleteUser(t *testing.T) {
-	testDB := testutils.TestDBSetup()
 	is := is.New(t)
-	tx := testDB.Begin()
-	defer tx.Rollback()
 
-	ur, err := repository.NewUserRepository(tx)
+	ur, err := setupUserRepository(t)
 	is.NoErr(err)
 
 	email := "testPermanentlyDeleteUser@test.com"
@@ -232,13 +235,10 @@ func TestUserRepository_PermanentlyDeleteUser(t *testing.T) {
 // TestUserRepository_UpdateUser test user updates into the database
 func TestUserRepository_UpdateUser(t *testing.T) {
 	is := is.New(t)
-	testDB := testutils.TestDBSetup()
 
 	// Error on empty user ID
 	t.Run("empty user ID", func(t *testing.T) {
-		tx := testDB.Begin()
-		defer tx.Rollback()
-		ur, err := repository.NewUserRepository(tx)
+		ur, err := setupUserRepository(t)
 		is.NoErr(err)
 
 		err = ur.UpdateUser("", map[string]any{})
@@ -247,9 +247,7 @@ func TestUserRepository_UpdateUser(t *testing.T) {
 
 	// Error on non-existent user
 	t.Run("non-existent user", func(t *testing.T) {
-		tx := testDB.Begin()
-		defer tx.Rollback()
-		ur, err := repository.NewUserRepository(tx)
+		ur, err := setupUserRepository(t)
 		is.NoErr(err)
 
 		err = ur.UpdateUser("doesNotExist", map[string]any{})
@@ -258,9 +256,7 @@ func TestUserRepository_UpdateUser(t *testing.T) {
 
 	// Can update user
 	t.Run("can update user", func(t *testing.T) {
-		tx := testDB.Begin()
-		defer tx.Rollback()
-		ur, err := repository.NewUserRepository(tx)
+		ur, err := setupUserRepository(t)
 		is.NoErr(err)
 
 		// Register a user to update
@@ -311,14 +307,10 @@ func TestUserRepository_UpdateUser(t *testing.T) {
 
 func TestUserRepository_IncrementFailedLogins(t *testing.T) {
 	is := is.New(t)
-	testDB := testutils.TestDBSetup()
 
 	// Error on empty user ID
 	t.Run("empty user ID", func(t *testing.T) {
-		is := is.New(t)
-		tx := testDB.Begin()
-		defer tx.Rollback()
-		ur, err := repository.NewUserRepository(tx)
+		ur, err := setupUserRepository(t)
 		is.NoErr(err)
 
 		err = ur.IncrementFailedLogins("")
@@ -327,10 +319,7 @@ func TestUserRepository_IncrementFailedLogins(t *testing.T) {
 
 	// Error on non-existing user lookup
 	t.Run("fails on non-existent user", func(t *testing.T) {
-		is := is.New(t)
-		tx := testDB.Begin()
-		defer tx.Rollback()
-		ur, err := repository.NewUserRepository(tx)
+		ur, err := setupUserRepository(t)
 		is.NoErr(err)
 
 		err = ur.IncrementFailedLogins(uuid.New().String())
@@ -339,10 +328,7 @@ func TestUserRepository_IncrementFailedLogins(t *testing.T) {
 
 	// Increments failed login attempts on successful lookup
 	t.Run("increments FailedLoginAttempts", func(t *testing.T) {
-		is := is.New(t)
-		tx := testDB.Begin()
-		defer tx.Rollback()
-		ur, err := repository.NewUserRepository(tx)
+		ur, err := setupUserRepository(t)
 		is.NoErr(err)
 
 		// Register a user to fail logins with
@@ -368,13 +354,10 @@ func TestUserRepository_IncrementFailedLogins(t *testing.T) {
 }
 
 func TestUserRepository_LockAccount(t *testing.T) {
-	testDB := testutils.TestDBSetup()
+	is := is.New(t)
 
 	t.Run("locks on existing user", func(t *testing.T) {
-		is := is.New(t)
-		tx := testDB.Begin()
-		defer tx.Rollback()
-		ur, err := repository.NewUserRepository(tx)
+		ur, err := setupUserRepository(t)
 		is.NoErr(err)
 
 		// Register test user
@@ -399,13 +382,18 @@ func TestUserRepository_LockAccount(t *testing.T) {
 	})
 
 	t.Run("fails on non-existent user", func(t *testing.T) {
-		is := is.New(t)
-		tx := testDB.Begin()
-		defer tx.Rollback()
-		ur, err := repository.NewUserRepository(tx)
+		ur, err := setupUserRepository(t)
 		is.NoErr(err)
 
 		err = ur.LockAccount(uuid.New().String())
 		is.Equal(err, apperrors.ErrUserNotFound)
 	})
+}
+
+func setupUserRepository(t *testing.T) (*repository.UserRepository, error) {
+	testDB := testutils.TestDBSetup()
+	ur, err := repository.NewUserRepository(testDB)
+	tx := testDB.Begin()
+	t.Cleanup(func() { tx.Rollback() })
+	return ur, err
 }
