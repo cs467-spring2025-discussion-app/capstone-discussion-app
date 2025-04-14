@@ -1,6 +1,7 @@
 package services
 
 import (
+	"godiscauth/internal/models"
 	"godiscauth/internal/repository"
 	"godiscauth/pkg/apperrors"
 )
@@ -23,4 +24,21 @@ func NewUserService(ur *repository.UserRepository, sr *repository.SessionReposit
 		UserRepo:    ur,
 		SessionRepo: sr,
 	}, nil
+}
+
+// RegisterUser mediates the new User value creation and the insertion of a user into the database
+func (us *UserService) RegisterUser(email, password string) error {
+	// Check for empty fields
+	if email == "" {
+		return apperrors.ErrEmailIsEmpty
+	}
+	if password == "" {
+		return apperrors.ErrPasswordIsEmpty
+	}
+
+	user, err := models.NewUser(email, password)
+	if err != nil {
+		return err
+	}
+	return us.UserRepo.RegisterUser(user)
 }
