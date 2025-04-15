@@ -50,9 +50,6 @@ func TestUserService_NewUserService(t *testing.T) {
 	})
 
 	t.Run("creates user service", func(t *testing.T) {
-		tx := testDB.Begin()
-		defer tx.Rollback()
-
 		userService := setupUserService(t)
 		is.True(userService != nil)
 	})
