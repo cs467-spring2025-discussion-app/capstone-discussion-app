@@ -183,4 +183,3 @@ func (us *UserService) PermanentlyDeleteUser(userID string) error {
 	}
 	return nil
 }
-
