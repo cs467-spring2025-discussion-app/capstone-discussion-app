@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt"
+	"github.com/google/uuid"
 	"github.com/matryer/is"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -355,6 +356,36 @@ func TestUserService_LogoutEverywhere(t *testing.T) {
 			is.Equal(session, nil)
 			is.Equal(err, gorm.ErrRecordNotFound)
 		}
+	})
+}
+
+func TestUserService_PermanentlyDeleteUser(t *testing.T) {
+	is := is.New(t)
+
+	us := setupUserService(t)
+
+	t.Run("empty userID", func(t *testing.T) {
+		err := us.PermanentlyDeleteUser("")
+		is.Equal(err, apperrors.ErrUserIdEmpty)
+	})
+
+	t.Run("non-existent user", func(t *testing.T) {
+		randomUUID := uuid.New()
+		err := us.PermanentlyDeleteUser(randomUUID.String())
+		is.True(err == apperrors.ErrUserNotFound)
+	})
+
+	t.Run("existing user", func(t *testing.T) {
+		// Register a test user
+		email := "testUserServicePermanentlyDeleteUser@test.com"
+		password := testutils.TestingPassword
+		err := us.RegisterUser(email, password)
+		is.NoErr(err)
+		// Get user ID
+		user, err := us.UserRepo.GetUserByEmail(email)
+		is.NoErr(err)
+		err = us.PermanentlyDeleteUser(user.ID.String())
+		is.NoErr(err)
 	})
 }
 
