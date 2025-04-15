@@ -25,6 +25,9 @@ func main() {
 
 	log.Info().Msg(fmt.Sprintf("Connected to database: %s", os.Getenv("DB")))
 	log.Info().Str("PORT", os.Getenv("PORT")).Msg("Starting server")
-	apiServer := server.NewAPIServer(db)
+	apiServer, err := server.NewAPIServer(db)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Error initializing server")
+	}
 	apiServer.Run()
 }

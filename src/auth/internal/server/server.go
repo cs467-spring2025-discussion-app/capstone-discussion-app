@@ -5,6 +5,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
+
+	"godiscauth/pkg/apperrors"
 )
 
 // APIServer represents the API server with a gin router.
@@ -15,7 +17,11 @@ type APIServer struct {
 }
 
 // NewAPIServer initializes a new API server with the gin engine as the router.
-func NewAPIServer(db *gorm.DB) *APIServer {
+func NewAPIServer(db *gorm.DB) (*APIServer, error) {
+	if db == nil {
+		return nil, apperrors.ErrDatabaseIsNil
+	}
+
 	router := gin.New()
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
@@ -24,7 +30,7 @@ func NewAPIServer(db *gorm.DB) *APIServer {
 	server := &APIServer{
 		Router: router,
 	}
-	return server
+	return server, nil
 }
 
 // SetupRoutes sets up the routes for the API server.

@@ -25,7 +25,8 @@ func TestPingRoute(t *testing.T) {
 	testutils.TestEnvSetup()
 
 	testDB := testutils.TestDBSetup()
-	server := server.NewAPIServer(testDB)
+	server, err := server.NewAPIServer(testDB)
+	is.NoErr(err)
 	server.SetupRoutes()
 
 	req, _ := http.NewRequest("GET", "/ping", nil)
