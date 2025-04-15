@@ -152,3 +152,18 @@ func (us *UserService) LoginUser(email, password string) (string, error) {
 
 	return tokenString, nil
 }
+
+// Logout invalidates a token by deleting its corresponding session
+func (us *UserService) Logout(token string) error {
+	if token == "" {
+		return apperrors.ErrTokenIsEmpty
+	}
+	return us.SessionRepo.DeleteSessionByToken(token)
+}
+
+func (us *UserService) LogoutEverywhere(userID string) error {
+	if userID == "" {
+		return apperrors.ErrUserIdEmpty
+	}
+	return us.SessionRepo.DeleteSessionsByUserID(userID)
+}
