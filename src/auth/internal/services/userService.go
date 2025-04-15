@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt"
+	"github.com/google/uuid"
 	passwordvalidator "github.com/wagslane/go-password-validator"
 	"golang.org/x/crypto/bcrypt"
 
@@ -127,6 +128,7 @@ func (us *UserService) LoginUser(email, password string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"sub": user.ID.String(),
 		"exp": time.Now().Add(time.Hour * 24 * 7).Unix(),
+		"jti": uuid.New().String(),
 	})
 
 	tokenString, err := token.SignedString([]byte(os.Getenv(config.JwtCookieName)))
