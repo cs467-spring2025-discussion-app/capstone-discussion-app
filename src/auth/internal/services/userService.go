@@ -167,3 +167,20 @@ func (us *UserService) LogoutEverywhere(userID string) error {
 	}
 	return us.SessionRepo.DeleteSessionsByUserID(userID)
 }
+
+// PermanentlyDeleteUser removes the user from the database. This is a permanent operation rather
+// than a "deletedAt" flag toggle.
+func (us *UserService) PermanentlyDeleteUser(userID string) error {
+	if userID == "" {
+		return apperrors.ErrUserIdEmpty
+	}
+	rowsAffected, err := us.UserRepo.PermanentlyDeleteUser(userID)
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return apperrors.ErrUserNotFound
+	}
+	return nil
+}
+
