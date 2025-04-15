@@ -384,8 +384,13 @@ func TestUserService_PermanentlyDeleteUser(t *testing.T) {
 		// Get user ID
 		user, err := us.UserRepo.GetUserByEmail(email)
 		is.NoErr(err)
+		// Delete user
 		err = us.PermanentlyDeleteUser(user.ID.String())
 		is.NoErr(err)
+		// Confirm user no longer exists in db
+		user, err = us.UserRepo.GetUserByEmail(email)
+		is.Equal(user, nil)
+		is.Equal(err, apperrors.ErrUserNotFound)
 	})
 }
 

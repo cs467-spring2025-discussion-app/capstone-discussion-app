@@ -198,17 +198,6 @@ func TestUserRepository_PermanentlyDeleteUser(t *testing.T) {
 	ur, err := setupUserRepository(t)
 	is.NoErr(err)
 
-	email := "testPermanentlyDeleteUser@test.com"
-	password := "password"
-
-	// Register a user to delete
-	user := &models.User{
-		Email:    email,
-		Password: password,
-	}
-	err = ur.RegisterUser(user)
-	is.NoErr(err)
-
 	// Error on empty user ID
 	t.Run("empty user ID", func(t *testing.T) {
 		rowsAffected, err := ur.PermanentlyDeleteUser("")
@@ -226,9 +215,23 @@ func TestUserRepository_PermanentlyDeleteUser(t *testing.T) {
 
 	// Success on existing-user lookup
 	t.Run("existing user", func(t *testing.T) {
+		email := "testPermanentlyDeleteUser@test.com"
+		password := "password"
+
+		// Register a user to delete
+		user := &models.User{
+			Email:    email,
+			Password: password,
+		}
+		err = ur.RegisterUser(user)
+		is.NoErr(err)
 		rowsAffected, err := ur.PermanentlyDeleteUser(user.ID.String())
 		is.Equal(rowsAffected, int64(1))
 		is.NoErr(err)
+		// Confirm user is no longer in the database
+		user, err = ur.GetUserByEmail(email)
+		is.Equal(user, nil)
+		is.Equal(err, apperrors.ErrUserNotFound)
 	})
 }
 
