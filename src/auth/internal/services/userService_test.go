@@ -1,9 +1,12 @@
 package services_test
 
 import (
+	"math"
+	"os"
 	"testing"
 	"time"
 
+	"github.com/golang-jwt/jwt"
 	"github.com/matryer/is"
 	"golang.org/x/crypto/bcrypt"
 
@@ -12,6 +15,7 @@ import (
 	"godiscauth/internal/services"
 	"godiscauth/internal/testutils"
 	"godiscauth/pkg/apperrors"
+	"godiscauth/pkg/config"
 )
 
 // TestUserService_NewUserService tests the creation of a new UserService
@@ -152,6 +156,134 @@ func TestUserService_UpdateUser(t *testing.T) {
 		t.Run("updates account_locked_until", func(t *testing.T) {
 			is.Equal(updatedUser.LastLogin, &referenceTime)
 		})
+	})
+}
+
+// TestUserService_LoginUser tests that a user can be logged in, generating a
+// JWT token and creating a session in the database
+func TestUserService_LoginUser(t *testing.T) {
+	is := is.New(t)
+
+	email := "testUserServiceLoginUser@test.com"
+	password := testutils.TestingPassword
+
+	t.Run("non existing user", func(t *testing.T) {
+		us := setupUserService(t)
+		_, err := us.LoginUser("doesNotExist@test.com", "password")
+		is.Equal(err, apperrors.ErrUserNotFound)
+	})
+
+	t.Run("empty email", func(t *testing.T) {
+		us := setupUserService(t)
+		_, err := us.LoginUser("", "password")
+		is.Equal(err, apperrors.ErrEmailIsEmpty)
+	})
+
+	t.Run("empty password", func(t *testing.T) {
+		us := setupUserService(t)
+		_, err := us.LoginUser("some@test.com", "")
+		is.Equal(err, apperrors.ErrPasswordIsEmpty)
+	})
+
+	t.Run("invalid password", func(t *testing.T) {
+		us := setupUserService(t)
+		err := us.RegisterUser(email, password)
+		is.NoErr(err)
+		_, err = us.LoginUser(email, "thisIsNotThePassword")
+		is.Equal(err, apperrors.ErrInvalidLogin)
+	})
+
+	t.Run("valid login", func(t *testing.T) {
+		us := setupUserService(t)
+		err := us.RegisterUser(email, password)
+		is.NoErr(err)
+		token, err := us.LoginUser(email, password)
+		is.NoErr(err)
+		is.True(token != "")
+	})
+
+	// Generated token has claims that match user email/password
+	t.Run("expected token claims", func(t *testing.T) {
+		us := setupUserService(t)
+		err := us.RegisterUser(email, password)
+		is.NoErr(err)
+
+		// Track current time for later comparison
+		loginTime := time.Now()
+		// Login user and get generated token
+		token, err := us.LoginUser(email, password)
+		is.NoErr(err)
+
+		// Parse the token and get the claims
+		parsedToken, err := jwt.Parse(token, func(token *jwt.Token) (any, error) {
+			return []byte(os.Getenv(config.JwtCookieName)), nil
+		})
+		is.NoErr(err)
+		is.True(parsedToken.Valid)
+
+		claims, ok := parsedToken.Claims.(jwt.MapClaims)
+		is.True(ok)
+
+		// Get registered user to compare against claims
+		user, err := us.UserRepo.GetUserByEmail(email)
+		is.NoErr(err)
+
+		// Subject of claims is the same as the user id
+		is.Equal(claims["sub"], user.ID.String())
+
+		// Expiration of token is approximately the same as the login time + expiration time
+		exp, ok := claims["exp"].(float64)
+		is.True(ok)
+		expectedExp := float64(loginTime.Unix() + config.TokenExpiration)
+		// Account for 1 second expiration difference
+		is.True(math.Abs(exp-expectedExp) < 1)
+
+		// Verify session was created
+		session, err := us.SessionRepo.GetUnexpiredSessionByToken(token)
+		is.NoErr(err)
+		is.Equal(session.UserID.String(), user.ID.String())
+	})
+
+	t.Run("deny locked account login", func(t *testing.T) {
+		us := setupUserService(t)
+
+		// Register user
+		err := us.RegisterUser(email, password)
+		is.NoErr(err)
+
+		// Get registered user
+		user, err := us.UserRepo.GetUserByEmail(email)
+		is.NoErr(err)
+
+		// Lock account
+		us.UserRepo.LockAccount(user.ID.String())
+
+		// Attempt locked-account login
+		_, err = us.LoginUser(email, password)
+		is.Equal(err, apperrors.ErrAccountIsLocked)
+	})
+
+	t.Run("locks account after max attempts", func(t *testing.T) {
+		us := setupUserService(t)
+		// Register user
+		err := us.RegisterUser(email, password)
+		is.NoErr(err)
+
+		// Get registered user
+		user, err := us.UserRepo.GetUserByEmail(email)
+		is.NoErr(err)
+
+		// Manually set failed attempts to max-1
+		us.UserRepo.DB.Model(&models.User{}).Where("id = ?", user.ID).
+			Updates(map[string]any{"failed_login_attempts": config.MaxLoginAttempts - 1})
+
+		// Fail a login attempt
+		_, err = us.LoginUser(email, "thisIsNotThePassword")
+		is.Equal(err, apperrors.ErrInvalidLogin)
+
+		// Attempt subsequent login, expecting locked account
+		_, err = us.LoginUser(email, password)
+		is.Equal(err, apperrors.ErrAccountIsLocked)
 	})
 }
 
