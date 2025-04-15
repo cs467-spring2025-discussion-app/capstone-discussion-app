@@ -9,6 +9,7 @@ import (
 	"github.com/golang-jwt/jwt"
 	"github.com/matryer/is"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 
 	"godiscauth/internal/models"
 	"godiscauth/internal/repository"
@@ -284,6 +285,76 @@ func TestUserService_LoginUser(t *testing.T) {
 		// Attempt subsequent login, expecting locked account
 		_, err = us.LoginUser(email, password)
 		is.Equal(err, apperrors.ErrAccountIsLocked)
+	})
+}
+
+// TestUserService_Logout checks that a token is no longer valid after Logout is called
+func TestUserService_Logout(t *testing.T) {
+	is := is.New(t)
+
+	us := setupUserService(t)
+	t.Run("error on empty token string", func(t *testing.T) {
+		err := us.Logout("")
+		is.Equal(err, apperrors.ErrTokenIsEmpty)
+	})
+
+	t.Run("invalidates a token", func(t *testing.T) {
+		// Register and login a user
+		email := "testUserServiceLogout@test.com"
+		password := testutils.TestingPassword
+		err := us.RegisterUser(email, password)
+		is.NoErr(err)
+		token, err := us.LoginUser(email, password)
+		is.NoErr(err)
+		is.NoErr(err)
+
+		// Logout a user
+		err = us.Logout(token)
+
+		// Check that corresponding session no longer exists in database
+		session, err := us.SessionRepo.GetUnexpiredSessionByToken(token)
+		is.Equal(session, nil)
+		is.Equal(err, gorm.ErrRecordNotFound)
+	})
+}
+
+// TestUserService_Logout checks that all tokens associated with a user ares no longer valid after
+// LogoutEverywhere is called
+func TestUserService_LogoutEverywhere(t *testing.T) {
+	is := is.New(t)
+
+	us := setupUserService(t)
+	t.Run("error on empty userID string", func(t *testing.T) {
+		err := us.LogoutEverywhere("")
+		is.Equal(err, apperrors.ErrUserIdEmpty)
+	})
+
+	t.Run("invalidates all user's tokens", func(t *testing.T) {
+		// Register a user
+		email := "testUserServiceLogout@test.com"
+		password := testutils.TestingPassword
+		err := us.RegisterUser(email, password)
+		is.NoErr(err)
+		// Get user ID
+		user, err := us.UserRepo.GetUserByEmail(email)
+		is.NoErr(err)
+		// Login user multiple times
+		tokens := []string{}
+		for range 10 {
+			token, err := us.LoginUser(email, password)
+			is.NoErr(err)
+			tokens = append(tokens, token)
+		}
+
+		// Invalidate all user's tokens
+		err = us.LogoutEverywhere(user.ID.String())
+
+		// Check that corresponding session no longer exists in database
+		for _, token := range tokens {
+			session, err := us.SessionRepo.GetUnexpiredSessionByToken(token)
+			is.Equal(session, nil)
+			is.Equal(err, gorm.ErrRecordNotFound)
+		}
 	})
 }
 
