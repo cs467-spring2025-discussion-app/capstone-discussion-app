@@ -165,3 +165,35 @@ func (uh *UserHandler) LogoutEverywhere(c *gin.Context) {
 	c.SetCookie(config.JwtCookieName, "", -1, "", "", true, true)
 	c.JSON(http.StatusOK, gin.H{"message": "logged out everywhere"})
 }
+
+func (uh *UserHandler) PermanentlyDeleteUser(c *gin.Context) {
+	clientIP := c.ClientIP()
+	userIDStr, exists := c.Get("userID")
+	if !exists {
+		log.Info().
+			Str("clientIP", clientIP).
+			Msg("userID not found in cookie")
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{})
+		return
+	}
+	userID := userIDStr.(string)
+	err := uh.UserService.PermanentlyDeleteUser(userID)
+	if err != nil {
+		log.Info().
+			Str("clientIP", clientIP).
+			Str("error", err.Error()).
+			Msg("failed to delete user")
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	// Account no longer exists, so we can clear cookie
+	// NOTE: we are assuming the database will delete all associated sessions once the
+	// corresponding user row is deleted
+	c.SetCookie(config.JwtCookieName, "", -1, "", "", true, true)
+
+	log.Info().
+		Str("clientIP", clientIP).
+		Msg("successfully deleted user")
+	c.String(http.StatusOK, "account deleted")
+}

@@ -10,6 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"github.com/matryer/is"
 
 	"godiscauth/internal/handlers"
@@ -422,6 +423,76 @@ func TestUserHandler_LogoutEverywhere(t *testing.T) {
 		server.Router.ServeHTTP(w, req)
 
 		is.Equal(w.Code, http.StatusUnauthorized)
+	})
+}
+
+func TestUserHandler_PermanentlyDeleteUser(t *testing.T) {
+	is := is.New(t)
+
+	server := setupServer(t)
+
+	// Register a test user
+	email := "TestUserHandler_PermanentlyDeleteUser@test.com"
+	password := testutils.TestingPassword
+	user, err := models.NewUser(email, password)
+	is.NoErr(err)
+	err = server.DB.Create(user).Error
+	is.NoErr(err)
+
+	// Read registered user from DB so we can get its ID
+	var dbUser models.User
+	server.DB.First(&dbUser, "email = ?", user.Email)
+
+	t.Run("set userID in gin context", func(t *testing.T) {
+		path := "/deleteAccountValid"
+		w := httptest.NewRecorder()
+		_, r := gin.CreateTestContext(w)
+
+		r.DELETE(path, func(c *gin.Context) {
+			c.Set("userID", dbUser.ID.String())
+			server.HandlerRegistry.User.PermanentlyDeleteUser(c)
+		})
+
+		req, _ := http.NewRequest(http.MethodDelete, path, nil)
+		r.ServeHTTP(w, req)
+		is.Equal(http.StatusOK, w.Code)
+
+		response := w.Body.String()
+		is.Equal("account deleted", response)
+	})
+
+	t.Run("non-existent user ID", func(t *testing.T) {
+		path := "/deleteAccountInvalidID"
+		w := httptest.NewRecorder()
+		_, r := gin.CreateTestContext(w)
+
+		r.DELETE(path, func(c *gin.Context) {
+			randUUID := uuid.New()
+			c.Set("userID", randUUID.String())
+			server.HandlerRegistry.User.PermanentlyDeleteUser(c)
+		})
+
+		req, _ := http.NewRequest(http.MethodDelete, path, nil)
+		r.ServeHTTP(w, req)
+		is.Equal(http.StatusBadRequest, w.Code)
+	})
+
+	t.Run("no userID in gin context", func(t *testing.T) {
+		path := "/deleteAccountNoUserID"
+		w := httptest.NewRecorder()
+		_, r := gin.CreateTestContext(w)
+
+		r.DELETE(path, func(c *gin.Context) {
+			server.HandlerRegistry.User.PermanentlyDeleteUser(c)
+		})
+
+		req, _ := http.NewRequest(http.MethodDelete, path, nil)
+		r.ServeHTTP(w, req)
+		is.Equal(http.StatusUnauthorized, w.Code)
+
+		var response map[string]any
+		json.Unmarshal(w.Body.Bytes(), &response)
+		is.Equal(0, len(response))
 	})
 }
 

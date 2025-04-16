@@ -71,13 +71,8 @@ func (s *APIServer) SetupRoutes() {
 	protected.Use(s.MiddlewareProvider.Auth.RequireAuth())
 	{
 		protected.POST("/logouteverywhere", s.HandlerRegistry.User.LogoutEverywhere)
-		// TODO:
-		// protected.GET("/profile", s.Handlers.User.GetUserProfile)
-		// protected.GET("/deleteaccount", s.Handlers.User.PermanentlyDeleteUser)
-		// protected.POST("/updateuser", s.Handlers.User.UpdateUser)
+		protected.DELETE("/deleteaccount", s.HandlerRegistry.User.PermanentlyDeleteUser)
 	}
-
-	// TODO: add admin routes
 }
 
 // Run starts the API server and listens for incoming requests.
