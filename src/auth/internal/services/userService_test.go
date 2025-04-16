@@ -76,8 +76,7 @@ func TestUserService_RegisterUser(t *testing.T) {
 	// Can register with a valid User value
 	t.Run("valid user", func(t *testing.T) {
 		email := "testUserServiceRegisterUser@test.com"
-		password := testutils.TestingPassword
-		err := us.RegisterUser(email, password)
+		err := us.RegisterUser(email, testutils.TestingPassword)
 		is.NoErr(err)
 
 		// Check user actually exists in db
@@ -109,10 +108,9 @@ func TestUserService_UpdateUser(t *testing.T) {
 	t.Run("can update user", func(t *testing.T) {
 		// Register a user to update
 		email := "testUpdateUser@test.com"
-		password := testutils.TestingPassword
 		us := setupUserService(t)
 
-		err := us.RegisterUser(email, password)
+		err := us.RegisterUser(email, testutils.TestingPassword)
 		is.NoErr(err)
 
 		// Update user
@@ -122,7 +120,7 @@ func TestUserService_UpdateUser(t *testing.T) {
 		is.NoErr(result.Error)
 		err = us.UpdateUser(user.ID.String(), map[string]any{
 			"email":                 "newUserName@test.com",
-			"password":              "new" + password,
+			"password":              "new" + testutils.TestingPassword,
 			"last_login":            referenceTime,
 			"failed_login_attempts": 99,
 			"account_locked":        true,
@@ -139,7 +137,7 @@ func TestUserService_UpdateUser(t *testing.T) {
 		t.Run("updates password", func(t *testing.T) {
 			err := bcrypt.CompareHashAndPassword(
 				[]byte(updatedUser.Password),
-				[]byte("new"+password),
+				[]byte("new"+testutils.TestingPassword),
 			)
 			is.NoErr(err)
 		})
@@ -164,7 +162,6 @@ func TestUserService_LoginUser(t *testing.T) {
 	is := is.New(t)
 
 	email := "testUserServiceLoginUser@test.com"
-	password := testutils.TestingPassword
 
 	t.Run("non existing user", func(t *testing.T) {
 		us := setupUserService(t)
@@ -186,7 +183,7 @@ func TestUserService_LoginUser(t *testing.T) {
 
 	t.Run("invalid password", func(t *testing.T) {
 		us := setupUserService(t)
-		err := us.RegisterUser(email, password)
+		err := us.RegisterUser(email, testutils.TestingPassword)
 		is.NoErr(err)
 		_, err = us.LoginUser(email, "thisIsNotThePassword")
 		is.Equal(err, apperrors.ErrInvalidLogin)
@@ -194,9 +191,9 @@ func TestUserService_LoginUser(t *testing.T) {
 
 	t.Run("valid login", func(t *testing.T) {
 		us := setupUserService(t)
-		err := us.RegisterUser(email, password)
+		err := us.RegisterUser(email, testutils.TestingPassword)
 		is.NoErr(err)
-		token, err := us.LoginUser(email, password)
+		token, err := us.LoginUser(email, testutils.TestingPassword)
 		is.NoErr(err)
 		is.True(token != "")
 	})
@@ -204,13 +201,13 @@ func TestUserService_LoginUser(t *testing.T) {
 	// Generated token has claims that match user email/password
 	t.Run("expected token claims", func(t *testing.T) {
 		us := setupUserService(t)
-		err := us.RegisterUser(email, password)
+		err := us.RegisterUser(email, testutils.TestingPassword)
 		is.NoErr(err)
 
 		// Track current time for later comparison
 		loginTime := time.Now()
 		// Login user and get generated token
-		token, err := us.LoginUser(email, password)
+		token, err := us.LoginUser(email, testutils.TestingPassword)
 		is.NoErr(err)
 
 		// Parse the token and get the claims
@@ -247,7 +244,7 @@ func TestUserService_LoginUser(t *testing.T) {
 		us := setupUserService(t)
 
 		// Register user
-		err := us.RegisterUser(email, password)
+		err := us.RegisterUser(email, testutils.TestingPassword)
 		is.NoErr(err)
 
 		// Get registered user
@@ -258,14 +255,14 @@ func TestUserService_LoginUser(t *testing.T) {
 		us.UserRepo.LockAccount(user.ID.String())
 
 		// Attempt locked-account login
-		_, err = us.LoginUser(email, password)
+		_, err = us.LoginUser(email, testutils.TestingPassword)
 		is.Equal(err, apperrors.ErrAccountIsLocked)
 	})
 
 	t.Run("locks account after max attempts", func(t *testing.T) {
 		us := setupUserService(t)
 		// Register user
-		err := us.RegisterUser(email, password)
+		err := us.RegisterUser(email, testutils.TestingPassword)
 		is.NoErr(err)
 
 		// Get registered user
@@ -281,7 +278,7 @@ func TestUserService_LoginUser(t *testing.T) {
 		is.Equal(err, apperrors.ErrInvalidLogin)
 
 		// Attempt subsequent login, expecting locked account
-		_, err = us.LoginUser(email, password)
+		_, err = us.LoginUser(email, testutils.TestingPassword)
 		is.Equal(err, apperrors.ErrAccountIsLocked)
 	})
 }
@@ -299,10 +296,9 @@ func TestUserService_Logout(t *testing.T) {
 	t.Run("invalidates a token", func(t *testing.T) {
 		// Register and login a user
 		email := "testUserServiceLogout@test.com"
-		password := testutils.TestingPassword
-		err := us.RegisterUser(email, password)
+		err := us.RegisterUser(email, testutils.TestingPassword)
 		is.NoErr(err)
-		token, err := us.LoginUser(email, password)
+		token, err := us.LoginUser(email, testutils.TestingPassword)
 		is.NoErr(err)
 		is.NoErr(err)
 
@@ -330,8 +326,7 @@ func TestUserService_LogoutEverywhere(t *testing.T) {
 	t.Run("invalidates all user's tokens", func(t *testing.T) {
 		// Register a user
 		email := "testUserServiceLogout@test.com"
-		password := testutils.TestingPassword
-		err := us.RegisterUser(email, password)
+		err := us.RegisterUser(email, testutils.TestingPassword)
 		is.NoErr(err)
 		// Get user ID
 		user, err := us.UserRepo.GetUserByEmail(email)
@@ -339,7 +334,7 @@ func TestUserService_LogoutEverywhere(t *testing.T) {
 		// Login user multiple times
 		tokens := []string{}
 		for range 10 {
-			token, err := us.LoginUser(email, password)
+			token, err := us.LoginUser(email, testutils.TestingPassword)
 			is.NoErr(err)
 			tokens = append(tokens, token)
 		}
@@ -375,8 +370,7 @@ func TestUserService_PermanentlyDeleteUser(t *testing.T) {
 	t.Run("existing user", func(t *testing.T) {
 		// Register a test user
 		email := "testUserServicePermanentlyDeleteUser@test.com"
-		password := testutils.TestingPassword
-		err := us.RegisterUser(email, password)
+		err := us.RegisterUser(email, testutils.TestingPassword)
 		is.NoErr(err)
 		// Get user ID
 		user, err := us.UserRepo.GetUserByEmail(email)

@@ -71,6 +71,7 @@ func (s *APIServer) SetupRoutes() {
 	protected.Use(s.MiddlewareProvider.Auth.RequireAuth())
 	{
 		protected.POST("/logouteverywhere", s.HandlerRegistry.User.LogoutEverywhere)
+		protected.POST("/updateuser", s.HandlerRegistry.User.UpdateUser)
 		protected.DELETE("/deleteaccount", s.HandlerRegistry.User.PermanentlyDeleteUser)
 	}
 }

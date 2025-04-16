@@ -166,6 +166,69 @@ func (uh *UserHandler) LogoutEverywhere(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "logged out everywhere"})
 }
 
+func (uh *UserHandler) UpdateUser(c *gin.Context) {
+	clientIP := c.ClientIP()
+
+	userIDStr, exists := c.Get("userID")
+	if !exists {
+		log.Info().
+			Str("clientIP", clientIP).
+			Msg("userID not found in cookie")
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{})
+		return
+	}
+	userID := userIDStr.(string)
+
+	// Only accept email or password
+	var body struct {
+		Email    string `json:"email,omitempty" binding:"omitempty,email"`
+		Password string `json:"password,omitempty" binding:"omitempty,min=8"`
+	}
+
+	if err := c.ShouldBindJSON(&body); err != nil {
+		log.Info().
+			Str("email", body.Email).
+			Str("clientIP", clientIP).
+			Str("error", err.Error()).
+			Msg("Bad user registration request")
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	requestData := make(map[string]any)
+	if body.Email != "" {
+		requestData["email"] = body.Email
+	}
+	if body.Password != "" {
+		requestData["password"] = body.Password
+	}
+
+	if len(requestData) == 0 {
+		log.Info().
+			Str("email", body.Email).
+			Str("clientIP", clientIP).
+			Msg("attempt to update user with empty value")
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "no valid fields provided"})
+		return
+	}
+
+	if err := uh.UserService.UpdateUser(userID, requestData); err != nil {
+		log.Error().
+			Str("email", body.Email).
+			Str("clientIP", clientIP).
+			Str("error", err.Error()).
+			Msg("failed to update user")
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	log.Info().
+		Str("email", body.Email).
+		Str("clientIP", clientIP).
+		Msg("successfully updated user")
+	c.JSON(http.StatusOK, gin.H{"message": "user updated"})
+}
+
 func (uh *UserHandler) PermanentlyDeleteUser(c *gin.Context) {
 	clientIP := c.ClientIP()
 	userIDStr, exists := c.Get("userID")

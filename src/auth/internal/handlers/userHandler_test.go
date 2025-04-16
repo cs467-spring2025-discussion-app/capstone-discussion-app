@@ -44,7 +44,6 @@ func TestUserHandler_RegisterUser(t *testing.T) {
 	is := is.New(t)
 
 	email := "testRegisterUser@test.com"
-	password := testutils.TestingPassword // strong password for validator
 
 	t.Run("no email", func(t *testing.T) {
 		server := setupServer(t)
@@ -52,7 +51,7 @@ func TestUserHandler_RegisterUser(t *testing.T) {
 			server.Router,
 			"POST",
 			"/register",
-			UserCredentialsRequest{Password: password},
+			UserCredentialsRequest{Password: testutils.TestingPassword},
 		)
 		is.NoErr(err)
 		is.Equal(rr.Code, http.StatusBadRequest)
@@ -75,7 +74,7 @@ func TestUserHandler_RegisterUser(t *testing.T) {
 			server.Router,
 			"POST",
 			"/register",
-			UserCredentialsRequest{Email: email, Password: password},
+			UserCredentialsRequest{Email: email, Password: testutils.TestingPassword},
 		)
 		is.NoErr(err)
 		is.Equal(rr.Code, http.StatusOK)
@@ -196,8 +195,7 @@ func TestUserHandler_Logout(t *testing.T) {
 
 	// Register a test user
 	email := "testUserHandlerLogoutUser@test.com"
-	password := testutils.TestingPassword
-	user, err := models.NewUser(email, password)
+	user, err := models.NewUser(email, testutils.TestingPassword)
 	is.NoErr(err)
 	err = server.DB.Create(user).Error
 	is.NoErr(err)
@@ -208,7 +206,7 @@ func TestUserHandler_Logout(t *testing.T) {
 			server.Router,
 			"POST",
 			"/login",
-			UserCredentialsRequest{Email: email, Password: password},
+			UserCredentialsRequest{Email: email, Password: testutils.TestingPassword},
 		)
 		is.NoErr(err)
 
@@ -283,8 +281,7 @@ func TestUserHandler_LogoutEverywhere(t *testing.T) {
 
 	// Register a test user
 	email := "testUserHandlerLogoutEverywhere@test.com"
-	password := testutils.TestingPassword
-	user, err := models.NewUser(email, password)
+	user, err := models.NewUser(email, testutils.TestingPassword)
 	is.NoErr(err)
 	err = server.DB.Create(user).Error
 	is.NoErr(err)
@@ -297,7 +294,7 @@ func TestUserHandler_LogoutEverywhere(t *testing.T) {
 		server.Router,
 		"POST",
 		"/login",
-		UserCredentialsRequest{Email: email, Password: password},
+		UserCredentialsRequest{Email: email, Password: testutils.TestingPassword},
 	)
 	is.NoErr(err)
 	is.Equal(rr.Code, http.StatusOK)
@@ -317,7 +314,7 @@ func TestUserHandler_LogoutEverywhere(t *testing.T) {
 		server.Router,
 		"POST",
 		"/login",
-		UserCredentialsRequest{Email: email, Password: password},
+		UserCredentialsRequest{Email: email, Password: testutils.TestingPassword},
 	)
 	is.NoErr(err)
 	is.Equal(rr.Code, http.StatusOK)
@@ -433,8 +430,7 @@ func TestUserHandler_PermanentlyDeleteUser(t *testing.T) {
 
 	// Register a test user
 	email := "TestUserHandler_PermanentlyDeleteUser@test.com"
-	password := testutils.TestingPassword
-	user, err := models.NewUser(email, password)
+	user, err := models.NewUser(email, testutils.TestingPassword)
 	is.NoErr(err)
 	err = server.DB.Create(user).Error
 	is.NoErr(err)
@@ -493,6 +489,141 @@ func TestUserHandler_PermanentlyDeleteUser(t *testing.T) {
 		var response map[string]any
 		json.Unmarshal(w.Body.Bytes(), &response)
 		is.Equal(0, len(response))
+	})
+}
+
+func TestUserHandler_UpdateUser(t *testing.T) {
+	is := is.New(t)
+	server := setupServer(t)
+
+	// Register a test user
+	email := "testUpdateUser@test.com"
+	user, err := models.NewUser(email, testutils.TestingPassword)
+	is.NoErr(err)
+	err = server.DB.Create(user).Error
+	is.NoErr(err)
+
+	var token string
+
+	// Login test user
+	rr, err := makeRequest(
+		server.Router,
+		"POST",
+		"/login",
+		UserCredentialsRequest{Email: email, Password: testutils.TestingPassword},
+	)
+	is.NoErr(err)
+	is.Equal(rr.Code, http.StatusOK)
+
+	// Get token from cookies
+	cookies := rr.Result().Cookies()
+	for _, cookie := range cookies {
+		if cookie.Name == config.JwtCookieName {
+			token = cookie.Value
+			break
+		}
+	}
+	is.True(token != "")
+
+	t.Run("update email and password", func(t *testing.T) {
+		// Create update request body
+		newEmail := "newemail2@test.com"
+		newPassword := "AnotherSecure" + testutils.TestingPassword
+		updateBody := map[string]string{
+			"email":    newEmail,
+			"password": newPassword,
+		}
+		jsonData, _ := json.Marshal(updateBody)
+		body := bytes.NewBuffer(jsonData)
+
+		// Create request
+		req, err := http.NewRequest("POST", "/updateuser", body)
+		is.NoErr(err)
+		req.Header.Set("Content-Type", "application/json")
+
+		// Get token from cookies
+		cookies := rr.Result().Cookies()
+		for _, cookie := range cookies {
+			if cookie.Name == config.JwtCookieName {
+				token = cookie.Value
+				break
+			}
+		}
+		is.True(token != "")
+
+		// Add auth cookie to update request
+		req.AddCookie(&http.Cookie{
+			Name:     config.JwtCookieName,
+			Value:    token,
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   true,
+		})
+
+		// Make request
+		w := httptest.NewRecorder()
+		server.Router.ServeHTTP(w, req)
+		is.Equal(w.Code, http.StatusOK)
+
+		// Check we can login with the new credentials
+		rr, err = makeRequest(
+			server.Router,
+			"POST",
+			"/login",
+			UserCredentialsRequest{Email: newEmail, Password: newPassword},
+		)
+		is.NoErr(err)
+		is.Equal(rr.Code, http.StatusOK)
+	})
+
+	t.Run("update with empty request", func(t *testing.T) {
+		// Create empty request body
+		updateBody := map[string]string{}
+		jsonData, _ := json.Marshal(updateBody)
+		body := bytes.NewBuffer(jsonData)
+
+		// Create request
+		req, err := http.NewRequest("POST", "/updateuser", body)
+		is.NoErr(err)
+		req.Header.Set("Content-Type", "application/json")
+
+		// Add auth cookie
+		req.AddCookie(&http.Cookie{
+			Name:     config.JwtCookieName,
+			Value:    token,
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   true,
+		})
+
+		// Make request
+		w := httptest.NewRecorder()
+		server.Router.ServeHTTP(w, req)
+		is.Equal(w.Code, http.StatusBadRequest)
+
+		var response map[string]string
+		err = json.NewDecoder(w.Body).Decode(&response)
+		is.NoErr(err)
+		is.Equal(response["error"], "no valid fields provided")
+	})
+
+	t.Run("update without auth", func(t *testing.T) {
+		// Create request body
+		updateBody := map[string]string{
+			"email": "valid@email.com",
+		}
+		jsonData, _ := json.Marshal(updateBody)
+		body := bytes.NewBuffer(jsonData)
+
+		// Create request
+		req, err := http.NewRequest("POST", "/updateuser", body)
+		is.NoErr(err)
+		req.Header.Set("Content-Type", "application/json")
+
+		// Make request
+		w := httptest.NewRecorder()
+		server.Router.ServeHTTP(w, req)
+		is.Equal(w.Code, http.StatusUnauthorized)
 	})
 }
 
