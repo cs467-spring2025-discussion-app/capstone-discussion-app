@@ -36,7 +36,7 @@ Cookie: {{login.response.headers.Set-Cookie}}
 ###
 
 # @name permanently delete user
-GET http://localhost:3001/deleteaccount
+DELETE http://localhost:3001/deleteaccount
 Cookie: {{login.response.headers.Set-Cookie}}
 
 ###
