@@ -70,6 +70,7 @@ func (s *APIServer) SetupRoutes() {
 	protected := r.Group("")
 	protected.Use(s.MiddlewareProvider.Auth.RequireAuth())
 	{
+		protected.GET("/profile", s.HandlerRegistry.User.GetUserProfile)
 		protected.POST("/logouteverywhere", s.HandlerRegistry.User.LogoutEverywhere)
 		protected.POST("/updateuser", s.HandlerRegistry.User.UpdateUser)
 		protected.DELETE("/deleteaccount", s.HandlerRegistry.User.PermanentlyDeleteUser)

@@ -86,6 +86,39 @@ func TestUserService_RegisterUser(t *testing.T) {
 	})
 }
 
+func TestUserService_GetUserProfile(t *testing.T) {
+	is := is.New(t)
+
+	us := setupUserService(t)
+
+	// Create test user
+	email := "testUserServiceGetUserProfile@test.com"
+	user := &models.User{
+		Email: email, Password: testutils.TestingPassword,
+	}
+	err := us.UserRepo.RegisterUser(user)
+	is.NoErr(err)
+
+	t.Run("empty userID", func(t *testing.T) {
+		userProfile, err := us.GetUserProfile("")
+		is.Equal(err, apperrors.ErrUserIdEmpty)
+		is.Equal(userProfile, nil)
+	})
+
+	t.Run("non-existent user", func(t *testing.T) {
+		randomUUID := uuid.New()
+		userProfile, err := us.GetUserProfile(randomUUID.String())
+		is.True(err == gorm.ErrRecordNotFound)
+		is.True(userProfile == nil)
+	})
+
+	t.Run("existing user", func(t *testing.T) {
+		userProfile, err := us.GetUserProfile(user.ID.String())
+		is.NoErr(err)
+		is.Equal(userProfile.Email, user.Email)
+	})
+}
+
 // TestUserService_UpdateUser test user updates into the database
 func TestUserService_UpdateUser(t *testing.T) {
 	is := is.New(t)

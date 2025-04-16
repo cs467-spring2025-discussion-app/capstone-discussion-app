@@ -53,36 +53,6 @@ func (us *UserService) RegisterUser(email, password string) error {
 	return us.UserRepo.RegisterUser(user)
 }
 
-// UpdateUser mediates the query for an update API request and the update of a user in the database
-func (us *UserService) UpdateUser(userID string, request map[string]any) error {
-	if userID == "" {
-		return apperrors.ErrUserIdEmpty
-	}
-
-	if password, ok := request["password"].(string); ok && password != "" {
-		if err := passwordvalidator.Validate(password, config.MinEntropyBits); err != nil {
-			return err
-		}
-
-		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-		if err != nil {
-			return err
-		}
-		request["password"] = string(hashedPassword)
-	}
-
-	if email, ok := request["email"].(string); ok && email != "" {
-		if _, err := mail.ParseAddress(email); err != nil {
-			return err
-		}
-		if len(email) > 254 {
-			return apperrors.ErrEmailMaxLength
-		}
-	}
-
-	return us.UserRepo.UpdateUser(userID, request)
-}
-
 // LoginUser authenticates a registered user and creates an associated session
 func (us *UserService) LoginUser(email, password string) (string, error) {
 	// Check for empty fields
@@ -166,6 +136,56 @@ func (us *UserService) LogoutEverywhere(userID string) error {
 		return apperrors.ErrUserIdEmpty
 	}
 	return us.SessionRepo.DeleteSessionsByUserID(userID)
+}
+
+
+func (us *UserService) GetUserProfile(userID string) (*models.UserProfile, error) {
+	if userID == "" {
+		return nil, apperrors.ErrUserIdEmpty
+	}
+	user, err := us.UserRepo.GetUserByID(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Why not just return a User object with every other field set to nil?
+	// The User object contains sensitive information like password hash.
+	// Rather than trust ourselves to never expose that, we create a new struct
+	userProfile := &models.UserProfile{
+		Email:     user.Email,
+		LastLogin: user.LastLogin,
+	}
+	return userProfile, nil
+}
+
+// UpdateUser mediates the query for an update API request and the update of a user in the database
+func (us *UserService) UpdateUser(userID string, request map[string]any) error {
+	if userID == "" {
+		return apperrors.ErrUserIdEmpty
+	}
+
+	if password, ok := request["password"].(string); ok && password != "" {
+		if err := passwordvalidator.Validate(password, config.MinEntropyBits); err != nil {
+			return err
+		}
+
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+		if err != nil {
+			return err
+		}
+		request["password"] = string(hashedPassword)
+	}
+
+	if email, ok := request["email"].(string); ok && email != "" {
+		if _, err := mail.ParseAddress(email); err != nil {
+			return err
+		}
+		if len(email) > 254 {
+			return apperrors.ErrEmailMaxLength
+		}
+	}
+
+	return us.UserRepo.UpdateUser(userID, request)
 }
 
 // PermanentlyDeleteUser removes the user from the database. This is a permanent operation rather

@@ -166,6 +166,39 @@ func (uh *UserHandler) LogoutEverywhere(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "logged out everywhere"})
 }
 
+func (uh *UserHandler) GetUserProfile(c *gin.Context) {
+	clientIP := c.ClientIP()
+
+	userIDStr, exists := c.Get("userID")
+	if !exists {
+		log.Info().
+			Str("clientIP", clientIP).
+			Msg("userID not found in cookie")
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{})
+		return
+	}
+
+	userID := userIDStr.(string)
+	userProfile, err := uh.UserService.GetUserProfile(userID)
+	if err != nil {
+		log.Info().
+			Str("clientIP", clientIP).
+			Str("error", err.Error()).
+			Msg("failed to get user profile")
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	log.Info().
+		Str("clientIP", clientIP).
+		Msg("user profile request successful")
+
+	c.JSON(http.StatusOK, gin.H{
+		"email":     userProfile.Email,
+		"lastLogin": userProfile.LastLogin,
+	})
+}
+
 func (uh *UserHandler) UpdateUser(c *gin.Context) {
 	clientIP := c.ClientIP()
 
