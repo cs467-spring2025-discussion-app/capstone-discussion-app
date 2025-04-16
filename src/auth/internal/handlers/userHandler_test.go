@@ -276,6 +276,155 @@ func TestUserHandler_Logout(t *testing.T) {
 	})
 }
 
+func TestUserHandler_LogoutEverywhere(t *testing.T) {
+	is := is.New(t)
+	server := setupServer(t)
+
+	// Register a test user
+	email := "testUserHandlerLogoutEverywhere@test.com"
+	password := testutils.TestingPassword
+	user, err := models.NewUser(email, password)
+	is.NoErr(err)
+	err = server.DB.Create(user).Error
+	is.NoErr(err)
+
+	var firstToken string
+	var secondToken string
+
+	// Login on one "device"
+	rr, err := makeRequest(
+		server.Router,
+		"POST",
+		"/login",
+		UserCredentialsRequest{Email: email, Password: password},
+	)
+	is.NoErr(err)
+	is.Equal(rr.Code, http.StatusOK)
+
+	// Get token from cookies
+	cookies := rr.Result().Cookies()
+	for _, cookie := range cookies {
+		if cookie.Name == config.JwtCookieName {
+			firstToken = cookie.Value
+			break
+		}
+	}
+	is.True(firstToken != "")
+
+	// Login on another "device"
+	rr, err = makeRequest(
+		server.Router,
+		"POST",
+		"/login",
+		UserCredentialsRequest{Email: email, Password: password},
+	)
+	is.NoErr(err)
+	is.Equal(rr.Code, http.StatusOK)
+
+	// Get token from cookies
+	cookies = rr.Result().Cookies()
+	for _, cookie := range cookies {
+		if cookie.Name == config.JwtCookieName {
+			secondToken = cookie.Value
+			break
+		}
+	}
+	is.True(secondToken != "")
+	is.True(firstToken != secondToken)
+
+	t.Run("successfully logout everywhere", func(t *testing.T) {
+		req, err := http.NewRequest("POST", "/logouteverywhere", nil)
+		is.NoErr(err)
+
+		// Add auth cookie
+		req.AddCookie(&http.Cookie{
+			Name:     config.JwtCookieName,
+			Value:    firstToken,
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   true,
+		})
+
+		// Logout everywhere
+		w := httptest.NewRecorder()
+		server.Router.ServeHTTP(w, req)
+		is.Equal(w.Code, http.StatusOK)
+
+		// Cookie is cleared
+		var clearedCookie *http.Cookie
+		for _, cookie := range w.Result().Cookies() {
+			if cookie.Name == config.JwtCookieName {
+				clearedCookie = cookie
+				break
+			}
+		}
+		is.True(clearedCookie != nil)
+		is.Equal(clearedCookie.MaxAge, -1) // Cookie should be expired
+
+		// Verify response body
+		var response map[string]string
+		err = json.NewDecoder(w.Body).Decode(&response)
+		is.NoErr(err)
+		is.Equal(response["message"], "logged out everywhere")
+
+		// Check first token is invalidated
+		req, err = http.NewRequest("POST", "/logouteverywhere", nil)
+		is.NoErr(err)
+		req.AddCookie(&http.Cookie{
+			Name:     config.JwtCookieName,
+			Value:    firstToken,
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   true,
+		})
+		w = httptest.NewRecorder()
+		server.Router.ServeHTTP(w, req)
+		is.Equal(w.Code, http.StatusUnauthorized)
+
+		// Check second token is invalidated
+		req, err = http.NewRequest("POST", "/logouteverywhere", nil)
+		is.NoErr(err)
+		req.AddCookie(&http.Cookie{
+			Name:     config.JwtCookieName,
+			Value:    secondToken,
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   true,
+		})
+		w = httptest.NewRecorder()
+		server.Router.ServeHTTP(w, req)
+		is.Equal(w.Code, http.StatusUnauthorized)
+	})
+
+	t.Run("logout everywhere without token", func(t *testing.T) {
+		req, err := http.NewRequest("POST", "/logouteverywhere", nil)
+		is.NoErr(err)
+
+		w := httptest.NewRecorder()
+		server.Router.ServeHTTP(w, req)
+
+		is.Equal(w.Code, http.StatusUnauthorized)
+	})
+
+	t.Run("logout everywhere with invalid token", func(t *testing.T) {
+		req, err := http.NewRequest("POST", "/logouteverywhere", nil)
+		is.NoErr(err)
+
+		req.AddCookie(&http.Cookie{
+			Name:     config.JwtCookieName,
+			Value:    "invalid-token",
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   true,
+		})
+
+		w := httptest.NewRecorder()
+		server.Router.ServeHTTP(w, req)
+
+		is.Equal(w.Code, http.StatusUnauthorized)
+	})
+}
+
 func setupUserHandler(t *testing.T) *handlers.UserHandler {
 	t.Helper()
 
