@@ -9,6 +9,7 @@ import (
 
 	"godiscauth/internal/services"
 	"godiscauth/pkg/apperrors"
+	"godiscauth/pkg/config"
 )
 
 type UserHandler struct {
@@ -50,7 +51,6 @@ func (uh *UserHandler) RegisterUser(c *gin.Context) {
 			Str("error", err.Error()).
 			Msg("User registration failed")
 
-
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -62,4 +62,49 @@ func (uh *UserHandler) RegisterUser(c *gin.Context) {
 		Msg("User registration success")
 
 	c.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("User %s created", body.Email)})
+}
+
+func (uh *UserHandler) Login(c *gin.Context) {
+	var body struct {
+		Email    string `json:"email" binding:"required"`
+		Password string `json:"password" binding:"required"`
+	}
+
+	clientIP := c.ClientIP()
+
+	// Expect both email and password
+	if err := c.ShouldBindJSON(&body); err != nil {
+		log.Info().
+			Str("email", body.Email).
+			Str("clientIP", clientIP).
+			Str("error", err.Error()).
+			Msg("Bad user registration request")
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Attempt login
+	tokenString, err := uh.UserService.LoginUser(body.Email, body.Password)
+	if err != nil {
+		log.Info().
+			Str("email", body.Email).
+			Str("clientIP", clientIP).
+			Str("error", err.Error()).
+			Msg("Login failed")
+
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Set session cookie
+	c.SetSameSite(http.SameSiteLaxMode)
+	c.SetCookie(config.JwtCookieName, tokenString, config.TokenExpiration, "", "", true, true)
+
+	log.Info().
+		Str("email", body.Email).
+		Str("clientIP", clientIP).
+		Msg("login success")
+	c.JSON(http.StatusOK, gin.H{
+		"message": "login success",
+	})
 }
