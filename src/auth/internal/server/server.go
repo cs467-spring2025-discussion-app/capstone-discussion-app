@@ -14,7 +14,7 @@ import (
 
 // APIServer represents the API server with a gin router.
 type APIServer struct {
-	Database *gorm.DB
+	DB *gorm.DB
 	Router   *gin.Engine
 	Handlers *HandlerRegistry
 	// TODO: middleware
@@ -45,7 +45,7 @@ func NewAPIServer(db *gorm.DB) (*APIServer, error) {
 	router.SetTrustedProxies([]string{"127.0.0.1"})
 
 	server := &APIServer{
-		Database: db,
+		DB: db,
 		Router:   router,
 		Handlers: handlers,
 	}
