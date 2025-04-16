@@ -189,6 +189,93 @@ func TestUserHandler_Login(t *testing.T) {
 	})
 }
 
+func TestUserHandler_Logout(t *testing.T) {
+	is := is.New(t)
+	server := setupServer(t)
+
+	// Register a test user
+	email := "testUserHandlerLogoutUser@test.com"
+	password := testutils.TestingPassword
+	user, err := models.NewUser(email, password)
+	is.NoErr(err)
+	err = server.DB.Create(user).Error
+	is.NoErr(err)
+
+	t.Run("valid token", func(t *testing.T) {
+		// Login test user
+		loginRR, err := makeRequest(
+			server.Router,
+			"POST",
+			"/login",
+			UserCredentialsRequest{Email: email, Password: password},
+		)
+		is.NoErr(err)
+
+		// Get cookie
+		var jwtCookie *http.Cookie
+		for _, cookie := range loginRR.Result().Cookies() {
+			if cookie.Name == config.JwtCookieName {
+				jwtCookie = cookie
+				break
+			}
+		}
+		is.True(jwtCookie != nil)
+
+		// Logout
+		req, err := http.NewRequest("POST", "/logout", nil)
+		is.NoErr(err)
+		req.AddCookie(jwtCookie)
+		w := httptest.NewRecorder()
+		server.Router.ServeHTTP(w, req)
+		is.Equal(w.Code, http.StatusOK)
+
+		// Check cookie is cleared
+		var logoutCookie *http.Cookie
+		for _, cookie := range w.Result().Cookies() {
+			if cookie.Name == config.JwtCookieName {
+				logoutCookie = cookie
+				break
+			}
+		}
+		is.True(logoutCookie != nil)
+		is.Equal(logoutCookie.MaxAge, -1)
+
+		// Check response message
+		var response map[string]string
+		err = json.NewDecoder(w.Body).Decode(&response)
+		is.NoErr(err)
+		is.Equal(response["message"], "logged out successfully")
+	})
+
+	t.Run("no token", func(t *testing.T) {
+		req, err := http.NewRequest("POST", "/logout", nil)
+		is.NoErr(err)
+		w := httptest.NewRecorder()
+		server.Router.ServeHTTP(w, req)
+		is.Equal(w.Code, http.StatusBadRequest)
+	})
+
+	t.Run("invalid token", func(t *testing.T) {
+		req, err := http.NewRequest("POST", "/logout", nil)
+		is.NoErr(err)
+
+		// Create an invalid cookie
+		invalidCookie := &http.Cookie{
+			Name:     config.JwtCookieName,
+			Value:    "invalid-token",
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   true,
+		}
+		req.AddCookie(invalidCookie)
+
+		// Perform request
+		w := httptest.NewRecorder()
+		server.Router.ServeHTTP(w, req)
+		is.Equal(w.Code, http.StatusInternalServerError)
+	})
+}
+
 func setupUserHandler(t *testing.T) *handlers.UserHandler {
 	t.Helper()
 
