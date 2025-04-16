@@ -76,9 +76,9 @@ func TestUserHandler_RegisterUser(t *testing.T) {
 		is.NoErr(err)
 		is.Equal(rr.Code, http.StatusOK)
 
-		// Check user is actually in database
+	// Check user is actually in database
 		var user models.User
-		result := server.Handlers.User.UserService.UserRepo.DB.First(&user, "email = ?", email)
+		result := server.Database.First(&user, "email = ?", email)
 		is.NoErr(result.Error)
 		is.Equal(user.Email, email)
 	})
