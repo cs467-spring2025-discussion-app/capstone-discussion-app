@@ -6,13 +6,16 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 
+	"godiscauth/internal/handlers"
+	"godiscauth/internal/repository"
+	"godiscauth/internal/services"
 	"godiscauth/pkg/apperrors"
 )
 
 // APIServer represents the API server with a gin router.
 type APIServer struct {
-	Router *gin.Engine
-	// TODO: handlers
+	Router   *gin.Engine
+	Handlers *HandlerRegistry
 	// TODO: middleware
 }
 
@@ -22,13 +25,27 @@ func NewAPIServer(db *gorm.DB) (*APIServer, error) {
 		return nil, apperrors.ErrDatabaseIsNil
 	}
 
+	repos, err := initRepoProvider(db)
+	if err != nil {
+		return nil, apperrors.ErrCouldNotInitRepoProvider
+	}
+	services, err := initServiceProvider(repos)
+	if err != nil {
+		return nil, apperrors.ErrCouldNotInitServiceProvider
+	}
+	handlers, err := initHandlerRegistry(services)
+	if err != nil {
+		return nil, apperrors.ErrCouldNotInitHandlerRegistry
+	}
+
 	router := gin.New()
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
 	router.SetTrustedProxies([]string{"127.0.0.1"})
 
 	server := &APIServer{
-		Router: router,
+		Router:   router,
+		Handlers: handlers,
 	}
 	return server, nil
 }
@@ -37,6 +54,8 @@ func NewAPIServer(db *gorm.DB) (*APIServer, error) {
 func (s *APIServer) SetupRoutes() {
 	r := s.Router
 	r.GET("/ping", func(c *gin.Context) { c.String(http.StatusOK, "pong") })
+
+	r.POST("/register", s.Handlers.User.RegisterUser)
 
 	// TODO: add protected (requireAuth)routes
 
@@ -47,4 +66,58 @@ func (s *APIServer) SetupRoutes() {
 func (s *APIServer) Run() {
 	s.SetupRoutes()
 	s.Router.Run()
+}
+
+func initRepoProvider(db *gorm.DB) (*RepoProvider, error) {
+	if db == nil {
+		return nil, apperrors.ErrDatabaseIsNil
+	}
+	ur, _ := repository.NewUserRepository(db)
+	if ur == nil {
+		return nil, apperrors.ErrUserRepoIsNil
+	}
+	sr, _ := repository.NewSessionRepository(db)
+	if sr == nil {
+		return nil, apperrors.ErrSessionRepoIsNil
+	}
+	return &RepoProvider{
+		User:    ur,
+		Session: sr,
+	}, nil
+}
+
+func initServiceProvider(repos *RepoProvider) (*Services, error) {
+	if repos == nil {
+		return nil, apperrors.ErrRepoProviderIsNil
+	}
+	us, _ := services.NewUserService(repos.User, repos.Session)
+	if us == nil {
+		return nil, apperrors.ErrUserServiceIsNil
+	}
+	return &Services{
+		User: us,
+	}, nil
+}
+
+func initHandlerRegistry(services *Services) (*HandlerRegistry, error) {
+	uh, _ := handlers.NewUserHandler(services.User)
+	if uh == nil {
+		return nil, apperrors.ErrUserHandlerIsNil
+	}
+	return &HandlerRegistry{
+		User: uh,
+	}, nil
+}
+
+type RepoProvider struct {
+	User    *repository.UserRepository
+	Session *repository.SessionRepository
+}
+
+type Services struct {
+	User *services.UserService
+}
+
+type HandlerRegistry struct {
+	User *handlers.UserHandler
 }
