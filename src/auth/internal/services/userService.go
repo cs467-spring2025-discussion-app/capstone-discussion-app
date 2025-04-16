@@ -183,3 +183,46 @@ func (us *UserService) PermanentlyDeleteUser(userID string) error {
 	}
 	return nil
 }
+
+// RotateSession generates a new JWT token for the user and invalidates the old one
+// RotateSession creates a new session and replaces the old one
+func (us *UserService) RotateSession(oldToken string) (string, error) {
+	// Check session exists
+	oldSession, err := us.SessionRepo.GetUnexpiredSessionByToken(oldToken)
+	if err != nil {
+		return "", err
+	}
+
+	// Generate new JWT token with same claims
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"sub": oldSession.UserID.String(),
+		"exp": time.Now().Add(time.Duration(config.TokenExpiration) * time.Second).Unix(),
+		"jti": uuid.New().String(), // JWT ID - making the token unique
+	})
+	newToken, err := token.SignedString([]byte(os.Getenv(config.JwtCookieName)))
+	if err != nil {
+		return "", apperrors.ErrTokenGeneration
+	}
+
+	// Create new session with the new token and expiration time
+	expiresAt := time.Now().Add(time.Duration(config.TokenExpiration) * time.Second)
+	newSession, err := models.NewSession(oldSession.UserID, newToken, expiresAt)
+	if err != nil {
+		return "", err
+	}
+
+	// Use the existing database connection/transaction from the repository
+	db := us.SessionRepo.DB
+
+	// Insert new session into the database
+	if err := db.Create(newSession).Error; err != nil {
+		return "", err
+	}
+
+	// Delete old session
+	if err := db.Where("token = ?", oldToken).Delete(&models.Session{}).Error; err != nil {
+		return "", err
+	}
+
+	return newToken, nil
+}
