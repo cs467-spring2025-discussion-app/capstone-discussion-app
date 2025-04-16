@@ -41,9 +41,4 @@ var (
 
 	ErrCouldNotIncrementFailedLogins = New("Could not increment users.failed_login_attempts")
 	ErrCouldNotUpdateUser            = New("Tried to update user but no changes were made")
-
-	// Server init errors
-	ErrCouldNotInitRepoProvider    = New("Could not initialize RepoProvider")
-	ErrCouldNotInitServiceProvider = New("Could not initialize ServiceProvider")
-	ErrCouldNotInitHandlerRegistry = New("Could not initialize HandlerRegistry")
 )

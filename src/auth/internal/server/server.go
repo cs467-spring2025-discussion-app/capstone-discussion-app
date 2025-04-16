@@ -26,17 +26,17 @@ func NewAPIServer(db *gorm.DB) (*APIServer, error) {
 		return nil, apperrors.ErrDatabaseIsNil
 	}
 
-	repos, err := initRepoProvider(db)
+	repos, err := NewRepoProvider(db)
 	if err != nil {
-		return nil, apperrors.ErrCouldNotInitRepoProvider
+		return nil, err
 	}
-	services, err := initServiceProvider(repos)
+	services, err := NewServiceProvider(repos)
 	if err != nil {
-		return nil, apperrors.ErrCouldNotInitServiceProvider
+		return nil, err
 	}
-	handlers, err := initHandlerRegistry(services)
+	handlers, err := NewHandlerRegistry(services)
 	if err != nil {
-		return nil, apperrors.ErrCouldNotInitHandlerRegistry
+		return nil, err
 	}
 
 	router := gin.New()
@@ -70,17 +70,17 @@ func (s *APIServer) Run() {
 	s.Router.Run()
 }
 
-func initRepoProvider(db *gorm.DB) (*RepoProvider, error) {
+func NewRepoProvider(db *gorm.DB) (*RepoProvider, error) {
 	if db == nil {
 		return nil, apperrors.ErrDatabaseIsNil
 	}
-	ur, _ := repository.NewUserRepository(db)
-	if ur == nil {
-		return nil, apperrors.ErrUserRepoIsNil
+	ur, err := repository.NewUserRepository(db)
+	if err != nil {
+		return nil, err
 	}
-	sr, _ := repository.NewSessionRepository(db)
-	if sr == nil {
-		return nil, apperrors.ErrSessionRepoIsNil
+	sr, err := repository.NewSessionRepository(db)
+	if err != nil {
+		return nil, err
 	}
 	return &RepoProvider{
 		User:    ur,
@@ -88,23 +88,23 @@ func initRepoProvider(db *gorm.DB) (*RepoProvider, error) {
 	}, nil
 }
 
-func initServiceProvider(repos *RepoProvider) (*Services, error) {
+func NewServiceProvider(repos *RepoProvider) (*ServiceProvider, error) {
 	if repos == nil {
 		return nil, apperrors.ErrRepoProviderIsNil
 	}
-	us, _ := services.NewUserService(repos.User, repos.Session)
-	if us == nil {
-		return nil, apperrors.ErrUserServiceIsNil
+	us, err := services.NewUserService(repos.User, repos.Session)
+	if err != nil {
+		return nil, err
 	}
-	return &Services{
+	return &ServiceProvider{
 		User: us,
 	}, nil
 }
 
-func initHandlerRegistry(services *Services) (*HandlerRegistry, error) {
-	uh, _ := handlers.NewUserHandler(services.User)
-	if uh == nil {
-		return nil, apperrors.ErrUserHandlerIsNil
+func NewHandlerRegistry(services *ServiceProvider) (*HandlerRegistry, error) {
+	uh, err := handlers.NewUserHandler(services.User)
+	if err != nil {
+		return nil, err
 	}
 	return &HandlerRegistry{
 		User: uh,
@@ -116,7 +116,7 @@ type RepoProvider struct {
 	Session *repository.SessionRepository
 }
 
-type Services struct {
+type ServiceProvider struct {
 	User *services.UserService
 }
 
