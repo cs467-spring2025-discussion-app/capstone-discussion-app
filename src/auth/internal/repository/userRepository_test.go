@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/matryer/is"
+	"gorm.io/gorm"
 
 	"godiscauth/internal/models"
 	"godiscauth/internal/repository"
@@ -120,7 +121,7 @@ func TestUserRepository_GetUserByEmail(t *testing.T) {
 
 		dbUser, err := ur.GetUserByEmail("doesNotExist@test.com")
 		is.Equal(dbUser, nil)
-		is.Equal(err, apperrors.ErrUserNotFound)
+		is.Equal(err, gorm.ErrRecordNotFound)
 	})
 
 	// Success on existing-user lookup
@@ -176,7 +177,7 @@ func TestUserRepository_GetUserByID(t *testing.T) {
 
 		dbUser, err := ur.GetUserByID(randUUID.String())
 		is.Equal(dbUser, nil)
-		is.Equal(err, apperrors.ErrUserNotFound)
+		is.Equal(err, gorm.ErrRecordNotFound)
 	})
 
 	// Success on existing-user lookup
@@ -231,7 +232,7 @@ func TestUserRepository_PermanentlyDeleteUser(t *testing.T) {
 		// Confirm user is no longer in the database
 		user, err = ur.GetUserByEmail(email)
 		is.Equal(user, nil)
-		is.Equal(err, apperrors.ErrUserNotFound)
+		is.Equal(err, gorm.ErrRecordNotFound)
 	})
 }
 

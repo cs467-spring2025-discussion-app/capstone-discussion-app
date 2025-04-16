@@ -169,7 +169,7 @@ func TestUserService_LoginUser(t *testing.T) {
 	t.Run("non existing user", func(t *testing.T) {
 		us := setupUserService(t)
 		_, err := us.LoginUser("doesNotExist@test.com", "password")
-		is.Equal(err, apperrors.ErrUserNotFound)
+		is.Equal(err, gorm.ErrRecordNotFound)
 	})
 
 	t.Run("empty email", func(t *testing.T) {
@@ -387,7 +387,7 @@ func TestUserService_PermanentlyDeleteUser(t *testing.T) {
 		// Confirm user no longer exists in db
 		user, err = us.UserRepo.GetUserByEmail(email)
 		is.Equal(user, nil)
-		is.Equal(err, apperrors.ErrUserNotFound)
+		is.Equal(err, gorm.ErrRecordNotFound)
 	})
 }
 

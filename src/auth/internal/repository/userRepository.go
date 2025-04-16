@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"errors"
 	"strings"
 	"time"
 
@@ -57,9 +56,6 @@ func (r *UserRepository) GetUserByEmail(email string) (*models.User, error) {
 
 	result := r.DB.First(&user, "email = ?", email)
 	if result.Error != nil {
-		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return nil, apperrors.ErrUserNotFound
-		}
 		return nil, result.Error
 	}
 
@@ -80,9 +76,6 @@ func (r *UserRepository) GetUserByID(userID string) (*models.User, error) {
 
 	result := r.DB.First(&user, "id = ?", id)
 	if result.Error != nil {
-		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return nil, apperrors.ErrUserNotFound
-		}
 		return nil, result.Error
 	}
 
