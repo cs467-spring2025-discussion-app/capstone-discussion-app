@@ -7,6 +7,7 @@ import (
 	"gorm.io/gorm"
 
 	"godiscauth/internal/handlers"
+	"godiscauth/internal/middleware"
 	"godiscauth/internal/repository"
 	"godiscauth/internal/services"
 	"godiscauth/pkg/apperrors"
@@ -14,10 +15,10 @@ import (
 
 // APIServer represents the API server with a gin router.
 type APIServer struct {
-	DB *gorm.DB
-	Router   *gin.Engine
-	Handlers *HandlerRegistry
-	// TODO: middleware
+	DB                 *gorm.DB
+	Router             *gin.Engine
+	HandlerRegistry    *HandlerRegistry
+	MiddlewareProvider *MiddlewareProvider
 }
 
 // NewAPIServer initializes a new API server with the gin engine as the router.
@@ -26,15 +27,19 @@ func NewAPIServer(db *gorm.DB) (*APIServer, error) {
 		return nil, apperrors.ErrDatabaseIsNil
 	}
 
-	repos, err := NewRepoProvider(db)
+	repoProvider, err := NewRepoProvider(db)
 	if err != nil {
 		return nil, err
 	}
-	services, err := NewServiceProvider(repos)
+	serviceProvider, err := NewServiceProvider(repoProvider)
 	if err != nil {
 		return nil, err
 	}
-	handlers, err := NewHandlerRegistry(services)
+	HandlerRegistry, err := NewHandlerRegistry(serviceProvider)
+	if err != nil {
+		return nil, err
+	}
+	middlewareProvider, err := NewMiddlewares(db)
 	if err != nil {
 		return nil, err
 	}
@@ -45,9 +50,10 @@ func NewAPIServer(db *gorm.DB) (*APIServer, error) {
 	router.SetTrustedProxies([]string{"127.0.0.1"})
 
 	server := &APIServer{
-		DB: db,
-		Router:   router,
-		Handlers: handlers,
+		DB:                 db,
+		Router:             router,
+		HandlerRegistry:    HandlerRegistry,
+		MiddlewareProvider: middlewareProvider,
 	}
 	return server, nil
 }
@@ -57,11 +63,19 @@ func (s *APIServer) SetupRoutes() {
 	r := s.Router
 	r.GET("/ping", func(c *gin.Context) { c.String(http.StatusOK, "pong") })
 
-	r.POST("/register", s.Handlers.User.RegisterUser)
-	r.POST("/login", s.Handlers.User.Login)
-	r.POST("/logout", s.Handlers.User.Logout)
+	r.POST("/register", s.HandlerRegistry.User.RegisterUser)
+	r.POST("/login", s.HandlerRegistry.User.Login)
+	r.POST("/logout", s.HandlerRegistry.User.Logout)
 
-	// TODO: add protected (requireAuth)routes
+	protected := r.Group("")
+	protected.Use(s.MiddlewareProvider.Auth.RequireAuth())
+	{
+		protected.POST("/logouteverywhere", s.HandlerRegistry.User.LogoutEverywhere)
+		// TODO:
+		// protected.GET("/profile", s.Handlers.User.GetUserProfile)
+		// protected.GET("/deleteaccount", s.Handlers.User.PermanentlyDeleteUser)
+		// protected.POST("/updateuser", s.Handlers.User.UpdateUser)
+	}
 
 	// TODO: add admin routes
 }
@@ -113,6 +127,16 @@ func NewHandlerRegistry(services *ServiceProvider) (*HandlerRegistry, error) {
 	}, nil
 }
 
+func NewMiddlewares(db *gorm.DB) (*MiddlewareProvider, error) {
+	mw, err := middleware.NewAuthMiddleware(db)
+	if err != nil {
+		return nil, err
+	}
+	return &MiddlewareProvider{
+		Auth: mw,
+	}, nil
+}
+
 type RepoProvider struct {
 	User    *repository.UserRepository
 	Session *repository.SessionRepository
@@ -124,4 +148,8 @@ type ServiceProvider struct {
 
 type HandlerRegistry struct {
 	User *handlers.UserHandler
+}
+
+type MiddlewareProvider struct {
+	Auth *middleware.AuthMiddleware
 }

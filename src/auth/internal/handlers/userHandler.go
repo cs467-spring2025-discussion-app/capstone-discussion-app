@@ -137,3 +137,31 @@ func (uh *UserHandler) Logout(c *gin.Context) {
 	c.SetCookie(config.JwtCookieName, "", -1, "", "", true, true)
 	c.JSON(http.StatusOK, gin.H{"message": "logged out successfully"})
 }
+
+func (uh *UserHandler) LogoutEverywhere(c *gin.Context) {
+	clientIP := c.ClientIP()
+
+	userIDStr, exists := c.Get("userID")
+	if !exists {
+		log.Info().
+			Str("clientIP", clientIP).
+			Msg("userID not found in cookie")
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{})
+		return
+	}
+	userID := userIDStr.(string)
+
+	log.Info().
+		Str("userID", userID).
+		Str("clientIP", c.ClientIP()).
+		Str("action", "logout_everywhere").
+		Msg("User logged out from all devices")
+
+	if err := uh.UserService.LogoutEverywhere(userID); err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.SetCookie(config.JwtCookieName, "", -1, "", "", true, true)
+	c.JSON(http.StatusOK, gin.H{"message": "logged out everywhere"})
+}
