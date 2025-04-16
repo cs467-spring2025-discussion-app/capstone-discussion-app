@@ -17,15 +17,14 @@ func TestNewUser(t *testing.T) {
 
 	// Valid email and password should return nil err, non-nil user value
 	validEmail := "test@newuser.com"
-	validPassword := testutils.TestingPassword
 	t.Run("valid email and password", func(t *testing.T) {
-		user, err := models.NewUser(validEmail, validPassword)
+		user, err := models.NewUser(validEmail, testutils.TestingPassword)
 		is.True(user != nil)
 		is.NoErr(err)
 
 		// User value holds passed email and password
 		is.Equal(user.Email, validEmail)
-		err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(validPassword))
+		err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(testutils.TestingPassword))
 		is.NoErr(err)
 
 	})
@@ -39,7 +38,7 @@ func TestNewUser(t *testing.T) {
 		}
 		exceeds254Chars += ".com"
 
-		user, err := models.NewUser(exceeds254Chars, validPassword)
+		user, err := models.NewUser(exceeds254Chars, testutils.TestingPassword)
 		is.Equal(user, nil)
 		is.True(err == apperrors.ErrEmailMaxLength)
 	})
@@ -59,7 +58,7 @@ func TestNewUser(t *testing.T) {
 
 	for name, email := range invalidFormats {
 		t.Run(name, func(t *testing.T) {
-			user, err := models.NewUser(email, validPassword)
+			user, err := models.NewUser(email, testutils.TestingPassword)
 			is.Equal(user, nil)
 			is.True(err != nil)
 		})

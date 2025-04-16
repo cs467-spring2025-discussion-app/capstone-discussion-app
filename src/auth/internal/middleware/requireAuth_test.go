@@ -43,8 +43,7 @@ func TestMiddlewareAuth_RequireAuth(t *testing.T) {
 
 	// Register a test user
 	email := "TestMiddlewareAuth_RequireAuth@test.com"
-	password := testutils.TestingPassword
-	user, err := models.NewUser(email, password)
+	user, err := models.NewUser(email, testutils.TestingPassword)
 	is.NoErr(err)
 	err = tx.Create(user).Error
 	is.NoErr(err)
@@ -155,8 +154,7 @@ func TestMiddlewareAuth_RequireAuth_SessionRotation(t *testing.T) {
 
 	// Register a test user
 	email := "TestMiddlewareAuth_RequireAuth_SessionRotation@test.com"
-	password := testutils.TestingPassword
-	user, err := models.NewUser(email, password)
+	user, err := models.NewUser(email, testutils.TestingPassword)
 	is.NoErr(err)
 	err = tx.Create(user).Error
 	is.NoErr(err)

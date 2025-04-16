@@ -154,12 +154,11 @@ func TestUserRepository_GetUserByID(t *testing.T) {
 	is.NoErr(err)
 
 	email := "testGetUserByID@test.com"
-	password := "password"
 
 	// Register a user to look up
 	user := &models.User{
 		Email:    email,
-		Password: password,
+		Password: testutils.TestingPassword,
 	}
 	err = ur.RegisterUser(user)
 	is.NoErr(err)
@@ -187,7 +186,7 @@ func TestUserRepository_GetUserByID(t *testing.T) {
 
 		is.True(dbUser.ID != uuid.UUID{})
 		is.Equal(dbUser.Email, email)
-		is.Equal(dbUser.Password, password)
+		is.Equal(dbUser.Password, testutils.TestingPassword)
 		is.Equal(dbUser.ID, user.ID)
 	})
 }
@@ -217,12 +216,11 @@ func TestUserRepository_PermanentlyDeleteUser(t *testing.T) {
 	// Success on existing-user lookup
 	t.Run("existing user", func(t *testing.T) {
 		email := "testPermanentlyDeleteUser@test.com"
-		password := "password"
 
 		// Register a user to delete
 		user := &models.User{
 			Email:    email,
-			Password: password,
+			Password: testutils.TestingPassword,
 		}
 		err = ur.RegisterUser(user)
 		is.NoErr(err)
@@ -265,10 +263,9 @@ func TestUserRepository_UpdateUser(t *testing.T) {
 
 		// Register a user to update
 		email := "testUpdateUser@test.com"
-		password := "password"
 		user := &models.User{
 			Email:    email,
-			Password: password,
+			Password: testutils.TestingPassword,
 		}
 		err = ur.RegisterUser(user)
 		is.NoErr(err)
@@ -337,10 +334,9 @@ func TestUserRepository_IncrementFailedLogins(t *testing.T) {
 
 		// Register a user to fail logins with
 		email := "testHandleFailedLogin@test.com"
-		password := "password"
 		user := &models.User{
 			Email:    email,
-			Password: password,
+			Password: testutils.TestingPassword,
 		}
 		err = ur.RegisterUser(user)
 		is.NoErr(err)
@@ -366,10 +362,9 @@ func TestUserRepository_LockAccount(t *testing.T) {
 
 		// Register test user
 		email := "testLockAccount@test.com"
-		password := "password"
 		user := &models.User{
 			Email:    email,
-			Password: password,
+			Password: testutils.TestingPassword,
 		}
 		err = ur.RegisterUser(user)
 		is.NoErr(err)
