@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/matryer/is"
 
 	"godiscauth/internal/handlers"
@@ -17,6 +19,7 @@ import (
 	"godiscauth/internal/services"
 	"godiscauth/internal/testutils"
 	"godiscauth/pkg/apperrors"
+	"godiscauth/pkg/config"
 )
 
 // TestHandlers_NewUserHandler checks the NewUserHandler constructor returns a valid UsrHandler
@@ -76,11 +79,113 @@ func TestUserHandler_RegisterUser(t *testing.T) {
 		is.NoErr(err)
 		is.Equal(rr.Code, http.StatusOK)
 
-	// Check user is actually in database
+		// Check user is actually in database
 		var user models.User
 		result := server.DB.First(&user, "email = ?", email)
 		is.NoErr(result.Error)
 		is.Equal(user.Email, email)
+	})
+}
+
+func TestUserHandler_Login(t *testing.T) {
+	is := is.New(t)
+
+	server := setupServer(t)
+
+	// Register two test users directly to the DB
+	email1 := "testUserHandlerLoginUser@test.com"
+	password1 := testutils.TestingPassword // strong password for validator
+	email2 := "SECONDARYtestUserHandlerLoginUser@test.com"
+	password2 := "SECONDARY" + testutils.TestingPassword
+	user1, err := models.NewUser(email1, password1)
+	is.NoErr(err)
+	user2, err := models.NewUser(email2, password2)
+	is.NoErr(err)
+	err = server.DB.Create(user1).Error
+	is.NoErr(err)
+	err = server.DB.Create(user2).Error
+	is.NoErr(err)
+
+	t.Run("valid request", func(t *testing.T) {
+		rr, err := makeRequest(
+			server.Router,
+			"POST",
+			"/login",
+			UserCredentialsRequest{Email: email1, Password: password1},
+		)
+		is.NoErr(err)
+		is.Equal(rr.Code, http.StatusOK)
+
+		// Check cookie is set
+		cookies := rr.Result().Cookies()
+		var jwtCookie *http.Cookie
+		for _, cookie := range cookies {
+			if cookie.Name == config.JwtCookieName {
+				jwtCookie = cookie
+				break
+			}
+		}
+		is.True(jwtCookie != nil)
+
+		tokenString := jwtCookie.Value
+
+		parsedToken, err := jwt.Parse(tokenString, func(token *jwt.Token) (any, error) {
+			return []byte(os.Getenv(config.JwtCookieName)), nil
+		}, jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}))
+
+		is.NoErr(err)
+		is.True(parsedToken.Valid)
+	})
+
+	t.Run("no email", func(t *testing.T) {
+		rr, err := makeRequest(
+			server.Router,
+			"POST",
+			"/login",
+			UserCredentialsRequest{Password: password1},
+		)
+		is.NoErr(err)
+		is.Equal(rr.Code, http.StatusBadRequest)
+	})
+	t.Run("no password", func(t *testing.T) {
+		rr, err := makeRequest(
+			server.Router,
+			"POST",
+			"/login",
+			UserCredentialsRequest{Email: email1},
+		)
+		is.NoErr(err)
+		is.Equal(rr.Code, http.StatusBadRequest)
+	})
+	t.Run("non-existent user", func(t *testing.T) {
+		rr, err := makeRequest(
+			server.Router,
+			"POST",
+			"/login",
+			UserCredentialsRequest{Email: "doesNotExist@test.com", Password: password1},
+		)
+		is.NoErr(err)
+		is.Equal(rr.Code, http.StatusBadRequest)
+	})
+	t.Run("incorrect password", func(t *testing.T) {
+		rr, err := makeRequest(
+			server.Router,
+			"POST",
+			"/login",
+			UserCredentialsRequest{Email: email1, Password: "notthepassword"},
+		)
+		is.NoErr(err)
+		is.Equal(rr.Code, http.StatusBadRequest)
+	})
+	t.Run("existing password, mismatched existing user", func(t *testing.T) {
+		rr, err := makeRequest(
+			server.Router,
+			"POST",
+			"/login",
+			UserCredentialsRequest{Email: email1, Password: password2},
+		)
+		is.NoErr(err)
+		is.Equal(rr.Code, http.StatusBadRequest)
 	})
 }
 
