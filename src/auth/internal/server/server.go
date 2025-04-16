@@ -59,6 +59,7 @@ func (s *APIServer) SetupRoutes() {
 
 	r.POST("/register", s.Handlers.User.RegisterUser)
 	r.POST("/login", s.Handlers.User.Login)
+	r.POST("/logout", s.Handlers.User.Logout)
 
 	// TODO: add protected (requireAuth)routes
 

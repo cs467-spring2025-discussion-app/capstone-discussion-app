@@ -108,3 +108,32 @@ func (uh *UserHandler) Login(c *gin.Context) {
 		"message": "login success",
 	})
 }
+
+func (uh *UserHandler) Logout(c *gin.Context) {
+	clientIP := c.ClientIP()
+
+	tokenString, err := c.Cookie(config.JwtCookieName)
+	if err != nil {
+		log.Info().
+			Str("clientIP", clientIP).
+			Str("error", err.Error()).
+			Msg("Cookie not found")
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	if err := uh.UserService.Logout(tokenString); err != nil {
+		log.Error().
+			Str("clientIP", clientIP).
+			Str("error", err.Error()).
+			Msg("Logout failed")
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	log.Info().
+		Str("clientIP", clientIP).
+		Msg("Logout success")
+	c.SetCookie(config.JwtCookieName, "", -1, "", "", true, true)
+	c.JSON(http.StatusOK, gin.H{"message": "logged out successfully"})
+}
