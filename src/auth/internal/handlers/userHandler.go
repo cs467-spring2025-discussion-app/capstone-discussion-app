@@ -291,5 +291,5 @@ func (uh *UserHandler) PermanentlyDeleteUser(c *gin.Context) {
 	log.Info().
 		Str("clientIP", clientIP).
 		Msg("successfully deleted user")
-	c.String(http.StatusOK, "account deleted")
+	c.JSON(http.StatusOK, gin.H{"message": "account deleted"})
 }

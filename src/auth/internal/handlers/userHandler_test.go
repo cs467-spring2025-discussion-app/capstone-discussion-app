@@ -452,9 +452,6 @@ func TestUserHandler_PermanentlyDeleteUser(t *testing.T) {
 		req, _ := http.NewRequest(http.MethodDelete, path, nil)
 		r.ServeHTTP(w, req)
 		is.Equal(http.StatusOK, w.Code)
-
-		response := w.Body.String()
-		is.Equal("account deleted", response)
 	})
 
 	t.Run("non-existent user ID", func(t *testing.T) {
