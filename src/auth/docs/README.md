@@ -15,9 +15,12 @@ go build -o auth ./main.go
 ├──  docs
 ├──  internal
 │   ├──  database
+│   ├──  handlers
+│   ├──  middleware
 │   ├──  models
 │   ├──  repository
 │   ├──  server
+│   ├──  services
 │   └──  testutils
 ├──  pkg
 │   └──  apperrors
@@ -29,9 +32,12 @@ go build -o auth ./main.go
 - `docs`: Contains documentation files related to the authentication system
 - `internal`: internal packages that are not meant to be used outside of the `auth` module
     - `database`: code related to database interactions for the authentication system
+    - `handlers`: handler functions for HTTP routes
+    - `middleware`: middleware used for user/admin authentication
     - `models`: models for database tables `users` and `sessions`, automigrated
     - `repository`: code to perform CRUD and other operations on `users` and `sessions` tables
     - `server`: code to setup and run API server
+    - `services`: functions for mediating logic between HTTP handler functions and repository functions
     - `testutils`: utility functions and types for testing the authentication system
 - `pkg`: packages that are meant to be used by other modules
     - `apperrors`: custom errors for testing and logging
