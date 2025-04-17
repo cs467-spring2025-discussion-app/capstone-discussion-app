@@ -34,6 +34,7 @@ default:
 # Run the application and watch for changes, recompile/restart on changes
 watch:
     #!/usr/bin/env sh
+    export SESSION_SECRET=$(date | sha256sum | cut -d' ' -f1)
     export PORT={{PORT}}
     export DB="{{DRIVER}}://{{DEV_USER}}:{{DEV_PASS}}@{{HOST}}:{{DB_PORT}}/{{DEV_DB}}"
     echo "Using DB: $DB"
