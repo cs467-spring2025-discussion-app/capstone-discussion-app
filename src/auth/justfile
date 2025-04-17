@@ -46,9 +46,9 @@ watch:
 test path="":
     #!/usr/bin/env sh
     if [ -z "{{path}}" ]; then
-        go test -v -json ./... | gotestfmt
+        go test -v -json ./... | gotestfmt -hide successful-tests
     else
-        go test -v -json ./internal/{{path}} | gotestfmt
+        go test -v -json ./internal/{{path}} | gotestfmt -hide successful-tests
     fi
 
 # Initialize auth development database
