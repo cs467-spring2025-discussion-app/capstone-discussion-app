@@ -29,4 +29,4 @@ Base URL: `https://localhost:3001`
 
 ## Authentication
 
-The service uses JWT (JSON Web Tokens) for authentication. On successful login, a JWT token is stored in a cookie for subsequent requests. The token is required for all protected endpoints. The token is used as an identifier for sessions in the database. On logout, the session will be deleted from the database, invalidating the token before its natural expiration. Tokens are rotated after token halflife. Account will be locked after too many failed attempts on the /login endpoint.
+TODO:
