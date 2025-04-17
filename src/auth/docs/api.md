@@ -29,4 +29,4 @@ Base URL: `https://localhost:3001`
 
 ## Authentication
 
-TODO:
+New sessions are stored on the client side as cookies with an expiration time and checked against a corresponding session in the database. Logout invalidates the session.
