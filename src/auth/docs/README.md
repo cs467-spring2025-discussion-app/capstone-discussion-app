@@ -51,7 +51,7 @@ The `auth` module expects the following environment variables to be set:
 
 - `DB`: The URL of the database to connect to
 - `PORT`: The port to run the http server on
-- `JWT_SECRET`: The secret key to sign the JWT tokens
+- `SESSION_SECRET`: The secret key to encrypt the session id
 
 See `example.env` or the `watch` command in `justfile` for sample environment variables.
 

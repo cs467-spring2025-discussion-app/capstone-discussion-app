@@ -2,7 +2,7 @@ package config
 
 // SessionCookieName is the env variable name that is also used to set the JWT
 // cookie for sessions
-const SessionCookieName = "JWT_SECRET"
+const SessionCookieName = "SESSION_SECRET"
 
 // TokenExpiration is the time in seconds when a token will expire
 const TokenExpiration = 3600 * 24 * 7
