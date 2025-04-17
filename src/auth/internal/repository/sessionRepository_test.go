@@ -76,19 +76,19 @@ func TestSessionRepository_CreateSession(t *testing.T) {
 		err := sr.DB.Create(user).Error
 		is.NoErr(err)
 
-		tokenStr := uuid.New().String()
+		sessionID := uuid.New().String()
 
 		// Insert first session
-		sessionOne, err := models.NewSession(user.ID, tokenStr, time.Now().Add(1*time.Hour))
+		sessionOne, err := models.NewSession(user.ID, sessionID, time.Now().Add(1*time.Hour))
 		is.NoErr(err)
 
 		err = sr.CreateSession(sessionOne)
 		is.NoErr(err)
 
-		// Insert second session with same token (expect error)
+		// Insert second session with same ID (expect error)
 		sessionTwo, err := models.NewSession(
 			user.ID,
-			tokenStr,
+			sessionID,
 			time.Now().Add(1*time.Hour),
 		)
 		is.NoErr(err)
@@ -98,32 +98,32 @@ func TestSessionRepository_CreateSession(t *testing.T) {
 	})
 }
 
-func TestSessionRepository_GetSessionByToken(t *testing.T) {
+func TestSessionRepository_GetUnexpiredSessionByID(t *testing.T) {
 	is := is.New(t)
 
-	t.Run("fails on empty token", func(t *testing.T) {
+	t.Run("fails on empty session id", func(t *testing.T) {
 		sr := setupSessionRepository(t)
 
-		session, err := sr.GetUnexpiredSessionByToken("")
+		session, err := sr.GetUnexpiredSessionByID("")
 		is.Equal(session, nil)
-		is.Equal(err, apperrors.ErrTokenIsEmpty)
+		is.Equal(err, apperrors.ErrSessionIdIsEmpty)
 	})
 
-	t.Run("fails on non-existing token", func(t *testing.T) {
+	t.Run("fails on non-existing session", func(t *testing.T) {
 		sr := setupSessionRepository(t)
 
-		session, err := sr.GetUnexpiredSessionByToken(uuid.New().String())
+		session, err := sr.GetUnexpiredSessionByID(uuid.New().String())
 		is.Equal(session, nil)
 		is.Equal(err, gorm.ErrRecordNotFound)
 	})
 
 	// Valid session in db can be retrieved
-	t.Run("retrieves session by token", func(t *testing.T) {
+	t.Run("retrieves session by id", func(t *testing.T) {
 		sr := setupSessionRepository(t)
 
 		// Register test user
 		user := &models.User{
-			Email:    "testGetUnexpiredSessionByToken@test.com",
+			Email:    "testGetUnexpiredSessionByID@test.com",
 			Password: "password",
 		}
 		err := sr.DB.Create(user).Error
@@ -136,36 +136,36 @@ func TestSessionRepository_GetSessionByToken(t *testing.T) {
 		is.NoErr(err)
 
 		// Retrieved session has same values we passed in
-		retrievedSession, err := sr.GetUnexpiredSessionByToken(session.Token)
+		retrievedSession, err := sr.GetUnexpiredSessionByID(session.ID)
 		is.NoErr(err)
 		is.Equal(retrievedSession.UserID, session.UserID)
-		is.Equal(retrievedSession.Token, session.Token)
+		is.Equal(retrievedSession.ID, session.ID)
 	})
 }
 
-func TestSessionRepository_DeleteSessionByToken(t *testing.T) {
+func TestSessionRepository_DeleteSessionByID(t *testing.T) {
 	is := is.New(t)
 
-	t.Run("fails on empty token", func(t *testing.T) {
+	t.Run("fails on empty id", func(t *testing.T) {
 		sr := setupSessionRepository(t)
 
-		err := sr.DeleteSessionByToken("")
-		is.Equal(err, apperrors.ErrTokenIsEmpty)
+		err := sr.DeleteSessionByID("")
+		is.Equal(err, apperrors.ErrSessionIdIsEmpty)
 	})
 
-	t.Run("fails on non-existing token", func(t *testing.T) {
+	t.Run("fails on non-existing session", func(t *testing.T) {
 		sr := setupSessionRepository(t)
 
-		err := sr.DeleteSessionByToken(uuid.New().String())
+		err := sr.DeleteSessionByID(uuid.New().String())
 		is.Equal(err, gorm.ErrRecordNotFound)
 	})
 
-	t.Run("deletes session by token", func(t *testing.T) {
+	t.Run("deletes session by id", func(t *testing.T) {
 		sr := setupSessionRepository(t)
 
 		// Register test user
 		user := &models.User{
-			Email:    "testDeleteSessionByToken@test.com",
+			Email:    "testDeleteSessionByID@test.com",
 			Password: "password",
 		}
 		err := sr.DB.Create(user).Error
@@ -178,11 +178,11 @@ func TestSessionRepository_DeleteSessionByToken(t *testing.T) {
 		is.NoErr(err)
 
 		// Delete session
-		err = sr.DeleteSessionByToken(session.Token)
+		err = sr.DeleteSessionByID(session.ID)
 		is.NoErr(err)
 
 		// Attempt to retrieve deleted session
-		retrievedSession, err := sr.GetUnexpiredSessionByToken(session.Token)
+		retrievedSession, err := sr.GetUnexpiredSessionByID(session.ID)
 		is.Equal(retrievedSession, nil)
 		is.Equal(err, gorm.ErrRecordNotFound)
 	})
@@ -234,7 +234,7 @@ func TestSessionRepository_DeleteSessionsByUserID(t *testing.T) {
 
 		// Attempt to retrieve both sessions
 		for _, session := range []*models.Session{sessionOne, sessionTwo} {
-			retrievedSession, err := sr.GetUnexpiredSessionByToken(session.Token)
+			retrievedSession, err := sr.GetUnexpiredSessionByID(session.ID)
 			if session.UserID == user.ID {
 				is.Equal(retrievedSession, nil)
 				is.Equal(err, gorm.ErrRecordNotFound)

@@ -12,8 +12,7 @@ import (
 	"godiscauth/pkg/config"
 )
 
-// UserRepository represents the entry point into the database for managing
-// the `users` table
+// UserRepository represents the entry point into the database for managing the `users` table
 type UserRepository struct {
 	DB *gorm.DB
 }

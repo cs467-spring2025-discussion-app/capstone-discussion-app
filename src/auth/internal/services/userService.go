@@ -2,11 +2,9 @@ package services
 
 import (
 	"net/mail"
-	"os"
+	"strings"
 	"time"
 
-	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/uuid"
 	passwordvalidator "github.com/wagslane/go-password-validator"
 	"golang.org/x/crypto/bcrypt"
 
@@ -77,7 +75,7 @@ func (us *UserService) LoginUser(email, password string) (string, error) {
 		return "", apperrors.ErrAccountIsLocked
 	}
 
-	// Return ErrInvalidLogin on bad password
+	// Validate password
 	if err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
 		// Increment failed login attempts
 		err = us.UserRepo.IncrementFailedLogins(user.ID.String())
@@ -94,21 +92,16 @@ func (us *UserService) LoginUser(email, password string) (string, error) {
 		return "", apperrors.ErrInvalidLogin
 	}
 
-	// Generate JWT token
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub": user.ID.String(),
-		"exp": time.Now().Add(time.Hour * 24 * 7).Unix(),
-		"jti": uuid.New().String(),
-	})
-
-	tokenString, err := token.SignedString([]byte(os.Getenv(config.SessionCookieName)))
+	// Generate session ID
+	sessionID, signature, err := models.GenerateSessionID()
 	if err != nil {
-		return "", apperrors.ErrTokenGeneration
+		return "", apperrors.ErrSessionIDGeneration
 	}
+	sessionToken := sessionID + "." + signature
 
-	// Create session with expiration time
-	expiresAt := time.Now().Add(time.Duration(config.TokenExpiration) * time.Second)
-	session, err := models.NewSession(user.ID, tokenString, expiresAt)
+	// Create session with expiration time (use UTC)
+	expiresAt := time.Now().UTC().Add(time.Duration(config.SessionExpiration) * time.Second)
+	session, err := models.NewSession(user.ID, sessionID, expiresAt)
 
 	if err := us.SessionRepo.CreateSession(session); err != nil {
 		return "", err
@@ -120,15 +113,21 @@ func (us *UserService) LoginUser(email, password string) (string, error) {
 		return "", err
 	}
 
-	return tokenString, nil
+	return sessionToken, nil
 }
 
 // Logout invalidates a token by deleting its corresponding session
-func (us *UserService) Logout(token string) error {
-	if token == "" {
-		return apperrors.ErrTokenIsEmpty
+func (us *UserService) Logout(sessionToken string) error {
+	if sessionToken == "" {
+		return apperrors.ErrSessionIdIsEmpty
 	}
-	return us.SessionRepo.DeleteSessionByToken(token)
+	// Split the session token
+	parts := strings.Split(sessionToken, ".")
+	if len(parts) != 2 {
+		return apperrors.ErrInvalidTokenFormat
+	}
+	sessionID := parts[0]
+	return us.SessionRepo.DeleteSessionByID(sessionID)
 }
 
 func (us *UserService) LogoutEverywhere(userID string) error {
@@ -137,7 +136,6 @@ func (us *UserService) LogoutEverywhere(userID string) error {
 	}
 	return us.SessionRepo.DeleteSessionsByUserID(userID)
 }
-
 
 func (us *UserService) GetUserProfile(userID string) (*models.UserProfile, error) {
 	if userID == "" {
@@ -204,29 +202,25 @@ func (us *UserService) PermanentlyDeleteUser(userID string) error {
 	return nil
 }
 
-// RotateSession generates a new JWT token for the user and invalidates the old one
+// RotateSession generates a new session token for the user and invalidates the old one
 // RotateSession creates a new session and replaces the old one
-func (us *UserService) RotateSession(oldToken string) (string, error) {
+func (us *UserService) RotateSession(oldSessionID string) (string, error) {
 	// Check session exists
-	oldSession, err := us.SessionRepo.GetUnexpiredSessionByToken(oldToken)
+	oldSession, err := us.SessionRepo.GetUnexpiredSessionByID(oldSessionID)
 	if err != nil {
 		return "", err
 	}
 
-	// Generate new JWT token with same claims
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub": oldSession.UserID.String(),
-		"exp": time.Now().Add(time.Duration(config.TokenExpiration) * time.Second).Unix(),
-		"jti": uuid.New().String(), // JWT ID - making the token unique
-	})
-	newToken, err := token.SignedString([]byte(os.Getenv(config.SessionCookieName)))
+	// Generate new session token with same claims
+	newSessionID, signature, err := models.GenerateSessionID()
 	if err != nil {
-		return "", apperrors.ErrTokenGeneration
+		return "", apperrors.ErrSessionIDGeneration
 	}
+	newSessionToken := newSessionID + "." + signature
 
 	// Create new session with the new token and expiration time
-	expiresAt := time.Now().Add(time.Duration(config.TokenExpiration) * time.Second)
-	newSession, err := models.NewSession(oldSession.UserID, newToken, expiresAt)
+	expiresAt := time.Now().UTC().Add(time.Duration(config.SessionExpiration) * time.Second)
+	newSession, err := models.NewSession(oldSession.UserID, newSessionID, expiresAt)
 	if err != nil {
 		return "", err
 	}
@@ -240,9 +234,9 @@ func (us *UserService) RotateSession(oldToken string) (string, error) {
 	}
 
 	// Delete old session
-	if err := db.Where("token = ?", oldToken).Delete(&models.Session{}).Error; err != nil {
+	if err := db.Where("id = ?", oldSessionID).Delete(&models.Session{}).Error; err != nil {
 		return "", err
 	}
 
-	return newToken, nil
+	return newSessionToken, nil
 }

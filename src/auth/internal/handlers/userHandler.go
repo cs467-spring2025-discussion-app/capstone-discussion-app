@@ -84,7 +84,7 @@ func (uh *UserHandler) Login(c *gin.Context) {
 	}
 
 	// Attempt login
-	tokenString, err := uh.UserService.LoginUser(body.Email, body.Password)
+	sessionToken, err := uh.UserService.LoginUser(body.Email, body.Password)
 	if err != nil {
 		log.Info().
 			Str("email", body.Email).
@@ -98,7 +98,7 @@ func (uh *UserHandler) Login(c *gin.Context) {
 
 	// Set session cookie
 	c.SetSameSite(http.SameSiteLaxMode)
-	c.SetCookie(config.SessionCookieName, tokenString, config.TokenExpiration, "", "", true, true)
+	c.SetCookie(config.SessionCookieName, sessionToken, config.SessionExpiration, "", "", true, true)
 
 	log.Info().
 		Str("email", body.Email).
@@ -112,7 +112,7 @@ func (uh *UserHandler) Login(c *gin.Context) {
 func (uh *UserHandler) Logout(c *gin.Context) {
 	clientIP := c.ClientIP()
 
-	tokenString, err := c.Cookie(config.SessionCookieName)
+	sessionToken, err := c.Cookie(config.SessionCookieName)
 	if err != nil {
 		log.Info().
 			Str("clientIP", clientIP).
@@ -122,7 +122,7 @@ func (uh *UserHandler) Logout(c *gin.Context) {
 		return
 	}
 
-	if err := uh.UserService.Logout(tokenString); err != nil {
+	if err := uh.UserService.Logout(sessionToken); err != nil {
 		log.Error().
 			Str("clientIP", clientIP).
 			Str("error", err.Error()).
