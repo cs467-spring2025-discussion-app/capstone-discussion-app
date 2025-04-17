@@ -45,7 +45,7 @@ func NewAuthMiddleware(db *gorm.DB) (*AuthMiddleware, error) {
 func (am *AuthMiddleware) RequireAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Get cookie from request
-		tokenString, err := c.Cookie(config.JwtCookieName)
+		tokenString, err := c.Cookie(config.SessionCookieName)
 		if err != nil {
 			log.Debug().Err(err).Msg("No auth cookie found")
 			c.AbortWithStatus(http.StatusUnauthorized)
@@ -54,7 +54,7 @@ func (am *AuthMiddleware) RequireAuth() gin.HandlerFunc {
 
 		// Decode and validate
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (any, error) {
-			return []byte(os.Getenv(config.JwtCookieName)), nil
+			return []byte(os.Getenv(config.SessionCookieName)), nil
 		})
 
 		if err != nil || !token.Valid {
@@ -104,7 +104,7 @@ func (am *AuthMiddleware) RequireAuth() gin.HandlerFunc {
 				return
 			} else {
 				c.SetSameSite(http.SameSiteStrictMode)
-				c.SetCookie(config.JwtCookieName, newToken, int(config.TokenExpiration), "", "", true, true)
+				c.SetCookie(config.SessionCookieName, newToken, int(config.TokenExpiration), "", "", true, true)
 			}
 		}
 

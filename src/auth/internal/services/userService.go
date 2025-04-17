@@ -101,7 +101,7 @@ func (us *UserService) LoginUser(email, password string) (string, error) {
 		"jti": uuid.New().String(),
 	})
 
-	tokenString, err := token.SignedString([]byte(os.Getenv(config.JwtCookieName)))
+	tokenString, err := token.SignedString([]byte(os.Getenv(config.SessionCookieName)))
 	if err != nil {
 		return "", apperrors.ErrTokenGeneration
 	}
@@ -219,7 +219,7 @@ func (us *UserService) RotateSession(oldToken string) (string, error) {
 		"exp": time.Now().Add(time.Duration(config.TokenExpiration) * time.Second).Unix(),
 		"jti": uuid.New().String(), // JWT ID - making the token unique
 	})
-	newToken, err := token.SignedString([]byte(os.Getenv(config.JwtCookieName)))
+	newToken, err := token.SignedString([]byte(os.Getenv(config.SessionCookieName)))
 	if err != nil {
 		return "", apperrors.ErrTokenGeneration
 	}

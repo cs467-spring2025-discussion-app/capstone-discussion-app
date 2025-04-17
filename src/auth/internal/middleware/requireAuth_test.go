@@ -53,7 +53,7 @@ func TestMiddlewareAuth_RequireAuth(t *testing.T) {
 		"sub": user.ID,
 		"exp": time.Now().Unix() + config.TokenExpiration,
 	})
-	tokenString, err := token.SignedString([]byte(os.Getenv(config.JwtCookieName)))
+	tokenString, err := token.SignedString([]byte(os.Getenv(config.SessionCookieName)))
 	is.NoErr(err)
 
 	// Create a session record for this token
@@ -74,7 +74,7 @@ func TestMiddlewareAuth_RequireAuth(t *testing.T) {
 		is.NoErr(err)
 
 		reqWithAuth.AddCookie(&http.Cookie{
-			Name:  config.JwtCookieName,
+			Name:  config.SessionCookieName,
 			Value: tokenString,
 		})
 		rr := httptest.NewRecorder()
@@ -102,7 +102,7 @@ func TestMiddlewareAuth_RequireAuth(t *testing.T) {
 			"sub": user.ID,
 			"exp": time.Now().Unix() + config.TokenExpiration*2,
 		})
-		expiredTokenString, _ := expiredToken.SignedString([]byte(os.Getenv(config.JwtCookieName)))
+		expiredTokenString, _ := expiredToken.SignedString([]byte(os.Getenv(config.SessionCookieName)))
 
 		// Create a session with an expired token
 		expiredSession, err := models.NewSession(
@@ -118,7 +118,7 @@ func TestMiddlewareAuth_RequireAuth(t *testing.T) {
 		// Make a request with the expired token
 		req, _ := http.NewRequest("GET", "/protected", nil)
 		req.AddCookie(&http.Cookie{
-			Name:  config.JwtCookieName,
+			Name:  config.SessionCookieName,
 			Value: expiredTokenString,
 		})
 
@@ -165,7 +165,7 @@ func TestMiddlewareAuth_RequireAuth_SessionRotation(t *testing.T) {
 		// Set to ten minutes from now
 		"exp": time.Now().Unix() + 600,
 	})
-	tokenString, err := token.SignedString([]byte(os.Getenv(config.JwtCookieName)))
+	tokenString, err := token.SignedString([]byte(os.Getenv(config.SessionCookieName)))
 	is.NoErr(err)
 
 	// Create a session record for this token
@@ -198,7 +198,7 @@ func TestMiddlewareAuth_RequireAuth_SessionRotation(t *testing.T) {
 		reqWithAuth, err := http.NewRequest("GET", "/protected", nil)
 		is.NoErr(err)
 		reqWithAuth.AddCookie(&http.Cookie{
-			Name:  config.JwtCookieName,
+			Name:  config.SessionCookieName,
 			Value: tokenString,
 		})
 		rr := httptest.NewRecorder()
@@ -211,7 +211,7 @@ func TestMiddlewareAuth_RequireAuth_SessionRotation(t *testing.T) {
 		// Check for new token in cookie
 		var newTokenFromCookie string
 		for _, cookie := range rr.Result().Cookies() {
-			if cookie.Name == config.JwtCookieName {
+			if cookie.Name == config.SessionCookieName {
 				newTokenFromCookie = cookie.Value
 				break
 			}

@@ -120,7 +120,7 @@ func TestUserHandler_Login(t *testing.T) {
 		cookies := rr.Result().Cookies()
 		var jwtCookie *http.Cookie
 		for _, cookie := range cookies {
-			if cookie.Name == config.JwtCookieName {
+			if cookie.Name == config.SessionCookieName {
 				jwtCookie = cookie
 				break
 			}
@@ -130,7 +130,7 @@ func TestUserHandler_Login(t *testing.T) {
 		tokenString := jwtCookie.Value
 
 		parsedToken, err := jwt.Parse(tokenString, func(token *jwt.Token) (any, error) {
-			return []byte(os.Getenv(config.JwtCookieName)), nil
+			return []byte(os.Getenv(config.SessionCookieName)), nil
 		}, jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}))
 
 		is.NoErr(err)
@@ -213,7 +213,7 @@ func TestUserHandler_Logout(t *testing.T) {
 		// Get cookie
 		var jwtCookie *http.Cookie
 		for _, cookie := range loginRR.Result().Cookies() {
-			if cookie.Name == config.JwtCookieName {
+			if cookie.Name == config.SessionCookieName {
 				jwtCookie = cookie
 				break
 			}
@@ -231,7 +231,7 @@ func TestUserHandler_Logout(t *testing.T) {
 		// Check cookie is cleared
 		var logoutCookie *http.Cookie
 		for _, cookie := range w.Result().Cookies() {
-			if cookie.Name == config.JwtCookieName {
+			if cookie.Name == config.SessionCookieName {
 				logoutCookie = cookie
 				break
 			}
@@ -260,7 +260,7 @@ func TestUserHandler_Logout(t *testing.T) {
 
 		// Create an invalid cookie
 		invalidCookie := &http.Cookie{
-			Name:     config.JwtCookieName,
+			Name:     config.SessionCookieName,
 			Value:    "invalid-token",
 			Path:     "/",
 			HttpOnly: true,
@@ -302,7 +302,7 @@ func TestUserHandler_LogoutEverywhere(t *testing.T) {
 	// Get token from cookies
 	cookies := rr.Result().Cookies()
 	for _, cookie := range cookies {
-		if cookie.Name == config.JwtCookieName {
+		if cookie.Name == config.SessionCookieName {
 			firstToken = cookie.Value
 			break
 		}
@@ -322,7 +322,7 @@ func TestUserHandler_LogoutEverywhere(t *testing.T) {
 	// Get token from cookies
 	cookies = rr.Result().Cookies()
 	for _, cookie := range cookies {
-		if cookie.Name == config.JwtCookieName {
+		if cookie.Name == config.SessionCookieName {
 			secondToken = cookie.Value
 			break
 		}
@@ -336,7 +336,7 @@ func TestUserHandler_LogoutEverywhere(t *testing.T) {
 
 		// Add auth cookie
 		req.AddCookie(&http.Cookie{
-			Name:     config.JwtCookieName,
+			Name:     config.SessionCookieName,
 			Value:    firstToken,
 			Path:     "/",
 			HttpOnly: true,
@@ -351,7 +351,7 @@ func TestUserHandler_LogoutEverywhere(t *testing.T) {
 		// Cookie is cleared
 		var clearedCookie *http.Cookie
 		for _, cookie := range w.Result().Cookies() {
-			if cookie.Name == config.JwtCookieName {
+			if cookie.Name == config.SessionCookieName {
 				clearedCookie = cookie
 				break
 			}
@@ -369,7 +369,7 @@ func TestUserHandler_LogoutEverywhere(t *testing.T) {
 		req, err = http.NewRequest("POST", "/logouteverywhere", nil)
 		is.NoErr(err)
 		req.AddCookie(&http.Cookie{
-			Name:     config.JwtCookieName,
+			Name:     config.SessionCookieName,
 			Value:    firstToken,
 			Path:     "/",
 			HttpOnly: true,
@@ -383,7 +383,7 @@ func TestUserHandler_LogoutEverywhere(t *testing.T) {
 		req, err = http.NewRequest("POST", "/logouteverywhere", nil)
 		is.NoErr(err)
 		req.AddCookie(&http.Cookie{
-			Name:     config.JwtCookieName,
+			Name:     config.SessionCookieName,
 			Value:    secondToken,
 			Path:     "/",
 			HttpOnly: true,
@@ -409,7 +409,7 @@ func TestUserHandler_LogoutEverywhere(t *testing.T) {
 		is.NoErr(err)
 
 		req.AddCookie(&http.Cookie{
-			Name:     config.JwtCookieName,
+			Name:     config.SessionCookieName,
 			Value:    "invalid-token",
 			Path:     "/",
 			HttpOnly: true,
@@ -515,7 +515,7 @@ func TestUserHandler_UpdateUser(t *testing.T) {
 	// Get token from cookies
 	cookies := rr.Result().Cookies()
 	for _, cookie := range cookies {
-		if cookie.Name == config.JwtCookieName {
+		if cookie.Name == config.SessionCookieName {
 			token = cookie.Value
 			break
 		}
@@ -541,7 +541,7 @@ func TestUserHandler_UpdateUser(t *testing.T) {
 		// Get token from cookies
 		cookies := rr.Result().Cookies()
 		for _, cookie := range cookies {
-			if cookie.Name == config.JwtCookieName {
+			if cookie.Name == config.SessionCookieName {
 				token = cookie.Value
 				break
 			}
@@ -550,7 +550,7 @@ func TestUserHandler_UpdateUser(t *testing.T) {
 
 		// Add auth cookie to update request
 		req.AddCookie(&http.Cookie{
-			Name:     config.JwtCookieName,
+			Name:     config.SessionCookieName,
 			Value:    token,
 			Path:     "/",
 			HttpOnly: true,
@@ -586,7 +586,7 @@ func TestUserHandler_UpdateUser(t *testing.T) {
 
 		// Add auth cookie
 		req.AddCookie(&http.Cookie{
-			Name:     config.JwtCookieName,
+			Name:     config.SessionCookieName,
 			Value:    token,
 			Path:     "/",
 			HttpOnly: true,

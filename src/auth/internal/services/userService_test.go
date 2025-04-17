@@ -245,7 +245,7 @@ func TestUserService_LoginUser(t *testing.T) {
 
 		// Parse the token and get the claims
 		parsedToken, err := jwt.Parse(token, func(token *jwt.Token) (any, error) {
-			return []byte(os.Getenv(config.JwtCookieName)), nil
+			return []byte(os.Getenv(config.SessionCookieName)), nil
 		})
 		is.NoErr(err)
 		is.True(parsedToken.Valid)
