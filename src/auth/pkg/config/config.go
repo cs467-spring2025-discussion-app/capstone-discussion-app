@@ -1,10 +1,10 @@
 package config
 
 // SessionCookieName is the env variable name used to set the cookie for sessions
-const SessionKey = "SESSION_SECRET"
+const SessionKey = "DISCUSSION_APP_SESSION_KEY"
 
 // SessionCookieName is the env variable name used to set the cookie for sessions
-const SessionCookieName = "SESSION_COOKIE_NAME"
+const SessionCookieName = "DISCUSSION_APP_SESSION_COOKIE"
 
 // SessionExpiration is the time in seconds when a token will expire
 const SessionExpiration = 3600 * 24 * 7

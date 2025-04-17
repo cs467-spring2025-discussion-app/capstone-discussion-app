@@ -15,7 +15,7 @@ import (
 
 // main is the entry point for the auth service. It sets up the logger, connects to the database, and starts the API server.
 func main() {
-	// SESSION_SECRET must be complex for encryption
+	// Ensure session key must be complex for encryption
 	if err := passwordvalidator.Validate(os.Getenv(config.SessionKey), config.MinEntropyBits); err != nil {
 		log.Fatal().Err(err).Msg("Session secret is not complex enough")
 	}
