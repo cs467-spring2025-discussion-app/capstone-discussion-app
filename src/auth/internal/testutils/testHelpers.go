@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -21,6 +22,7 @@ const TestingPassword = "correcthorsebatterystaple"
 // relevant test database has been created. See `scripts/init_testing.sql` to
 // create the testing database.
 func TestEnvSetup() {
+	os.Setenv("SESSION_SECRET", uuid.New().String())
 	os.Setenv("PORT", "3001")
 	os.Setenv("DB", "host=localhost user=godiscauth_test password=godiscauth_test dbname=godiscauth_test port=5432 sslmode=disable TimeZone=UTC")
 

@@ -84,7 +84,7 @@ func (uh *UserHandler) Login(c *gin.Context) {
 	}
 
 	// Attempt login
-	tokenString, err := uh.UserService.LoginUser(body.Email, body.Password)
+	sessionToken, err := uh.UserService.LoginUser(body.Email, body.Password)
 	if err != nil {
 		log.Info().
 			Str("email", body.Email).
@@ -98,7 +98,7 @@ func (uh *UserHandler) Login(c *gin.Context) {
 
 	// Set session cookie
 	c.SetSameSite(http.SameSiteLaxMode)
-	c.SetCookie(config.JwtCookieName, tokenString, config.TokenExpiration, "", "", true, true)
+	c.SetCookie(config.SessionCookieName, sessionToken, config.SessionExpiration, "", "", true, true)
 
 	log.Info().
 		Str("email", body.Email).
@@ -112,7 +112,7 @@ func (uh *UserHandler) Login(c *gin.Context) {
 func (uh *UserHandler) Logout(c *gin.Context) {
 	clientIP := c.ClientIP()
 
-	tokenString, err := c.Cookie(config.JwtCookieName)
+	sessionToken, err := c.Cookie(config.SessionCookieName)
 	if err != nil {
 		log.Info().
 			Str("clientIP", clientIP).
@@ -122,7 +122,7 @@ func (uh *UserHandler) Logout(c *gin.Context) {
 		return
 	}
 
-	if err := uh.UserService.Logout(tokenString); err != nil {
+	if err := uh.UserService.Logout(sessionToken); err != nil {
 		log.Error().
 			Str("clientIP", clientIP).
 			Str("error", err.Error()).
@@ -134,7 +134,7 @@ func (uh *UserHandler) Logout(c *gin.Context) {
 	log.Info().
 		Str("clientIP", clientIP).
 		Msg("Logout success")
-	c.SetCookie(config.JwtCookieName, "", -1, "", "", true, true)
+	c.SetCookie(config.SessionCookieName, "", -1, "", "", true, true)
 	c.JSON(http.StatusOK, gin.H{"message": "logged out successfully"})
 }
 
@@ -162,7 +162,7 @@ func (uh *UserHandler) LogoutEverywhere(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie(config.JwtCookieName, "", -1, "", "", true, true)
+	c.SetCookie(config.SessionCookieName, "", -1, "", "", true, true)
 	c.JSON(http.StatusOK, gin.H{"message": "logged out everywhere"})
 }
 
@@ -286,7 +286,7 @@ func (uh *UserHandler) PermanentlyDeleteUser(c *gin.Context) {
 	// Account no longer exists, so we can clear cookie
 	// NOTE: we are assuming the database will delete all associated sessions once the
 	// corresponding user row is deleted
-	c.SetCookie(config.JwtCookieName, "", -1, "", "", true, true)
+	c.SetCookie(config.SessionCookieName, "", -1, "", "", true, true)
 
 	log.Info().
 		Str("clientIP", clientIP).

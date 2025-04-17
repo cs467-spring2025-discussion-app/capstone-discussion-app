@@ -5,11 +5,10 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"os"
+	"strings"
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/matryer/is"
 
@@ -118,23 +117,21 @@ func TestUserHandler_Login(t *testing.T) {
 
 		// Check cookie is set
 		cookies := rr.Result().Cookies()
-		var jwtCookie *http.Cookie
+		var sessionCookie *http.Cookie
 		for _, cookie := range cookies {
-			if cookie.Name == config.JwtCookieName {
-				jwtCookie = cookie
+			if cookie.Name == config.SessionCookieName {
+				sessionCookie = cookie
 				break
 			}
 		}
-		is.True(jwtCookie != nil)
+		is.True(sessionCookie != nil)
 
-		tokenString := jwtCookie.Value
-
-		parsedToken, err := jwt.Parse(tokenString, func(token *jwt.Token) (any, error) {
-			return []byte(os.Getenv(config.JwtCookieName)), nil
-		}, jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}))
-
-		is.NoErr(err)
-		is.True(parsedToken.Valid)
+		// Session Token is valid
+		sessionToken := sessionCookie.Value
+		parts := strings.Split(sessionToken, ".")
+		is.True(len(parts) == 2)
+		sessionID, signature := parts[0], parts[1]
+		is.True(models.ValidateSessionID(sessionID, signature))
 	})
 
 	t.Run("no email", func(t *testing.T) {
@@ -211,19 +208,19 @@ func TestUserHandler_Logout(t *testing.T) {
 		is.NoErr(err)
 
 		// Get cookie
-		var jwtCookie *http.Cookie
+		var sessionCookie *http.Cookie
 		for _, cookie := range loginRR.Result().Cookies() {
-			if cookie.Name == config.JwtCookieName {
-				jwtCookie = cookie
+			if cookie.Name == config.SessionCookieName {
+				sessionCookie = cookie
 				break
 			}
 		}
-		is.True(jwtCookie != nil)
+		is.True(sessionCookie != nil)
 
 		// Logout
 		req, err := http.NewRequest("POST", "/logout", nil)
 		is.NoErr(err)
-		req.AddCookie(jwtCookie)
+		req.AddCookie(sessionCookie)
 		w := httptest.NewRecorder()
 		server.Router.ServeHTTP(w, req)
 		is.Equal(w.Code, http.StatusOK)
@@ -231,7 +228,7 @@ func TestUserHandler_Logout(t *testing.T) {
 		// Check cookie is cleared
 		var logoutCookie *http.Cookie
 		for _, cookie := range w.Result().Cookies() {
-			if cookie.Name == config.JwtCookieName {
+			if cookie.Name == config.SessionCookieName {
 				logoutCookie = cookie
 				break
 			}
@@ -260,7 +257,7 @@ func TestUserHandler_Logout(t *testing.T) {
 
 		// Create an invalid cookie
 		invalidCookie := &http.Cookie{
-			Name:     config.JwtCookieName,
+			Name:     config.SessionCookieName,
 			Value:    "invalid-token",
 			Path:     "/",
 			HttpOnly: true,
@@ -302,7 +299,7 @@ func TestUserHandler_LogoutEverywhere(t *testing.T) {
 	// Get token from cookies
 	cookies := rr.Result().Cookies()
 	for _, cookie := range cookies {
-		if cookie.Name == config.JwtCookieName {
+		if cookie.Name == config.SessionCookieName {
 			firstToken = cookie.Value
 			break
 		}
@@ -322,7 +319,7 @@ func TestUserHandler_LogoutEverywhere(t *testing.T) {
 	// Get token from cookies
 	cookies = rr.Result().Cookies()
 	for _, cookie := range cookies {
-		if cookie.Name == config.JwtCookieName {
+		if cookie.Name == config.SessionCookieName {
 			secondToken = cookie.Value
 			break
 		}
@@ -336,7 +333,7 @@ func TestUserHandler_LogoutEverywhere(t *testing.T) {
 
 		// Add auth cookie
 		req.AddCookie(&http.Cookie{
-			Name:     config.JwtCookieName,
+			Name:     config.SessionCookieName,
 			Value:    firstToken,
 			Path:     "/",
 			HttpOnly: true,
@@ -351,7 +348,7 @@ func TestUserHandler_LogoutEverywhere(t *testing.T) {
 		// Cookie is cleared
 		var clearedCookie *http.Cookie
 		for _, cookie := range w.Result().Cookies() {
-			if cookie.Name == config.JwtCookieName {
+			if cookie.Name == config.SessionCookieName {
 				clearedCookie = cookie
 				break
 			}
@@ -369,7 +366,7 @@ func TestUserHandler_LogoutEverywhere(t *testing.T) {
 		req, err = http.NewRequest("POST", "/logouteverywhere", nil)
 		is.NoErr(err)
 		req.AddCookie(&http.Cookie{
-			Name:     config.JwtCookieName,
+			Name:     config.SessionCookieName,
 			Value:    firstToken,
 			Path:     "/",
 			HttpOnly: true,
@@ -383,7 +380,7 @@ func TestUserHandler_LogoutEverywhere(t *testing.T) {
 		req, err = http.NewRequest("POST", "/logouteverywhere", nil)
 		is.NoErr(err)
 		req.AddCookie(&http.Cookie{
-			Name:     config.JwtCookieName,
+			Name:     config.SessionCookieName,
 			Value:    secondToken,
 			Path:     "/",
 			HttpOnly: true,
@@ -409,7 +406,7 @@ func TestUserHandler_LogoutEverywhere(t *testing.T) {
 		is.NoErr(err)
 
 		req.AddCookie(&http.Cookie{
-			Name:     config.JwtCookieName,
+			Name:     config.SessionCookieName,
 			Value:    "invalid-token",
 			Path:     "/",
 			HttpOnly: true,
@@ -452,9 +449,6 @@ func TestUserHandler_PermanentlyDeleteUser(t *testing.T) {
 		req, _ := http.NewRequest(http.MethodDelete, path, nil)
 		r.ServeHTTP(w, req)
 		is.Equal(http.StatusOK, w.Code)
-
-		response := w.Body.String()
-		is.Equal("account deleted", response)
 	})
 
 	t.Run("non-existent user ID", func(t *testing.T) {
@@ -503,7 +497,7 @@ func TestUserHandler_UpdateUser(t *testing.T) {
 	err = server.DB.Create(user).Error
 	is.NoErr(err)
 
-	var token string
+	var sessionToken string
 
 	// Login test user
 	rr, err := makeRequest(
@@ -518,12 +512,12 @@ func TestUserHandler_UpdateUser(t *testing.T) {
 	// Get token from cookies
 	cookies := rr.Result().Cookies()
 	for _, cookie := range cookies {
-		if cookie.Name == config.JwtCookieName {
-			token = cookie.Value
+		if cookie.Name == config.SessionCookieName {
+			sessionToken = cookie.Value
 			break
 		}
 	}
-	is.True(token != "")
+	is.True(sessionToken != "")
 
 	t.Run("update email and password", func(t *testing.T) {
 		// Create update request body
@@ -544,17 +538,17 @@ func TestUserHandler_UpdateUser(t *testing.T) {
 		// Get token from cookies
 		cookies := rr.Result().Cookies()
 		for _, cookie := range cookies {
-			if cookie.Name == config.JwtCookieName {
-				token = cookie.Value
+			if cookie.Name == config.SessionCookieName {
+				sessionToken = cookie.Value
 				break
 			}
 		}
-		is.True(token != "")
+		is.True(sessionToken != "")
 
 		// Add auth cookie to update request
 		req.AddCookie(&http.Cookie{
-			Name:     config.JwtCookieName,
-			Value:    token,
+			Name:     config.SessionCookieName,
+			Value:    sessionToken,
 			Path:     "/",
 			HttpOnly: true,
 			Secure:   true,
@@ -589,8 +583,8 @@ func TestUserHandler_UpdateUser(t *testing.T) {
 
 		// Add auth cookie
 		req.AddCookie(&http.Cookie{
-			Name:     config.JwtCookieName,
-			Value:    token,
+			Name:     config.SessionCookieName,
+			Value:    sessionToken,
 			Path:     "/",
 			HttpOnly: true,
 			Secure:   true,

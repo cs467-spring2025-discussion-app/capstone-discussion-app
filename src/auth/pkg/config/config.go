@@ -1,11 +1,13 @@
 package config
 
-// JwtCookieName is the env variable name that is also used to set the JWT
-// cookie for sessions
-const JwtCookieName = "JWT_SECRET"
+// SessionCookieName is the env variable name used to set the cookie for sessions
+const SessionKey = "SESSION_SECRET"
 
-// TokenExpiration is the time in seconds when a token will expire
-const TokenExpiration = 3600 * 24 * 7
+// SessionCookieName is the env variable name used to set the cookie for sessions
+const SessionCookieName = "SESSION_COOKIE_NAME"
+
+// SessionExpiration is the time in seconds when a token will expire
+const SessionExpiration = 3600 * 24 * 7
 
 
 // MinEntropyBits is the minimum number of bits of entropy required for a password.

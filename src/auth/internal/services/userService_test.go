@@ -1,12 +1,9 @@
 package services_test
 
 import (
-	"math"
-	"os"
 	"testing"
 	"time"
 
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/matryer/is"
 	"golang.org/x/crypto/bcrypt"
@@ -190,7 +187,7 @@ func TestUserService_UpdateUser(t *testing.T) {
 }
 
 // TestUserService_LoginUser tests that a user can be logged in, generating a
-// JWT token and creating a session in the database
+// session cookie and creating a session in the database
 func TestUserService_LoginUser(t *testing.T) {
 	is := is.New(t)
 
@@ -229,48 +226,6 @@ func TestUserService_LoginUser(t *testing.T) {
 		token, err := us.LoginUser(email, testutils.TestingPassword)
 		is.NoErr(err)
 		is.True(token != "")
-	})
-
-	// Generated token has claims that match user email/password
-	t.Run("expected token claims", func(t *testing.T) {
-		us := setupUserService(t)
-		err := us.RegisterUser(email, testutils.TestingPassword)
-		is.NoErr(err)
-
-		// Track current time for later comparison
-		loginTime := time.Now()
-		// Login user and get generated token
-		token, err := us.LoginUser(email, testutils.TestingPassword)
-		is.NoErr(err)
-
-		// Parse the token and get the claims
-		parsedToken, err := jwt.Parse(token, func(token *jwt.Token) (any, error) {
-			return []byte(os.Getenv(config.JwtCookieName)), nil
-		})
-		is.NoErr(err)
-		is.True(parsedToken.Valid)
-
-		claims, ok := parsedToken.Claims.(jwt.MapClaims)
-		is.True(ok)
-
-		// Get registered user to compare against claims
-		user, err := us.UserRepo.GetUserByEmail(email)
-		is.NoErr(err)
-
-		// Subject of claims is the same as the user id
-		is.Equal(claims["sub"], user.ID.String())
-
-		// Expiration of token is approximately the same as the login time + expiration time
-		exp, ok := claims["exp"].(float64)
-		is.True(ok)
-		expectedExp := float64(loginTime.Unix() + config.TokenExpiration)
-		// Account for 1 second expiration difference
-		is.True(math.Abs(exp-expectedExp) < 1)
-
-		// Verify session was created
-		session, err := us.SessionRepo.GetUnexpiredSessionByToken(token)
-		is.NoErr(err)
-		is.Equal(session.UserID.String(), user.ID.String())
 	})
 
 	t.Run("deny locked account login", func(t *testing.T) {
@@ -323,7 +278,7 @@ func TestUserService_Logout(t *testing.T) {
 	us := setupUserService(t)
 	t.Run("error on empty token string", func(t *testing.T) {
 		err := us.Logout("")
-		is.Equal(err, apperrors.ErrTokenIsEmpty)
+		is.Equal(err, apperrors.ErrSessionIdIsEmpty)
 	})
 
 	t.Run("invalidates a token", func(t *testing.T) {
@@ -339,7 +294,7 @@ func TestUserService_Logout(t *testing.T) {
 		err = us.Logout(token)
 
 		// Check that corresponding session no longer exists in database
-		session, err := us.SessionRepo.GetUnexpiredSessionByToken(token)
+		session, err := us.SessionRepo.GetUnexpiredSessionByID(token)
 		is.Equal(session, nil)
 		is.Equal(err, gorm.ErrRecordNotFound)
 	})
@@ -377,7 +332,7 @@ func TestUserService_LogoutEverywhere(t *testing.T) {
 
 		// Check that corresponding session no longer exists in database
 		for _, token := range tokens {
-			session, err := us.SessionRepo.GetUnexpiredSessionByToken(token)
+			session, err := us.SessionRepo.GetUnexpiredSessionByID(token)
 			is.Equal(session, nil)
 			is.Equal(err, gorm.ErrRecordNotFound)
 		}

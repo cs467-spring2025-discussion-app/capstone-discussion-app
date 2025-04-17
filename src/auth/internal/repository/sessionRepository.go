@@ -28,46 +28,43 @@ func (sr *SessionRepository) CreateSession(session *models.Session) error {
 	if session == nil {
 		return apperrors.ErrSessionIsNil
 	}
-	// Lookup existing session by token
+	// Lookup existing session by ID
 	var existingSession models.Session
-	result := sr.DB.Where("token = ?", session.Token).First(&existingSession)
+	result := sr.DB.Where("id = ?", session.ID).First(&existingSession)
 	if result.Error == nil {
 		// Session already exists
 		return apperrors.ErrSessionAlreadyExists
-	} else if result.Error != gorm.ErrRecordNotFound { // RecordNotFound is what we want
+	} else if result.Error != gorm.ErrRecordNotFound { // RecordNotFound is what we want to prevent duplicates
 		// Some other error
 		return result.Error
 	}
 	return sr.DB.Create(session).Error
 }
 
-// GetUnexpiredSessionByToken retrieves a session from the database by token, but ignores any
-// expired tokens
-func (sr *SessionRepository) GetUnexpiredSessionByToken(token string) (*models.Session, error) {
-	if token == "" {
-		return nil, apperrors.ErrTokenIsEmpty
+// GetUnexpiredSessionByID retrieves a session from the database by sessionID, but ignores any expired sessions
+func (sr *SessionRepository) GetUnexpiredSessionByID(sessionID string) (*models.Session, error) {
+	if sessionID == "" {
+		return nil, apperrors.ErrSessionIdIsEmpty
 	}
 	var session models.Session
-	result := sr.DB.Where("token = ? AND expires_at > ?", token, time.Now()).First(&session)
+	result := sr.DB.Where("id = ? AND expires_at > ?", sessionID, time.Now()).First(&session)
 	if result.Error != nil {
 		return nil, result.Error
 	}
 	return &session, nil
 }
 
-
-// DeleteSessionByToken deletes a single session from the database by token
-func (sr *SessionRepository) DeleteSessionByToken(token string) error {
-	if token == "" {
-		return apperrors.ErrTokenIsEmpty
+// DeleteSessionByID deletes a single session from the database by sessionID
+func (sr *SessionRepository) DeleteSessionByID(sessionID string) error {
+	if sessionID == "" {
+		return apperrors.ErrSessionIdIsEmpty
 	}
-	result := sr.DB.Where("token = ?", token).Delete(&models.Session{})
+	result := sr.DB.Where("id = ?", sessionID).Delete(&models.Session{})
 	if result.RowsAffected == 0 {
 		return gorm.ErrRecordNotFound
 	}
 	return result.Error
 }
-
 
 // DeleteSessionsByUserID deletes all sessions associated with a userID from the database
 func (sr *SessionRepository) DeleteSessionsByUserID(userID string) error {

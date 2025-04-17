@@ -1,5 +1,5 @@
-# @name ping
 
+# @name ping
 GET http://localhost:3001/ping
 
 ###

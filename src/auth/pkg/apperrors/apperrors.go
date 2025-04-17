@@ -8,9 +8,10 @@ var New = errors.New
 
 var (
 	// Authentication errors
-	ErrAccountIsLocked = New("Account is locked")
-	ErrInvalidLogin    = New("Invalid login credentials")
-	ErrTokenGeneration = New("Could not generate token")
+	ErrAccountIsLocked     = New("Account is locked")
+	ErrInvalidLogin        = New("Invalid login credentials")
+	ErrSessionIDGeneration = New("Could not generate token")
+	ErrInvalidTokenFormat  = New("Invalid token format")
 
 	// User registration errors
 	ErrDuplicateEmail = New("Email already exists in database")
@@ -33,7 +34,7 @@ var (
 	// Empty string argument errors
 	ErrExpiresAtIsEmpty = New("Expiration time is empty")
 	ErrPasswordIsEmpty  = New("Password is empty")
-	ErrTokenIsEmpty     = New("Token is empty")
+	ErrSessionIdIsEmpty     = New("Token is empty")
 	ErrUserIdEmpty      = New("User ID is empty")
 
 	// Database errors
