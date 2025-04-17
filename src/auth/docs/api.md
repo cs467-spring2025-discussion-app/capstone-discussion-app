@@ -6,12 +6,12 @@ Base URL: `https://localhost:3001`
 
 ### Authentication
 
-| Endpoint            | Method | Description       | Request Body                                  | Response                                      |
-| ------------------- | ------ | ----------------- | --------------------------------------------- | --------------------------------------------- |
-| `/register`         | POST   | Register new user | `{ "email": "string", "password": "string" }` | `{ "message": "User {{user}} created" }`      |
-| `/login`            | POST   | Authenticate user | `{ "email": "string", "password": "string" }` | `{ "message": "login success" }` + JWT Cookie |
-| `/logout`           | POST   | End a session     | `{}` (requires cookie)                        | `{ "message": "logged out successfully" }`    |
-| `/logouteverywhere` | POST   | End all sessions  | `{}` (requires cookie)                        | `{ "message": "logged out everywhere" }`      |
+| Endpoint            | Method | Description       | Request Body                                  | Response                                          |
+| ------------------- | ------ | ----------------- | --------------------------------------------- | ------------------------------------------------- |
+| `/register`         | POST   | Register new user | `{ "email": "string", "password": "string" }` | `{ "message": "User {{user}} created" }`          |
+| `/login`            | POST   | Authenticate user | `{ "email": "string", "password": "string" }` | `{ "message": "login success" }` + session cookie |
+| `/logout`           | POST   | End a session     | `{}` (requires cookie)                        | `{ "message": "logged out successfully" }`        |
+| `/logouteverywhere` | POST   | End all sessions  | `{}` (requires cookie)                        | `{ "message": "logged out everywhere" }`          |
 
 ### User Management
 
