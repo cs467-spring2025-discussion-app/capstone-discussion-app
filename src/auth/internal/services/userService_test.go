@@ -1,6 +1,7 @@
 package services_test
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -293,8 +294,15 @@ func TestUserService_Logout(t *testing.T) {
 		// Logout a user
 		err = us.Logout(token)
 
+		// Get session ID from token
+		parts := strings.Split(token, ".")
+		is.True(len(parts) == 2)
+		sessionID := parts[0]
+		parsedID, err := uuid.Parse(sessionID)
+		is.NoErr(err)
+
 		// Check that corresponding session no longer exists in database
-		session, err := us.SessionRepo.GetUnexpiredSessionByID(token)
+		session, err := us.SessionRepo.GetUnexpiredSessionByID(parsedID)
 		is.Equal(session, nil)
 		is.Equal(err, gorm.ErrRecordNotFound)
 	})
@@ -332,7 +340,14 @@ func TestUserService_LogoutEverywhere(t *testing.T) {
 
 		// Check that corresponding session no longer exists in database
 		for _, token := range tokens {
-			session, err := us.SessionRepo.GetUnexpiredSessionByID(token)
+			// Get session ID from token
+			parts := strings.Split(token, ".")
+			is.True(len(parts) == 2)
+			sessionID := parts[0]
+			parsedID, err := uuid.Parse(sessionID)
+			is.NoErr(err)
+			// Confirm session is gone
+			session, err := us.SessionRepo.GetUnexpiredSessionByID(parsedID)
 			is.Equal(session, nil)
 			is.Equal(err, gorm.ErrRecordNotFound)
 		}

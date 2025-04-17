@@ -3,6 +3,7 @@ package repository
 import (
 	"time"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 
 	"godiscauth/internal/models"
@@ -42,8 +43,8 @@ func (sr *SessionRepository) CreateSession(session *models.Session) error {
 }
 
 // GetUnexpiredSessionByID retrieves a session from the database by sessionID, but ignores any expired sessions
-func (sr *SessionRepository) GetUnexpiredSessionByID(sessionID string) (*models.Session, error) {
-	if sessionID == "" {
+func (sr *SessionRepository) GetUnexpiredSessionByID(sessionID uuid.UUID) (*models.Session, error) {
+	if sessionID == uuid.Nil {
 		return nil, apperrors.ErrSessionIdIsEmpty
 	}
 	var session models.Session
@@ -55,8 +56,8 @@ func (sr *SessionRepository) GetUnexpiredSessionByID(sessionID string) (*models.
 }
 
 // DeleteSessionByID deletes a single session from the database by sessionID
-func (sr *SessionRepository) DeleteSessionByID(sessionID string) error {
-	if sessionID == "" {
+func (sr *SessionRepository) DeleteSessionByID(sessionID uuid.UUID) error {
+	if sessionID == uuid.Nil {
 		return apperrors.ErrSessionIdIsEmpty
 	}
 	result := sr.DB.Where("id = ?", sessionID).Delete(&models.Session{})

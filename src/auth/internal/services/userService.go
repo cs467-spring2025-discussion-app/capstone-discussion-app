@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	passwordvalidator "github.com/wagslane/go-password-validator"
 	"golang.org/x/crypto/bcrypt"
 
@@ -97,7 +98,7 @@ func (us *UserService) LoginUser(email, password string) (string, error) {
 	if err != nil {
 		return "", apperrors.ErrSessionIDGeneration
 	}
-	sessionToken := sessionID + "." + signature
+	sessionToken := sessionID.String() + "." + signature
 
 	// Create session with expiration time (use UTC)
 	expiresAt := time.Now().UTC().Add(time.Duration(config.SessionExpiration) * time.Second)
@@ -127,7 +128,11 @@ func (us *UserService) Logout(sessionToken string) error {
 		return apperrors.ErrInvalidTokenFormat
 	}
 	sessionID := parts[0]
-	return us.SessionRepo.DeleteSessionByID(sessionID)
+	parsedID, err := uuid.Parse(sessionID)
+	if err != nil {
+		return apperrors.ErrInvalidTokenFormat
+	}
+	return us.SessionRepo.DeleteSessionByID(parsedID)
 }
 
 func (us *UserService) LogoutEverywhere(userID string) error {
@@ -204,7 +209,7 @@ func (us *UserService) PermanentlyDeleteUser(userID string) error {
 
 // RotateSession generates a new session token for the user and invalidates the old one
 // RotateSession creates a new session and replaces the old one
-func (us *UserService) RotateSession(oldSessionID string) (string, error) {
+func (us *UserService) RotateSession(oldSessionID uuid.UUID) (string, error) {
 	// Check session exists
 	oldSession, err := us.SessionRepo.GetUnexpiredSessionByID(oldSessionID)
 	if err != nil {
@@ -216,7 +221,7 @@ func (us *UserService) RotateSession(oldSessionID string) (string, error) {
 	if err != nil {
 		return "", apperrors.ErrSessionIDGeneration
 	}
-	newSessionToken := newSessionID + "." + signature
+	newSessionToken := newSessionID.String() + "." + signature
 
 	// Create new session with the new token and expiration time
 	expiresAt := time.Now().UTC().Add(time.Duration(config.SessionExpiration) * time.Second)

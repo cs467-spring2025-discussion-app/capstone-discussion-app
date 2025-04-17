@@ -58,7 +58,7 @@ func TestSessionRepository_CreateSession(t *testing.T) {
 		err := sr.DB.Create(user).Error
 		is.NoErr(err)
 
-		session, err := models.NewSession(user.ID, uuid.New().String(), time.Now().Add(1*time.Hour))
+		session, err := models.NewSession(user.ID, uuid.New(), time.Now().Add(1*time.Hour))
 		is.NoErr(err)
 
 		err = sr.CreateSession(session)
@@ -76,7 +76,7 @@ func TestSessionRepository_CreateSession(t *testing.T) {
 		err := sr.DB.Create(user).Error
 		is.NoErr(err)
 
-		sessionID := uuid.New().String()
+		sessionID := uuid.New()
 
 		// Insert first session
 		sessionOne, err := models.NewSession(user.ID, sessionID, time.Now().Add(1*time.Hour))
@@ -104,7 +104,7 @@ func TestSessionRepository_GetUnexpiredSessionByID(t *testing.T) {
 	t.Run("fails on empty session id", func(t *testing.T) {
 		sr := setupSessionRepository(t)
 
-		session, err := sr.GetUnexpiredSessionByID("")
+		session, err := sr.GetUnexpiredSessionByID(uuid.Nil)
 		is.Equal(session, nil)
 		is.Equal(err, apperrors.ErrSessionIdIsEmpty)
 	})
@@ -112,7 +112,7 @@ func TestSessionRepository_GetUnexpiredSessionByID(t *testing.T) {
 	t.Run("fails on non-existing session", func(t *testing.T) {
 		sr := setupSessionRepository(t)
 
-		session, err := sr.GetUnexpiredSessionByID(uuid.New().String())
+		session, err := sr.GetUnexpiredSessionByID(uuid.New())
 		is.Equal(session, nil)
 		is.Equal(err, gorm.ErrRecordNotFound)
 	})
@@ -130,7 +130,7 @@ func TestSessionRepository_GetUnexpiredSessionByID(t *testing.T) {
 		is.NoErr(err)
 
 		// Insert associated session
-		session, err := models.NewSession(user.ID, uuid.New().String(), time.Now().Add(1*time.Hour))
+		session, err := models.NewSession(user.ID, uuid.New(), time.Now().Add(1*time.Hour))
 		is.NoErr(err)
 		err = sr.CreateSession(session)
 		is.NoErr(err)
@@ -149,14 +149,14 @@ func TestSessionRepository_DeleteSessionByID(t *testing.T) {
 	t.Run("fails on empty id", func(t *testing.T) {
 		sr := setupSessionRepository(t)
 
-		err := sr.DeleteSessionByID("")
+		err := sr.DeleteSessionByID(uuid.Nil)
 		is.Equal(err, apperrors.ErrSessionIdIsEmpty)
 	})
 
 	t.Run("fails on non-existing session", func(t *testing.T) {
 		sr := setupSessionRepository(t)
 
-		err := sr.DeleteSessionByID(uuid.New().String())
+		err := sr.DeleteSessionByID(uuid.New())
 		is.Equal(err, gorm.ErrRecordNotFound)
 	})
 
@@ -172,7 +172,7 @@ func TestSessionRepository_DeleteSessionByID(t *testing.T) {
 		is.NoErr(err)
 
 		// Insert session to delete
-		session, err := models.NewSession(user.ID, uuid.New().String(), time.Now().Add(1*time.Hour))
+		session, err := models.NewSession(user.ID, uuid.New(), time.Now().Add(1*time.Hour))
 		is.NoErr(err)
 		err = sr.CreateSession(session)
 		is.NoErr(err)
@@ -217,13 +217,13 @@ func TestSessionRepository_DeleteSessionsByUserID(t *testing.T) {
 		is.NoErr(err)
 
 		// Insert first session associated with user
-		sessionOne, err := models.NewSession(user.ID, uuid.New().String(), time.Now().Add(1*time.Hour))
+		sessionOne, err := models.NewSession(user.ID, uuid.New(), time.Now().Add(1*time.Hour))
 		is.NoErr(err)
 		err = sr.CreateSession(sessionOne)
 		is.NoErr(err)
 
 		// Insert second session associated with user
-		sessionTwo, err := models.NewSession(user.ID, uuid.New().String(), time.Now().Add(1*time.Hour))
+		sessionTwo, err := models.NewSession(user.ID, uuid.New(), time.Now().Add(1*time.Hour))
 		is.NoErr(err)
 		err = sr.CreateSession(sessionTwo)
 		is.NoErr(err)

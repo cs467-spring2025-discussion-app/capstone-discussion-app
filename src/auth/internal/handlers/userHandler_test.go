@@ -131,7 +131,9 @@ func TestUserHandler_Login(t *testing.T) {
 		parts := strings.Split(sessionToken, ".")
 		is.True(len(parts) == 2)
 		sessionID, signature := parts[0], parts[1]
-		is.True(models.ValidateSessionID(sessionID, signature))
+		parsedID, err := uuid.Parse(sessionID)
+		is.NoErr(err)
+		is.True(models.ValidateSessionID(parsedID, signature))
 	})
 
 	t.Run("no email", func(t *testing.T) {

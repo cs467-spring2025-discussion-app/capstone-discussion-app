@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/matryer/is"
 
 	"godiscauth/internal/middleware"
@@ -50,7 +51,7 @@ func TestMiddlewareAuth_RequireAuth(t *testing.T) {
 	// Generate a test token
 	sessionID, signature, err := models.GenerateSessionID()
 	is.NoErr(err)
-	sessionToken := sessionID + "." + signature
+	sessionToken := sessionID.String() + "." + signature
 
 	// Create a session record for this token
 	session, err := models.NewSession(
@@ -97,12 +98,12 @@ func TestMiddlewareAuth_RequireAuth(t *testing.T) {
 		// Generate new session token with same claims
 		sessionID, signature, err := models.GenerateSessionID()
 		is.NoErr(err)
-		expiredSessionToken := sessionID + "." + signature
+		expiredSessionToken := sessionID.String() + "." + signature
 
 		// Create a session with an expired token
 		expiredSession, err := models.NewSession(
 			user.ID,
-			expiredSessionToken,
+			sessionID,
 			time.Now().Add(-1*time.Hour),
 		)
 		is.NoErr(err)
@@ -155,15 +156,15 @@ func TestMiddlewareAuth_RequireAuth_SessionRotation(t *testing.T) {
 	is.NoErr(err)
 
 	// Generate a test token
-	sessionID, signature, err := models.GenerateSessionID()
+	oldSessionID, signature, err := models.GenerateSessionID()
 	is.NoErr(err)
-	sessionToken := sessionID + "." + signature
+	sessionToken := oldSessionID.String() + "." + signature
 
 	// Create a session record for this token
 	expiresAt := time.Now().UTC().Add(10 * time.Minute)
 	session, err := models.NewSession(
 		user.ID,
-		sessionID,
+		oldSessionID,
 		expiresAt,
 	)
 	is.NoErr(err)
@@ -176,7 +177,7 @@ func TestMiddlewareAuth_RequireAuth_SessionRotation(t *testing.T) {
 	is.NoErr(err)
 
 	// Check that the session is in the database
-	updatedSession, err := sessionRepo.GetUnexpiredSessionByID(sessionID)
+	updatedSession, err := sessionRepo.GetUnexpiredSessionByID(oldSessionID)
 	is.NoErr(err)
 
 	// Calculate halfway point
@@ -213,18 +214,20 @@ func TestMiddlewareAuth_RequireAuth_SessionRotation(t *testing.T) {
 		parts := strings.Split(newTokenFromCookie, ".")
 		is.True(len(parts) == 2)
 		newSessionID, newSignature := parts[0], parts[1]
-		is.True(models.ValidateSessionID(newSessionID, newSignature))
+		parsedID, err := uuid.Parse(newSessionID)
+		is.NoErr(err)
+		is.True(models.ValidateSessionID(parsedID, newSignature))
 
 		// Check that the new token is different from the old one
 		is.True(newTokenFromCookie != "")
 		is.True(newTokenFromCookie != sessionToken)
 
 		// Check that the old session is deleted
-		_, err = sessionRepo.GetUnexpiredSessionByID(sessionID)
+		_, err = sessionRepo.GetUnexpiredSessionByID(oldSessionID)
 		is.True(err != nil)
 
 		// Check that the new, rotated session is created
-		newSession, err := sessionRepo.GetUnexpiredSessionByID(newSessionID)
+		newSession, err := sessionRepo.GetUnexpiredSessionByID(parsedID)
 		is.NoErr(err)
 		is.Equal(user.ID, newSession.UserID)
 
@@ -234,6 +237,6 @@ func TestMiddlewareAuth_RequireAuth_SessionRotation(t *testing.T) {
 		// Rotated session should have the same user ID
 		is.Equal(user.ID, newSession.UserID)
 		// Rotated session should have a different token
-		is.True(newSession.ID != sessionToken)
+		is.True(newSession.ID != oldSessionID)
 	})
 }

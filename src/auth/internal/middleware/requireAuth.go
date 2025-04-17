@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
 
@@ -60,16 +61,22 @@ func (am *AuthMiddleware) RequireAuth() gin.HandlerFunc {
 			return
 		}
 		sessionID, signature := parts[0], parts[1]
+		parsedID, err := uuid.Parse(sessionID)
+		if err != nil {
+			log.Debug().Msg("Invalid token format")
+			c.AbortWithStatus(http.StatusUnauthorized)
+			return
+		}
 
 		// Verify the HMAC signature
-		if !models.ValidateSessionID(sessionID, signature) {
+		if !models.ValidateSessionID(parsedID, signature) {
 			log.Debug().Msg("Invalid token signature")
 			c.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
 
 		// Get session from database
-		session, err := am.SessionRepo.GetUnexpiredSessionByID(sessionID)
+		session, err := am.SessionRepo.GetUnexpiredSessionByID(parsedID)
 		if err != nil {
 			log.Debug().Err(err).Msg("Session not found")
 			c.AbortWithStatus(http.StatusUnauthorized)
@@ -96,7 +103,7 @@ func (am *AuthMiddleware) RequireAuth() gin.HandlerFunc {
 			}
 
 			// Rotate session
-			newSessionToken, err := userService.RotateSession(sessionID) // Note: pass sessionID, not the full token
+			newSessionToken, err := userService.RotateSession(parsedID)
 			if err != nil {
 				log.Debug().Err(err).Msg("Failed to rotate session")
 				c.AbortWithStatus(http.StatusUnauthorized)
