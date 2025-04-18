@@ -30,7 +30,7 @@ func main() {
 		log.Fatal().Err(err).Msg("Error migrating database")
 	}
 
-	log.Info().Msg(fmt.Sprintf("Connected to database: %s", os.Getenv(config.DatabaseURL)))
+	log.Info().Msg(fmt.Sprintf("Connected to postgres database"))
 	log.Info().Str(config.AuthServerPort, os.Getenv(config.AuthServerPort)).Msg("Starting server")
 	apiServer, err := server.NewAPIServer(db)
 	if err != nil {
