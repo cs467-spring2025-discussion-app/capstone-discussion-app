@@ -30,8 +30,8 @@ func main() {
 		log.Fatal().Err(err).Msg("Error migrating database")
 	}
 
-	log.Info().Msg(fmt.Sprintf("Connected to database: %s", os.Getenv("DB")))
-	log.Info().Str("PORT", os.Getenv("PORT")).Msg("Starting server")
+	log.Info().Msg(fmt.Sprintf("Connected to database: %s", os.Getenv(config.DatabaseURL)))
+	log.Info().Str(config.AuthServerPort, os.Getenv(config.AuthServerPort)).Msg("Starting server")
 	apiServer, err := server.NewAPIServer(db)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Error initializing server")

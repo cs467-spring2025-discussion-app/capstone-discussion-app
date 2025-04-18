@@ -1,5 +1,11 @@
 package config
 
+// DatabaseURL is the env variable name for the database url
+const DatabaseURL = "DATABASE_URL"
+
+// AuthServerPort is the env variable name for the port to use for the auth server
+const AuthServerPort = "AUTH_SERVER_PORT"
+
 // SessionCookieName is the env variable name used to set the cookie for sessions
 const SessionKey = "DISCUSSION_APP_SESSION_KEY"
 

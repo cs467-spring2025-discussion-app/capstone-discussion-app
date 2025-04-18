@@ -6,12 +6,14 @@ import (
 	"github.com/rs/zerolog/log"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+
+	"godiscauth/pkg/config"
 )
 
 // NewDB creates a new database connection using GORM and PostgreSQL.
 func NewDB() (*gorm.DB, error) {
 	var db *gorm.DB
-	dsn := os.Getenv("DB")
+	dsn := os.Getenv(config.DatabaseURL)
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {

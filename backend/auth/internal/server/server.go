@@ -2,6 +2,7 @@ package server
 
 import (
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -11,6 +12,7 @@ import (
 	"godiscauth/internal/repository"
 	"godiscauth/internal/services"
 	"godiscauth/pkg/apperrors"
+	"godiscauth/pkg/config"
 )
 
 // APIServer represents the API server with a gin router.
@@ -80,7 +82,7 @@ func (s *APIServer) SetupRoutes() {
 // Run starts the API server and listens for incoming requests.
 func (s *APIServer) Run() {
 	s.SetupRoutes()
-	s.Router.Run()
+	s.Router.Run(":" + os.Getenv(config.AuthServerPort))
 }
 
 func NewRepoProvider(db *gorm.DB) (*RepoProvider, error) {
