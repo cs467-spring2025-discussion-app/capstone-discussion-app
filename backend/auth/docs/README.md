@@ -49,8 +49,8 @@ go build -o auth ./main.go
 
 The `auth` module expects the following environment variables to be set:
 
-- `DB`: The URL of the database to connect to
-- `PORT`: The port to run the http server on
+- `DATABASE_URL`: The URL of the database to connect to
+- `AUTH_SERVER_PORT`: The port to run the http server on
 - `DISCUSSION_APP_SESSION_KEY`: The secret key to encrypt the session id
 
 See `example.env` or the `watch` command in `justfile` for sample environment variables.
