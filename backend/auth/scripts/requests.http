@@ -1,0 +1,68 @@
+
+# @name ping
+GET http://localhost:3001/ping
+
+###
+
+# @name register
+
+POST http://localhost:3001/register
+Accept: application/json
+Content-Type: application/json
+
+{
+    "email": "crashTestDummy@test.com",
+    "password": "thermostatdonationbarndiamond"
+}
+
+###
+
+# @name login
+POST http://localhost:3001/login
+Accept: application/json
+Content-Type: application/json
+
+{
+    "email": "crashTestDummy@test.com",
+    "password": "thermostatdonationbarndiamond"
+}
+
+###
+
+# @name profile
+GET http://localhost:3001/profile
+Cookie: {{login.response.headers.Set-Cookie}}
+
+###
+
+# @name permanently delete user
+DELETE http://localhost:3001/deleteaccount
+Cookie: {{login.response.headers.Set-Cookie}}
+
+###
+
+# @name update
+POST http://localhost:3001/updateuser
+Cookie: {{login.response.headers.Set-Cookie}}
+Accept: application/json
+Content-Type: application/json
+
+{
+    "email": "crashTestDummy22@test.com",
+    "password": "thermostatdonationbarndiamond22"
+}
+
+###
+
+# @name logout
+POST http://localhost:3001/logout
+Cookie: {{login.response.headers.Set-Cookie}}
+Accept: application/json
+
+###
+
+# @name logouteverywhere
+POST http://localhost:3001/logouteverywhere
+Cookie: {{login.response.headers.Set-Cookie}}
+Accept: application/json
+###
