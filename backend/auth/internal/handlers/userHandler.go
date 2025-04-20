@@ -118,7 +118,7 @@ func (uh *UserHandler) Logout(c *gin.Context) {
 			Str("clientIP", clientIP).
 			Str("error", err.Error()).
 			Msg("Cookie not found")
-		c.AbortWithStatus(http.StatusBadRequest)
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
 
@@ -146,7 +146,7 @@ func (uh *UserHandler) LogoutEverywhere(c *gin.Context) {
 		log.Info().
 			Str("clientIP", clientIP).
 			Msg("userID not found in cookie")
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
 	userID := userIDStr.(string)
