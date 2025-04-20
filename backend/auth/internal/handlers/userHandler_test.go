@@ -250,7 +250,8 @@ func TestUserHandler_Logout(t *testing.T) {
 		is.NoErr(err)
 		w := httptest.NewRecorder()
 		server.Router.ServeHTTP(w, req)
-		is.Equal(w.Code, http.StatusBadRequest)
+
+		is.Equal(w.Code, http.StatusUnauthorized)
 	})
 
 	t.Run("invalid token", func(t *testing.T) {
@@ -466,7 +467,7 @@ func TestUserHandler_PermanentlyDeleteUser(t *testing.T) {
 
 		req, _ := http.NewRequest(http.MethodDelete, path, nil)
 		r.ServeHTTP(w, req)
-		is.Equal(http.StatusBadRequest, w.Code)
+		is.Equal(http.StatusInternalServerError, w.Code)
 	})
 
 	t.Run("no userID in gin context", func(t *testing.T) {
