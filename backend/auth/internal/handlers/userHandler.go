@@ -279,7 +279,7 @@ func (uh *UserHandler) PermanentlyDeleteUser(c *gin.Context) {
 			Str("clientIP", clientIP).
 			Str("error", err.Error()).
 			Msg("failed to delete user")
-		c.AbortWithStatus(http.StatusBadRequest)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{})
 		return
 	}
 
