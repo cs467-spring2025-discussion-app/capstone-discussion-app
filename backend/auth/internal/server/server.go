@@ -76,8 +76,7 @@ func (s *APIServer) SetupRoutes() {
 		MaxAge:           12 * time.Hour,
 	}))
 
-	r.GET("/ping", func(c *gin.Context) { c.String(http.StatusOK, "pong") })
-
+	r.GET("/ping", func(c *gin.Context) { c.JSON(http.StatusOK, gin.H{"message": "pong"}) })
 	r.POST("/register", s.HandlerRegistry.User.RegisterUser)
 	r.POST("/login", s.HandlerRegistry.User.Login)
 	r.POST("/logout", s.HandlerRegistry.User.Logout)
