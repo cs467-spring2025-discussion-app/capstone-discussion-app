@@ -3,7 +3,9 @@ package server
 import (
 	"net/http"
 	"os"
+	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 
@@ -63,8 +65,18 @@ func NewAPIServer(db *gorm.DB) (*APIServer, error) {
 // SetupRoutes sets up the routes for the API server.
 func (s *APIServer) SetupRoutes() {
 	r := s.Router
-	r.GET("/ping", func(c *gin.Context) { c.String(http.StatusOK, "pong") })
 
+	// CORS middleware
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:5173", "http://frontend:5173", "http://localhost:8080"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
+
+	r.GET("/ping", func(c *gin.Context) { c.JSON(http.StatusOK, gin.H{"message": "pong"}) })
 	r.POST("/register", s.HandlerRegistry.User.RegisterUser)
 	r.POST("/login", s.HandlerRegistry.User.Login)
 	r.POST("/logout", s.HandlerRegistry.User.Logout)
