@@ -1,6 +1,7 @@
 package server_test
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -31,9 +32,10 @@ func TestPingRoute(t *testing.T) {
 
 	req, _ := http.NewRequest("GET", "/ping", nil)
 	rr := httptest.NewRecorder()
-
 	server.Router.ServeHTTP(rr, req)
+	var response map[string]string
+	err = json.NewDecoder(rr.Body).Decode(&response)
 
 	is.Equal(http.StatusOK, rr.Code)
-	is.Equal("pong", rr.Body.String())
+	is.Equal(response["message"], "pong")
 }
