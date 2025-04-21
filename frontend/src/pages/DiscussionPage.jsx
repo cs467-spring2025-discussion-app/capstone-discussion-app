@@ -6,12 +6,12 @@ export default function DiscussionPage() {
     const postTextAreaId = React.useId();
     return (
         <div className="flex justify-center">
-            <div className='flex flex-col items-center w-full max-w-xl p-4 text-center'>
-                <div className='border-t-15 border-t-purple-400 h-35 p-5 rounded-lg shadow-lg w-2xl bg-white text-left mb-8'>
+            <div className='flex flex-col items-center w-full max-w-4xl p-4 text-center'>
+                <div className='w-full max-w-5xl border-t-15 border-t-purple-400 h-35 p-5 rounded-lg shadow-lg bg-white text-left mb-8'>
                     <h3 className='mt-2 mb-5 font-bold text-2xl'>Topic</h3>
                     <p>Question</p>
                 </div>
-                <div className='border-t-5 border-t-purple-400 p-5 rounded-lg shadow-lg w-2xl bg-white text-left mb-8'>
+                <div className='border-t-5 border-t-purple-400 p-5 rounded-lg shadow-lg w-full max-w-5xl bg-white text-left mb-8'>
                     <label htmlFor={postTextAreaId}>
                         Join the discussion:
                         <textarea
