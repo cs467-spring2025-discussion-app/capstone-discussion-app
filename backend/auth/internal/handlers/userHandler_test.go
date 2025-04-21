@@ -223,13 +223,13 @@ func TestUserHandler_Logout(t *testing.T) {
 		req, err := http.NewRequest("POST", "/logout", nil)
 		is.NoErr(err)
 		req.AddCookie(sessionCookie)
-		w := httptest.NewRecorder()
-		server.Router.ServeHTTP(w, req)
-		is.Equal(w.Code, http.StatusOK)
+		rr := httptest.NewRecorder()
+		server.Router.ServeHTTP(rr, req)
+		is.Equal(rr.Code, http.StatusOK)
 
 		// Check cookie is cleared
 		var logoutCookie *http.Cookie
-		for _, cookie := range w.Result().Cookies() {
+		for _, cookie := range rr.Result().Cookies() {
 			if cookie.Name == config.SessionCookieName {
 				logoutCookie = cookie
 				break
@@ -240,7 +240,7 @@ func TestUserHandler_Logout(t *testing.T) {
 
 		// Check response message
 		var response map[string]string
-		err = json.NewDecoder(w.Body).Decode(&response)
+		err = json.NewDecoder(rr.Body).Decode(&response)
 		is.NoErr(err)
 		is.Equal(response["message"], "logged out successfully")
 	})
@@ -248,10 +248,10 @@ func TestUserHandler_Logout(t *testing.T) {
 	t.Run("no token", func(t *testing.T) {
 		req, err := http.NewRequest("POST", "/logout", nil)
 		is.NoErr(err)
-		w := httptest.NewRecorder()
-		server.Router.ServeHTTP(w, req)
+		rr := httptest.NewRecorder()
+		server.Router.ServeHTTP(rr, req)
 
-		is.Equal(w.Code, http.StatusUnauthorized)
+		is.Equal(rr.Code, http.StatusUnauthorized)
 	})
 
 	t.Run("invalid token", func(t *testing.T) {
@@ -269,9 +269,9 @@ func TestUserHandler_Logout(t *testing.T) {
 		req.AddCookie(invalidCookie)
 
 		// Perform request
-		w := httptest.NewRecorder()
-		server.Router.ServeHTTP(w, req)
-		is.Equal(w.Code, http.StatusInternalServerError)
+		rr := httptest.NewRecorder()
+		server.Router.ServeHTTP(rr, req)
+		is.Equal(rr.Code, http.StatusInternalServerError)
 	})
 }
 
@@ -344,13 +344,13 @@ func TestUserHandler_LogoutEverywhere(t *testing.T) {
 		})
 
 		// Logout everywhere
-		w := httptest.NewRecorder()
-		server.Router.ServeHTTP(w, req)
-		is.Equal(w.Code, http.StatusOK)
+		rr := httptest.NewRecorder()
+		server.Router.ServeHTTP(rr, req)
+		is.Equal(rr.Code, http.StatusOK)
 
 		// Cookie is cleared
 		var clearedCookie *http.Cookie
-		for _, cookie := range w.Result().Cookies() {
+		for _, cookie := range rr.Result().Cookies() {
 			if cookie.Name == config.SessionCookieName {
 				clearedCookie = cookie
 				break
@@ -361,7 +361,7 @@ func TestUserHandler_LogoutEverywhere(t *testing.T) {
 
 		// Verify response body
 		var response map[string]string
-		err = json.NewDecoder(w.Body).Decode(&response)
+		err = json.NewDecoder(rr.Body).Decode(&response)
 		is.NoErr(err)
 		is.Equal(response["message"], "logged out everywhere")
 
@@ -375,9 +375,9 @@ func TestUserHandler_LogoutEverywhere(t *testing.T) {
 			HttpOnly: true,
 			Secure:   true,
 		})
-		w = httptest.NewRecorder()
-		server.Router.ServeHTTP(w, req)
-		is.Equal(w.Code, http.StatusUnauthorized)
+		rr = httptest.NewRecorder()
+		server.Router.ServeHTTP(rr, req)
+		is.Equal(rr.Code, http.StatusUnauthorized)
 
 		// Check second token is invalidated
 		req, err = http.NewRequest("POST", "/logouteverywhere", nil)
@@ -389,19 +389,19 @@ func TestUserHandler_LogoutEverywhere(t *testing.T) {
 			HttpOnly: true,
 			Secure:   true,
 		})
-		w = httptest.NewRecorder()
-		server.Router.ServeHTTP(w, req)
-		is.Equal(w.Code, http.StatusUnauthorized)
+		rr = httptest.NewRecorder()
+		server.Router.ServeHTTP(rr, req)
+		is.Equal(rr.Code, http.StatusUnauthorized)
 	})
 
 	t.Run("logout everywhere without token", func(t *testing.T) {
 		req, err := http.NewRequest("POST", "/logouteverywhere", nil)
 		is.NoErr(err)
 
-		w := httptest.NewRecorder()
-		server.Router.ServeHTTP(w, req)
+		rr := httptest.NewRecorder()
+		server.Router.ServeHTTP(rr, req)
 
-		is.Equal(w.Code, http.StatusUnauthorized)
+		is.Equal(rr.Code, http.StatusUnauthorized)
 	})
 
 	t.Run("logout everywhere with invalid token", func(t *testing.T) {
@@ -416,10 +416,10 @@ func TestUserHandler_LogoutEverywhere(t *testing.T) {
 			Secure:   true,
 		})
 
-		w := httptest.NewRecorder()
-		server.Router.ServeHTTP(w, req)
+		rr := httptest.NewRecorder()
+		server.Router.ServeHTTP(rr, req)
 
-		is.Equal(w.Code, http.StatusUnauthorized)
+		is.Equal(rr.Code, http.StatusUnauthorized)
 	})
 }
 
@@ -441,8 +441,8 @@ func TestUserHandler_PermanentlyDeleteUser(t *testing.T) {
 
 	t.Run("set userID in gin context", func(t *testing.T) {
 		path := "/deleteAccountValid"
-		w := httptest.NewRecorder()
-		_, r := gin.CreateTestContext(w)
+		rr := httptest.NewRecorder()
+		_, r := gin.CreateTestContext(rr)
 
 		r.DELETE(path, func(c *gin.Context) {
 			c.Set("userID", dbUser.ID.String())
@@ -450,14 +450,14 @@ func TestUserHandler_PermanentlyDeleteUser(t *testing.T) {
 		})
 
 		req, _ := http.NewRequest(http.MethodDelete, path, nil)
-		r.ServeHTTP(w, req)
-		is.Equal(http.StatusOK, w.Code)
+		r.ServeHTTP(rr, req)
+		is.Equal(http.StatusOK, rr.Code)
 	})
 
 	t.Run("non-existent user ID", func(t *testing.T) {
 		path := "/deleteAccountInvalidID"
-		w := httptest.NewRecorder()
-		_, r := gin.CreateTestContext(w)
+		rr := httptest.NewRecorder()
+		_, r := gin.CreateTestContext(rr)
 
 		r.DELETE(path, func(c *gin.Context) {
 			randUUID := uuid.New()
@@ -466,25 +466,25 @@ func TestUserHandler_PermanentlyDeleteUser(t *testing.T) {
 		})
 
 		req, _ := http.NewRequest(http.MethodDelete, path, nil)
-		r.ServeHTTP(w, req)
-		is.Equal(http.StatusInternalServerError, w.Code)
+		r.ServeHTTP(rr, req)
+		is.Equal(http.StatusInternalServerError, rr.Code)
 	})
 
 	t.Run("no userID in gin context", func(t *testing.T) {
 		path := "/deleteAccountNoUserID"
-		w := httptest.NewRecorder()
-		_, r := gin.CreateTestContext(w)
+		rr := httptest.NewRecorder()
+		_, r := gin.CreateTestContext(rr)
 
 		r.DELETE(path, func(c *gin.Context) {
 			server.HandlerRegistry.User.PermanentlyDeleteUser(c)
 		})
 
 		req, _ := http.NewRequest(http.MethodDelete, path, nil)
-		r.ServeHTTP(w, req)
-		is.Equal(http.StatusUnauthorized, w.Code)
+		r.ServeHTTP(rr, req)
+		is.Equal(http.StatusUnauthorized, rr.Code)
 
 		var response map[string]any
-		json.Unmarshal(w.Body.Bytes(), &response)
+		json.Unmarshal(rr.Body.Bytes(), &response)
 		is.Equal(0, len(response))
 	})
 }
@@ -503,17 +503,17 @@ func TestUserHandler_UpdateUser(t *testing.T) {
 	var sessionToken string
 
 	// Login test user
-	rr, err := makeRequest(
+	_rr, err := makeRequest(
 		server.Router,
 		"POST",
 		"/login",
 		UserCredentialsRequest{Email: email, Password: testutils.TestingPassword},
 	)
 	is.NoErr(err)
-	is.Equal(rr.Code, http.StatusOK)
+	is.Equal(_rr.Code, http.StatusOK)
 
 	// Get token from cookies
-	cookies := rr.Result().Cookies()
+	cookies := _rr.Result().Cookies()
 	for _, cookie := range cookies {
 		if cookie.Name == config.SessionCookieName {
 			sessionToken = cookie.Value
@@ -539,7 +539,7 @@ func TestUserHandler_UpdateUser(t *testing.T) {
 		req.Header.Set("Content-Type", "application/json")
 
 		// Get token from cookies
-		cookies := rr.Result().Cookies()
+		cookies := _rr.Result().Cookies()
 		for _, cookie := range cookies {
 			if cookie.Name == config.SessionCookieName {
 				sessionToken = cookie.Value
@@ -558,19 +558,19 @@ func TestUserHandler_UpdateUser(t *testing.T) {
 		})
 
 		// Make request
-		w := httptest.NewRecorder()
-		server.Router.ServeHTTP(w, req)
-		is.Equal(w.Code, http.StatusOK)
+		rr := httptest.NewRecorder()
+		server.Router.ServeHTTP(rr, req)
+		is.Equal(rr.Code, http.StatusOK)
 
 		// Check we can login with the new credentials
-		rr, err = makeRequest(
+		_rr, err = makeRequest(
 			server.Router,
 			"POST",
 			"/login",
 			UserCredentialsRequest{Email: newEmail, Password: newPassword},
 		)
 		is.NoErr(err)
-		is.Equal(rr.Code, http.StatusOK)
+		is.Equal(_rr.Code, http.StatusOK)
 	})
 
 	t.Run("update with empty request", func(t *testing.T) {
@@ -594,12 +594,12 @@ func TestUserHandler_UpdateUser(t *testing.T) {
 		})
 
 		// Make request
-		w := httptest.NewRecorder()
-		server.Router.ServeHTTP(w, req)
-		is.Equal(w.Code, http.StatusBadRequest)
+		rr := httptest.NewRecorder()
+		server.Router.ServeHTTP(rr, req)
+		is.Equal(rr.Code, http.StatusBadRequest)
 
 		var response map[string]string
-		err = json.NewDecoder(w.Body).Decode(&response)
+		err = json.NewDecoder(rr.Body).Decode(&response)
 		is.NoErr(err)
 		is.Equal(response["error"], "no valid fields provided")
 	})
@@ -618,9 +618,9 @@ func TestUserHandler_UpdateUser(t *testing.T) {
 		req.Header.Set("Content-Type", "application/json")
 
 		// Make request
-		w := httptest.NewRecorder()
-		server.Router.ServeHTTP(w, req)
-		is.Equal(w.Code, http.StatusUnauthorized)
+		rr := httptest.NewRecorder()
+		server.Router.ServeHTTP(rr, req)
+		is.Equal(rr.Code, http.StatusUnauthorized)
 	})
 }
 
