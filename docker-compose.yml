@@ -1,20 +1,20 @@
 version: "3.9"
 x-database-url: &db_url
-  postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+                  postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
 services:
-  # fastapi_app:
-  #   build:
-  #     context: ./backend/fastapi
-  #     dockerfile: Dockerfile
-  #   container_name: fastapi_app
-  #   ports:
-  #     - "8000:8000"
-  #   depends_on:
-  #     - db
-  #   environment:
-  #     DATABASE_URL: *db_url
-  #   networks:
-  #     - app_network
+  fastapi_app:
+    build:
+      context: ./backend/fastapi
+      dockerfile: Dockerfile
+    container_name: fastapi_app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: *db_url
+    networks:
+      - app_network
   goauth:
     build:
       context: ./backend/auth
