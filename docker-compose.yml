@@ -1,6 +1,6 @@
 version: "3.9"
 x-database-url: &db_url
-                  postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+  postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
 services:
   fastapi_app:
     build:
