@@ -1,9 +1,15 @@
 from fastapi import FastAPI
 from sqlalchemy import create_engine, text
+from models import Base
 import os
 
 DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise ValueError("DATABASE_URL environment variable is not set.")
+
 engine = create_engine(DATABASE_URL, echo=True)
+
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
