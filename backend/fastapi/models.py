@@ -7,7 +7,7 @@ import uuid
 Base = declarative_base()
 
 
-class User(Base):
+class Users(Base):
     __tablename__ = "users"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -42,11 +42,12 @@ class Tags(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(50), unique=True, nullable=False)
-    description = Column(String(50), nullable=False)
-    is_custom_tag = Column(Boolean, nullable=False, default=False)
+    description = Column(String(50), nullable=False)  # What does this tag indicate?
+    is_custom_tag = Column(Boolean, nullable=False, default=False)  # true for user-created tags
     created_at = Column(TIMESTAMP, server_default=text("CURRENT_TIMESTAMP"), nullable=False)
 
 
+# Junction table
 class UserTags(Base):
     __tablename__ = "user_tags"
 
@@ -64,10 +65,11 @@ class Badges(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(50), unique=True, nullable=False)
-    description = Column(String(50), nullable=False)
+    description = Column(String(50), nullable=False)  # What does this badge indicate?
     created_at = Column(TIMESTAMP, server_default=text("CURRENT_TIMESTAMP"), nullable=False)
 
 
+# Junction table
 class UserBadges(Base):
     __tablename__ = "user_badges"
 
@@ -133,8 +135,9 @@ class Replies(Base):
 class Votes(Base):
     __tablename__ = "votes"
 
-    user_id = Column(UUID(as_uuid=True), nullable=False)
+    user_id = Column(UUID(as_uuid=True), nullable=False)  # who voted
     reply_id = Column(Integer, nullable=False)
+    # Positive int for upvote (e.g. 1), negative for downvote (e.g. -1), 0 if a user cancels their up/downvote
     vote_type = Column(Integer, nullable=False)
     created_at = Column(TIMESTAMP, server_default=text("CURRENT_TIMESTAMP"), nullable=False)
     updated_at = Column(TIMESTAMP, server_default=text("CURRENT_TIMESTAMP"), nullable=False)
@@ -143,7 +146,8 @@ class Votes(Base):
         PrimaryKeyConstraint("user_id", "reply_id"),
         ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
         ForeignKeyConstraint(["reply_id"], ["replies.id"]),
+        CheckConstraint("vote_type in (-1, 0, 1)", name="check_vote_type"),
+        # prevent duplicate votes on the same reply
         Index("idx_votes_reply_id", "reply_id"),
         Index("idx_votes_user_id", "user_id"),
-        CheckConstraint("vote_type in (-1, 0, 1)", name="check_vote_type"),
     )
