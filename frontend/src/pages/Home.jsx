@@ -5,7 +5,7 @@ import TabToggle from '../components/TabToggle'
 export default function Home() {
     return (
         <div className="flex justify-center">
-            <div className='flex flex-col items-center w-full max-w-xl p-4 text-center'>
+            <div className='flex flex-col items-center w-full max-w-screen p-4 text-center'>
                 <h1 className="text-4xl font-bold mb-5">Daily Discussion</h1>
                 <h3 className="font-light mb-3">Join the conversation, anonymously.</h3>
                 <div className="flex justify-around w-xs mb-5">
@@ -19,12 +19,14 @@ export default function Home() {
                 <div>
                     <TabToggle />
                 </div>
-                    <p className='font-light mt-3 mb-5'>Select a prompt to join the discussion. All discussions reset at midnight.</p>
+                <p className='font-light mt-3 mb-5'>Select a prompt to join the discussion. All discussions reset at midnight.</p>
+                <div className='md:flex md:flex-wrap md:flex-row md:justify-center md:gap-2 md:max-w-screen'>
                     <Topic />
                     <Topic />
                     <Topic />
                     <Topic />
                     <Topic />
+                </div>
             </div>
         </div>
     )
