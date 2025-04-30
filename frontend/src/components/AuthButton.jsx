@@ -120,6 +120,10 @@ const AuthButton = () => {
   };
 
   const closeAuthBox = () => {
+    setFormData({
+      email: "",
+      password: "",
+    });
     document.getElementById("loginForm").close();
   };
 
