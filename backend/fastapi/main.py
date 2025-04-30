@@ -1,8 +1,8 @@
 from fastapi import FastAPI, HTTPException, Depends
 from sqlalchemy import create_engine, select, text
 from sqlalchemy.orm import Session, sessionmaker
-from models import Base, DiscussionTopics
-from schemas import NewPrompt
+from tables import Base, DiscussionTopics
+from models import NewPrompt, Prompt, PromptList
 import os
 
 DATABASE_URL = os.getenv("DATABASE_URL")
@@ -65,19 +65,26 @@ def activate_prompt(prompt_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/get_daily_prompt")
-def get_daily_prompt(db: Session = Depends(get_db)):
+@app.get("/get_prompts", response_model=PromptList)
+def get_prompts(db: Session = Depends(get_db)):
     try:
-        # Fetch the first active prompt
+        # Fetch five random active prompts
         stmt = select(DiscussionTopics).where(DiscussionTopics.is_active == True)
-        daily_prompt = db.execute(stmt).scalars().first()
-        if not daily_prompt:
+        daily_prompts = db.execute(stmt).scalars().fetchmany(5)
+        if not daily_prompts:
             raise HTTPException(status_code=404, detail="No active prompt found.")
+        if len(daily_prompts) < 5:
+            raise HTTPException(status_code=404, detail="Less than 5 active prompts found.")
         return {
-            "id": daily_prompt.id,
-            "title": daily_prompt.title,
-            "prompt": daily_prompt.prompt,
-            "created_at": daily_prompt.created_at,
+            "prompts": [
+                {
+                    "id": prompt.id,
+                    "title": prompt.title,
+                    "prompt": prompt.prompt,
+                    "created_at": prompt.created_at.isoformat(),
+                }
+                for prompt in daily_prompts
+            ]
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
