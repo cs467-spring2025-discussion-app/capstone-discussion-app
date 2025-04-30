@@ -1,6 +1,6 @@
 import React from 'react'
-import Topic from "../components/Topic"
-import TabToggle from '../components/TabToggle'
+import Topic from "@/components/Topic"
+import TabToggle from '@/components/TabToggle'
 
 export default function Home() {
     return (

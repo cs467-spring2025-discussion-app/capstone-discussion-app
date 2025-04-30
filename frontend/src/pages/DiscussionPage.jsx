@@ -1,6 +1,6 @@
+import Topic from "@/components/Topic"
 import React from 'react'
-import Topic from "../components/Topic"
-import TabToggle from '../components/TabToggle'
+import TabToggle from '@/components/TabToggle'
 
 export default function DiscussionPage() {
     const postTextAreaId = React.useId();
