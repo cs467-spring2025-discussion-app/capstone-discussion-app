@@ -132,6 +132,7 @@ const AuthButton = () => {
     <div>
       {!loggedInStatus ? (
         <button
+          type="button"
           className="text-purple-800 bg-purple-100 inline-block p-1 rounded-lg cursor-pointer"
           onClick={() => document.getElementById("loginForm").showModal()}
         >
@@ -139,6 +140,7 @@ const AuthButton = () => {
         </button>
       ) : (
         <button
+          type="button"
           className="text-purple-800 bg-purple-100 inline-block p-1 rounded-lg cursor-pointer"
           onClick={handleLogout}
         >
@@ -182,12 +184,14 @@ const AuthButton = () => {
               {errorMsg && <div className="text-red-600">{errorMsg}</div>}
               <div className="flex justify-center space-x-4 pt-4">
                 <button
+                  type="submit"
                   onClick={handleLogin}
                   className="bg-black text-white p-1 rounded-md hover:bg-blue-500 cursor-pointer"
                 >
                   Login
                 </button>
                 <button
+                  type="submit"
                   onClick={handleRegister}
                   className="bg-black text-white p-1 rounded-md hover:bg-blue-500 cursor-pointer"
                 >
@@ -198,6 +202,7 @@ const AuthButton = () => {
 
             <div className="flex justify-center pt-2">
               <button
+                type="button"
                 onClick={closeAuthBox}
                 className="bg-black text-white p-1 rounded-md hover:bg-blue-500 cursor-pointer"
               >
