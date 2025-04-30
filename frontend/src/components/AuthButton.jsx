@@ -124,6 +124,7 @@ const AuthButton = () => {
       email: "",
       password: "",
     });
+    setErrorMsg("");
     document.getElementById("loginForm").close();
   };
 
