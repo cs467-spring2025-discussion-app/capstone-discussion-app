@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const AuthButton = () => {
   const [formData, setFormData] = useState({
