@@ -1,5 +1,6 @@
 from datetime import datetime
 from pydantic import BaseModel
+from typing import Optional
 
 
 ################################################################################
@@ -16,7 +17,7 @@ class Topic(BaseModel):
     title: str
     prompt: str
     created_at: datetime
-    last_shown: datetime | None
+    last_shown: Optional[datetime] = None
     is_active: bool
     show_count: int
 
@@ -30,7 +31,6 @@ class TopicList(BaseModel):
 ################################################################################
 
 class NewReply(BaseModel):
-    discussion_id: int
     user_id: str | None
     content: str
 
