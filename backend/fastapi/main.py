@@ -305,7 +305,7 @@ def delete_reply(reply_id: int, db: Session = Depends(get_db)):
         if not reply:
             raise HTTPException(status_code=404, detail="Reply not found.")
 
-        reply.is_deleted = True
+        db.delete(reply)
         db.commit()
         return {"message": f"Reply with ID {reply_id} deleted successfully."}
     except Exception as e:
