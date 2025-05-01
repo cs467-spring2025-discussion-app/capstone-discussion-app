@@ -1,6 +1,7 @@
 from datetime import datetime
 from pydantic import BaseModel
 from typing import Optional
+from uuid import UUID
 
 
 ################################################################################
@@ -31,14 +32,14 @@ class TopicList(BaseModel):
 ################################################################################
 
 class NewReply(BaseModel):
-    user_id: str | None
+    user_id: UUID | None
     content: str
 
 
 class Reply(BaseModel):
     id: int
-    discussion_id: int
-    user_id: str | None
+    discussion_id: intUU
+    user_id: UUID | None
     content: str
     created_at: datetime
     is_deleted: bool
