@@ -47,7 +47,7 @@ def submit_topic(new_topic: NewTopic, db: Session = Depends(get_db)):
     try:
         topic = DiscussionTopics(
             title=new_topic.title,
-            topic=new_topic.prompt,
+            prompt=new_topic.prompt,
             is_active=False  # All new topics are inactive by default
         )
         db.add(topic)
@@ -73,7 +73,7 @@ def get_topics(db: Session = Depends(get_db)):
                 {
                     "id": topic.id,
                     "title": topic.title,
-                    "topic": topic.prompt,
+                    "prompt": topic.prompt,
                     "created_at": topic.created_at.isoformat(),
                 }
                 for topic in daily_topics
@@ -92,7 +92,7 @@ def get_topic(topic_id: int, db: Session = Depends(get_db)):
         return {
             "id": topic.id,
             "title": topic.title,
-            "topic": topic.prompt,
+            "prompt": topic.prompt,
             "created_at": topic.created_at.isoformat(),
             "last_shown": topic.last_shown.isoformat() if topic.last_shown else None,
         }
@@ -111,7 +111,7 @@ def get_all_topics(db: Session = Depends(get_db)):
                 {
                     "id": topic.id,
                     "title": topic.title,
-                    "topic": topic.prompt,
+                    "prompt": topic.prompt,
                     "created_at": topic.created_at.isoformat(),
                     "last_shown": topic.last_shown.isoformat() if topic.last_shown else None,
                 }
