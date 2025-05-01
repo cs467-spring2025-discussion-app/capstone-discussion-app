@@ -1,0 +1,81 @@
+# used sample code from workflows outlined here:
+# https://github.com/actions/starter-workflows/blob/main/deployments/google-cloudrun-docker.yml
+# also used this information from GitHub Actions documentation:
+# https://docs.github.com/en/actions/about-github-actions/about-continuous-deployment-with-github-actions
+
+
+name: Build and Deploy to Cloud Run
+
+# this is what triggers the deployment workflow, a push to the main branch 
+on:
+  push:
+    branches:
+      - main
+
+# runs three separate jobs to account for the three different services: fastapi, goauth, and frontend
+jobs:
+  deploy-fastapi:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+# sets up the Google Cloud SDK and connects GitHub account to GCP project
+    - name: Set up Google Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        project_id: capstone-457718
+        service_account_key: ${{ secrets.GCP_SA_KEY }}
+# first command builds the Docker image on Cloud Build, second command deploys to Cloud Run on GCP
+    - name: Deploy fastapi-service
+      run: |
+        gcloud builds submit ./backend/fastapi \                                       
+          --tag us-west2-docker.pkg.dev/capstone-457718/quickstart-docker-repo2/fastapi-service
+        gcloud run deploy fastapi-service \
+          --image us-west2-docker.pkg.dev/capstone-457718/quickstart-docker-repo2/fastapi-service \
+          --region us-west2 \
+          --platform managed \
+          --allow-unauthenticated
+
+  deploy-go-auth:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Google Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        project_id: capstone-457718
+        service_account_key: ${{ secrets.GCP_SA_KEY }}
+
+    - name: Deploy go-auth-service
+      run: |
+        gcloud builds submit ./backend/go-auth \
+          --tag us-west2-docker.pkg.dev/capstone-457718/quickstart-docker-repo2/go-auth-service
+        gcloud run deploy go-auth-service \
+          --image us-west2-docker.pkg.dev/capstone-457718/quickstart-docker-repo2/go-auth-service \
+          --region us-west2 \
+          --platform managed \
+          --allow-unauthenticated
+
+  deploy-frontend:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Google Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        project_id: capstone-457718
+        service_account_key: ${{ secrets.GCP_SA_KEY }}
+
+    - name: Deploy frontend
+      run: |
+        gcloud builds submit ./frontend \
+          --tag us-west2-docker.pkg.dev/capstone-457718/quickstart-docker-repo2/frontend
+        gcloud run deploy frontend \
+          --image us-west2-docker.pkg.dev/capstone-457718/quickstart-docker-repo2/frontend \
+          --region us-west2 \
+          --platform managed \
+          --allow-unauthenticated
