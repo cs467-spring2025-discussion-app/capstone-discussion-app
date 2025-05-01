@@ -63,7 +63,6 @@ def submit_topic(new_topic: NewTopic, db: Session = Depends(get_db)):
 # Get the five topics of the day
 def get_topics(db: Session = Depends(get_db)):
     try:
-        # Fetch five random active topics
         stmt = select(DiscussionTopics).where(DiscussionTopics.is_active == True)
         daily_topics = db.execute(stmt).scalars().fetchmany(5)
         if not daily_topics:
@@ -156,6 +155,8 @@ def activate_topic(topic_id: int, db: Session = Depends(get_db)):
         topic = db.query(DiscussionTopics).filter(DiscussionTopics.id == topic_id).first()
         if not topic:
             raise HTTPException(status_code=404, detail="Topic not found.")
+        if topic.is_active:
+            raise HTTPException(status_code=400, detail="Topic is already active.")
         topic.is_active = True
         db.commit()
         return {"message": f"Topic with ID {topic_id} activated successfully."}
@@ -170,6 +171,8 @@ def deactivate_topic(topic_id: int, db: Session = Depends(get_db)):
         topic = db.query(DiscussionTopics).filter(DiscussionTopics.id == topic_id).first()
         if not topic:
             raise HTTPException(status_code=404, detail="Topic not found.")
+        if not topic.is_active:
+            raise HTTPException(status_code=400, detail="Topic is already inactive.")
         topic.is_active = False
         db.commit()
         return {"message": f"Topic with ID {topic_id} deactivated successfully."}
