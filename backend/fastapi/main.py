@@ -42,7 +42,8 @@ def read_root():
 ################################################################################
 
 
-@app.post("/topics/submit_topic", response_model=Topic)
+@app.post("/topics/submit_topic")
+# Submit a new topic
 def submit_topic(new_topic: NewTopic, db: Session = Depends(get_db)):
     try:
         topic = DiscussionTopics(
@@ -59,6 +60,7 @@ def submit_topic(new_topic: NewTopic, db: Session = Depends(get_db)):
 
 
 @app.get("/topics/get_topics", response_model=TopicList)
+# Get the five topics of the day
 def get_topics(db: Session = Depends(get_db)):
     try:
         # Fetch five random active topics
@@ -75,6 +77,9 @@ def get_topics(db: Session = Depends(get_db)):
                     "title": topic.title,
                     "prompt": topic.prompt,
                     "created_at": topic.created_at.isoformat(),
+                    "last_shown": topic.last_shown.isoformat() if topic.last_shown else None,
+                    "is_active": topic.is_active,
+                    "show_count": topic.show_count,
                 }
                 for topic in daily_topics
             ]
@@ -84,6 +89,7 @@ def get_topics(db: Session = Depends(get_db)):
 
 
 @app.get("/topics/get_topic/{topic_id}", response_model=Topic)
+# Get a topic by its ID
 def get_topic(topic_id: int, db: Session = Depends(get_db)):
     try:
         topic = db.query(DiscussionTopics).filter(DiscussionTopics.id == topic_id).first()
@@ -95,12 +101,15 @@ def get_topic(topic_id: int, db: Session = Depends(get_db)):
             "prompt": topic.prompt,
             "created_at": topic.created_at.isoformat(),
             "last_shown": topic.last_shown.isoformat() if topic.last_shown else None,
+            "is_active": topic.is_active,
+            "show_count": topic.show_count,
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/topics/get_all_topics", response_model=TopicList)
+# Get all topics
 def get_all_topics(db: Session = Depends(get_db)):
     try:
         topics = db.query(DiscussionTopics).all()
@@ -114,6 +123,8 @@ def get_all_topics(db: Session = Depends(get_db)):
                     "prompt": topic.prompt,
                     "created_at": topic.created_at.isoformat(),
                     "last_shown": topic.last_shown.isoformat() if topic.last_shown else None,
+                    "is_active": topic.is_active,
+                    "show_count": topic.show_count,
                 }
                 for topic in topics
             ]
@@ -123,6 +134,7 @@ def get_all_topics(db: Session = Depends(get_db)):
 
 
 @app.put("/topics/update_topic/{topic_id}")
+# Update a topic by its ID
 def update_topic(topic_id: int, updated_topic: NewTopic, db: Session = Depends(get_db)):
     try:
         topic = db.query(DiscussionTopics).filter(DiscussionTopics.id == topic_id).first()
@@ -138,6 +150,7 @@ def update_topic(topic_id: int, updated_topic: NewTopic, db: Session = Depends(g
 
 
 @app.put("/topics/activate_topic/{topic_id}")
+# Activate a topic by its ID
 def activate_topic(topic_id: int, db: Session = Depends(get_db)):
     try:
         topic = db.query(DiscussionTopics).filter(DiscussionTopics.id == topic_id).first()
@@ -151,6 +164,7 @@ def activate_topic(topic_id: int, db: Session = Depends(get_db)):
 
 
 @app.put("/topics/deactivate_topic/{topic_id}")
+# Deactivate a topic by its ID
 def deactivate_topic(topic_id: int, db: Session = Depends(get_db)):
     try:
         topic = db.query(DiscussionTopics).filter(DiscussionTopics.id == topic_id).first()
@@ -164,6 +178,7 @@ def deactivate_topic(topic_id: int, db: Session = Depends(get_db)):
 
 
 @app.put("/topics/show_topic/{topic_id}")
+# Mark a topic as shown by its ID
 def show_topic(topic_id: int, db: Session = Depends(get_db)):
     try:
         topic = db.query(DiscussionTopics).filter(DiscussionTopics.id == topic_id).first()
@@ -178,6 +193,7 @@ def show_topic(topic_id: int, db: Session = Depends(get_db)):
 
 
 @app.delete("/topics/delete_topic/{topic_id}")
+# Delete a topic by its ID
 def delete_topic(topic_id: int, db: Session = Depends(get_db)):
     try:
         topic = db.query(DiscussionTopics).filter(DiscussionTopics.id == topic_id).first()
@@ -197,7 +213,8 @@ def delete_topic(topic_id: int, db: Session = Depends(get_db)):
 
 
 @app.post("/replies/submit_reply/{discussion_id}")
-def submit_topic(new_reply: NewReply, discussion_id: int, db: Session = Depends(get_db)):
+# Submit a new reply to a discussion
+def submit_reply(new_reply: NewReply, discussion_id: int, db: Session = Depends(get_db)):
     try:
         reply = Replies(
             discussion_id=discussion_id,
@@ -213,6 +230,7 @@ def submit_topic(new_reply: NewReply, discussion_id: int, db: Session = Depends(
 
 
 @app.get("/replies/get_all_replies/{discussion_id}", response_model=ReplyList)
+# Get all replies for a discussion
 def get_all_replies(discussion_id: int, db: Session = Depends(get_db)):
     try:
         replies = db.query(Replies).filter(Replies.discussion_id == discussion_id).all()
@@ -240,6 +258,7 @@ def get_all_replies(discussion_id: int, db: Session = Depends(get_db)):
 
 
 @app.get("/replies/get_reply/{reply_id}", response_model=Reply)
+# Get a reply by its ID
 def get_reply(reply_id: int, db: Session = Depends(get_db)):
     try:
         reply = db.query(Replies).filter(Replies.id == reply_id).first()
@@ -261,6 +280,7 @@ def get_reply(reply_id: int, db: Session = Depends(get_db)):
 
 
 @app.put("/replies/update_reply/{reply_id}")
+# Update a reply by its ID
 def update_reply(reply_id: int, updated_reply: NewReply, db: Session = Depends(get_db)):
     try:
         reply = db.query(Replies).filter(Replies.id == reply_id).first()
@@ -275,6 +295,7 @@ def update_reply(reply_id: int, updated_reply: NewReply, db: Session = Depends(g
 
 
 @app.delete("/replies/delete_reply/{reply_id}")
+# Delete a reply by its ID
 def delete_reply(reply_id: int, db: Session = Depends(get_db)):
     try:
         reply = db.query(Replies).filter(Replies.id == reply_id).first()
