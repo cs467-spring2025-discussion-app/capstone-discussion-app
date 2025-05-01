@@ -17,10 +17,12 @@ class Topic(BaseModel):
     prompt: str
     created_at: datetime
     last_shown: datetime | None
+    is_active: bool
+    show_count: int
 
 
 class TopicList(BaseModel):
-    prompts: list[Topic]
+    topics: list[Topic]
 
 
 ################################################################################
