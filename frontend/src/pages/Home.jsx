@@ -7,6 +7,7 @@ export default function Home() {
     // create variables for topics coming from backend
     const [topics, setTopics] = useState([]);
 
+    // get discussion topics from backend 
     useEffect(() => {
         fetch("http://localhost:8000/topics/get_all_topics")
             // convert response to JSON
@@ -34,6 +35,7 @@ export default function Home() {
                 </div>
                 <p className='font-light mt-3 mb-5'>Select a prompt to join the discussion. All discussions reset at midnight.</p>
                 <div className='md:flex md:flex-wrap md:flex-row md:justify-center md:gap-2 md:max-w-screen'>
+                    {/* Present the list of cards that are sent from the backend */}
                     {topics.map(topic => (
                         <Topic key={topic.id} topic={topic} />
                     ))}

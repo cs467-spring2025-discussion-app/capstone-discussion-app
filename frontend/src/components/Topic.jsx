@@ -1,5 +1,6 @@
 import React from 'react'
 
+// this shows a topic card and dynamically changes the title and prompt based on what was sent from the backend to the topic variable in Home.jsx
 export default function Topic({ topic }) {
     return (
         <button className='w-full md:w-xl border-solid border-gray-700 p-8 pb-3 text-left bg-white mb-7 rounded-lg shadow-md'>
