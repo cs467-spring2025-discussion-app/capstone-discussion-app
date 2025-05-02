@@ -8,7 +8,7 @@ export default function Home() {
     const [topics, setTopics] = useState([]);
 
     useEffect(() => {
-        fetch("https://fastapi-service-182441842390.us-west2.run.app/topics/get_topics")
+        fetch("https://localhost:8000/topics/get_topics")
             // convert response to JSON
             .then(res => res.json())
             // store response
