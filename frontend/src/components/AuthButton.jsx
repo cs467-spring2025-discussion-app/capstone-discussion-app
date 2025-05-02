@@ -16,7 +16,7 @@ const AuthButton = () => {
           "Content-Type": "application/json",
         },
       });
-      setLoggedInStatus(response.ok); // Logged in only on 200 status
+      setLoggedInStatus(response.status == 200)
     } catch (error) {
       console.error("Error checking login status:", error);
       setLoggedInStatus(false);
