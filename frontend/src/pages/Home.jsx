@@ -8,7 +8,7 @@ export default function Home() {
     const [topics, setTopics] = useState([]);
 
     useEffect(() => {
-        fetch("https://localhost:8000/topics/get_topics")
+        fetch("http://localhost:8000/topics/get_topics")
             // convert response to JSON
             .then(res => res.json())
             // store response
@@ -34,11 +34,9 @@ export default function Home() {
                 </div>
                 <p className='font-light mt-3 mb-5'>Select a prompt to join the discussion. All discussions reset at midnight.</p>
                 <div className='md:flex md:flex-wrap md:flex-row md:justify-center md:gap-2 md:max-w-screen'>
-                    <Topic />
-                    <Topic />
-                    <Topic />
-                    <Topic />
-                    <Topic />
+                    {topics.map(topic => (
+                        <Topic key={topic.id} topic={topic} />
+                    ))}
                 </div>
             </div>
         </div>
