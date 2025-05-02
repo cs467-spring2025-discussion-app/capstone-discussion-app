@@ -1,8 +1,21 @@
-import React from 'react'
-import Topic from "@/components/Topic"
-import TabToggle from '@/components/TabToggle'
+import React, { useEffect, useState } from 'react';
+import Topic from "@/components/Topic";
+import TabToggle from '@/components/TabToggle';
 
 export default function Home() {
+
+    // create variables for topics coming from backend
+    const [topics, setTopics] = useState([]);
+
+    useEffect(() => {
+        fetch("https://fastapi-service-182441842390.us-west2.run.app/topics/get_topics")
+            // convert response to JSON
+            .then(res => res.json())
+            // store response
+            .then(data => setTopics(data.topics))
+            .catch(err => console.error("Failed to get topics:", err));
+    }, []);
+
     return (
         <div className="flex justify-center">
             <div className='flex flex-col items-center w-full max-w-screen p-4 text-center'>
