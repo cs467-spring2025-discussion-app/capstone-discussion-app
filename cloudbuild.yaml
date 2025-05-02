@@ -1,0 +1,32 @@
+# This file builds Docker images, pushes them to Google Artifact Registry on GCP, and makes them available for deployment
+# followed the guide here: https://cloud.google.com/build/docs/configuring-builds/create-basic-configuration
+
+steps:
+  # FASTAPI
+  - name: 'gcr.io/cloud-builders/docker'
+    dir: 'backend/fastapi'
+    args: ['build', '-t', 'us-west2-docker.pkg.dev/$PROJECT_ID/quickstart-docker-repo/fastapi-app:latest', '.']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'us-west2-docker.pkg.dev/$PROJECT_ID/quickstart-docker-repo/fastapi-app:latest']
+
+  # GOAUTH
+  - name: 'gcr.io/cloud-builders/docker'
+    dir: 'backend/auth'
+    args: ['build', '-t', 'us-west2-docker.pkg.dev/$PROJECT_ID/quickstart-docker-repo/go-auth:latest', '.']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'us-west2-docker.pkg.dev/$PROJECT_ID/quickstart-docker-repo/go-auth:latest']
+
+  # FRONTEND
+  - name: 'gcr.io/cloud-builders/docker'
+    dir: 'frontend'
+    args: ['build', '-t', 'us-west2-docker.pkg.dev/$PROJECT_ID/quickstart-docker-repo/frontend:latest', '.']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'us-west2-docker.pkg.dev/$PROJECT_ID/quickstart-docker-repo/frontend:latest']
+
+images:
+  - 'us-west2-docker.pkg.dev/$PROJECT_ID/quickstart-docker-repo/fastapi-app:latest'
+  - 'us-west2-docker.pkg.dev/$PROJECT_ID/quickstart-docker-repo/go-auth:latest'
+  - 'us-west2-docker.pkg.dev/$PROJECT_ID/quickstart-docker-repo/frontend:latest'
