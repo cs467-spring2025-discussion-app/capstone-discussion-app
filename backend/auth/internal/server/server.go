@@ -94,7 +94,11 @@ func (s *APIServer) SetupRoutes() {
 // Run starts the API server and listens for incoming requests.
 func (s *APIServer) Run() {
 	s.SetupRoutes()
-	s.Router.Run(":" + os.Getenv(config.AuthServerPort))
+	port := os.Getenv(config.AuthServerPort)
+	if port == "" {
+		port = "3001"
+	}
+	s.Router.Run(":" + port)
 }
 
 func NewRepoProvider(db *gorm.DB) (*RepoProvider, error) {

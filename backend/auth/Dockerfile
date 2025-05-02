@@ -9,5 +9,5 @@ FROM alpine:latest
 RUN apk --no-cache add ca-certificates
 WORKDIR /root/
 COPY --from=builder /app/godiscauth .
-EXPOSE 3001
+EXPOSE 8080
 CMD ["./godiscauth"]
