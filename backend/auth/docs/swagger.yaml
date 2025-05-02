@@ -1,0 +1,18 @@
+info:
+  contact: {}
+paths:
+  /ping:
+    get:
+      consumes:
+      - application/json
+      description: do ping
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: response with message field
+          schema:
+            additionalProperties: true
+            type: object
+      summary: ping the server
+swagger: "2.0"
