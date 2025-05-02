@@ -94,7 +94,10 @@ func (s *APIServer) SetupRoutes() {
 // Run starts the API server and listens for incoming requests.
 func (s *APIServer) Run() {
 	s.SetupRoutes()
-	port := os.Getenv(config.AuthServerPort)
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = os.Getenv(config.AuthServerPort)
+	}
 	if port == "" {
 		port = "3001"
 	}
