@@ -78,7 +78,7 @@ func (uh *UserHandler) Login(c *gin.Context) {
 			Str("email", body.Email).
 			Str("clientIP", clientIP).
 			Str("error", err.Error()).
-			Msg("Bad user registration request")
+			Msg("Bad user login request")
 
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -93,7 +93,14 @@ func (uh *UserHandler) Login(c *gin.Context) {
 			Str("error", err.Error()).
 			Msg("Login failed")
 
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		var status int
+		if err == apperrors.ErrInvalidLogin {
+			status = http.StatusUnauthorized
+		} else {
+			status = http.StatusBadRequest
+		}
+
+		c.AbortWithStatusJSON(status, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -230,7 +237,7 @@ func (uh *UserHandler) UpdateUser(c *gin.Context) {
 			Str("email", body.Email).
 			Str("clientIP", clientIP).
 			Str("error", err.Error()).
-			Msg("Bad user registration request")
+			Msg("Bad user update request")
 
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
