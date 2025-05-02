@@ -7,6 +7,7 @@ import (
 	"github.com/rs/zerolog/log"
 	passwordvalidator "github.com/wagslane/go-password-validator"
 
+	_ "godiscauth/docs"
 	"godiscauth/internal/database"
 	"godiscauth/internal/server"
 	"godiscauth/pkg/config"

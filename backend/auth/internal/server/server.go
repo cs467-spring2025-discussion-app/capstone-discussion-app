@@ -7,6 +7,8 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	swaggerfiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"gorm.io/gorm"
 
 	"fmt"
@@ -79,7 +81,7 @@ func (s *APIServer) SetupRoutes() {
 		MaxAge:           12 * time.Hour,
 	}))
 
-	r.GET("/ping", func(c *gin.Context) { c.JSON(http.StatusOK, gin.H{"message": "pong"}) })
+	r.GET("/ping", Ping)
 	r.POST("/register", s.HandlerRegistry.User.RegisterUser)
 	r.POST("/login", s.HandlerRegistry.User.Login)
 	r.POST("/logout", s.HandlerRegistry.User.Logout)
@@ -92,6 +94,8 @@ func (s *APIServer) SetupRoutes() {
 		protected.POST("/updateuser", s.HandlerRegistry.User.UpdateUser)
 		protected.DELETE("/deleteaccount", s.HandlerRegistry.User.PermanentlyDeleteUser)
 	}
+
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 }
 
 // Run starts the API server and listens for incoming requests.
@@ -176,4 +180,16 @@ type HandlerRegistry struct {
 
 type MiddlewareProvider struct {
 	Auth *middleware.AuthMiddleware
+}
+
+// Ping godoc
+// @Summary ping the server
+// @Schemes
+// @Description do ping
+// @Accept json
+// @Produce json
+// @Success 200 {object} map[string]interface{} "response with message field"
+// @Router /ping [get]
+func Ping(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"message": "pong"})
 }
