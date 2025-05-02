@@ -41,6 +41,11 @@ const AuthButton = () => {
       return;
     }
 
+    if (!document.getElementById("email").checkValidity()) {
+      setErrorMsg("Please enter a valid email address");
+      return;
+    }
+
     try {
       const response = await fetch("/authapi/login", {
         method: "POST",
@@ -160,12 +165,12 @@ const AuthButton = () => {
                   Email:
                 </label>
                 <input
-                  type="text"
+                  type="email"
                   id="email"
                   name="email"
+                  required
                   value={formData.email}
                   onChange={handleChange}
-                  required
                   className="text-black border border-black rounded-md p-2"
                 />
               </div>
