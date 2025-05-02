@@ -5,6 +5,7 @@ const AuthButton = () => {
     email: "",
     password: "",
   });
+  const [isCheckingStatus, setIsCheckingStatus] = useState(true);
   const [loggedInStatus, setLoggedInStatus] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -16,10 +17,12 @@ const AuthButton = () => {
           "Content-Type": "application/json",
         },
       });
-      setLoggedInStatus(response.status == 200)
+      setLoggedInStatus(response.status == 200);
     } catch (error) {
       console.error("Error checking login status:", error);
       setLoggedInStatus(false);
+    } finally {
+      setIsCheckingStatus(false);
     }
   };
   useEffect(() => {
@@ -135,7 +138,9 @@ const AuthButton = () => {
 
   return (
     <div>
-      {!loggedInStatus ? (
+      {isCheckingStatus ? (
+        <span className="inline-block p-1">&nbsp;</span>
+      ) : !loggedInStatus ? (
         <button
           type="button"
           className="text-purple-800 bg-purple-100 inline-block p-1 rounded-lg cursor-pointer"
