@@ -310,3 +310,10 @@ def delete_reply(reply_id: int, db: Session = Depends(get_db)):
         return {"message": f"Reply with ID {reply_id} deleted successfully."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+# 
+if __name__ == "__main__":
+    import uvicorn
+    # use default port unless set in a variable (example: during GCP deployment)
+    port = int(os.environ.get("PORT", 8080))  
+    uvicorn.run("main:app", host="0.0.0.0", port=port)
