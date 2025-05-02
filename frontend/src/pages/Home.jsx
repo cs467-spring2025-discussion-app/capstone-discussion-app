@@ -8,7 +8,7 @@ export default function Home() {
     const [topics, setTopics] = useState([]);
 
     useEffect(() => {
-        fetch("http://localhost:8000/topics/get_topics")
+        fetch("http://localhost:8000/topics/get_all_topics")
             // convert response to JSON
             .then(res => res.json())
             // store response
