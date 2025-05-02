@@ -188,7 +188,7 @@ type MiddlewareProvider struct {
 // @Description do ping
 // @Accept json
 // @Produce json
-// @Success 200 {object} map[string]interface{} "response with message field"
+// @Success 200 {object} models.MessageResponse "response with message field"
 // @Router /ping [get]
 func Ping(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "pong"})
