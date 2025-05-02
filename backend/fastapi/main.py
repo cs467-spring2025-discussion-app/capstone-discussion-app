@@ -5,6 +5,7 @@ from tables import Base, DiscussionTopics, Replies
 from models import NewTopic, Topic, TopicList, NewReply, Reply, ReplyList
 from datetime import datetime
 import os
+from fastapi.middleware.cors import CORSMiddleware
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
@@ -17,6 +18,14 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 def get_db():
