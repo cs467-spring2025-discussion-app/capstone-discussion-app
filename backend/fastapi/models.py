@@ -38,7 +38,7 @@ class NewReply(BaseModel):
 
 class Reply(BaseModel):
     id: int
-    discussion_id: intUU
+    discussion_id: int
     user_id: UUID | None
     content: str
     created_at: datetime
