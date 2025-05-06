@@ -1,6 +1,7 @@
 import Topic from "@/components/Topic"
 import React from 'react'
 import TabToggle from '@/components/TabToggle'
+import DiscussionComment from "../components/DisccusionComment";
 
 export default function DiscussionPage() {
     const postTextAreaId = React.useId();
@@ -12,14 +13,14 @@ export default function DiscussionPage() {
                     <p>Question</p>
                 </div>
                 <div className='border-t-5 border-t-purple-400 p-5 rounded-lg shadow-lg w-full max-w-5xl bg-white text-left mb-8'>
-                    <label htmlFor={postTextAreaId}>
+                    <label htmlFor={postTextAreaId} className="font-semibold">
                         Join the discussion:
                         <textarea
                             name="postContent"
                             id={postTextAreaId}
                             placeholder="Share your thoughts...(280 chars max.)"
                             rows={4}
-                            class='mt-5 mb-2 p-2.5 w-full text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                            class='font-normal mt-5 mb-2 p-2.5 w-full text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500'
                         />
                     </label>
                     <div className='flex justify-between pb-5 border-b border-gray-300'>
@@ -49,6 +50,9 @@ export default function DiscussionPage() {
                         </button>
                     </div>
                 </div>
+                <DiscussionComment />
+                <DiscussionComment />
+                <DiscussionComment />
             </div>
         </div>
     )
