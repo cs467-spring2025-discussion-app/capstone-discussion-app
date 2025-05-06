@@ -32,7 +32,7 @@ export default function DiscussionPage() {
                         </div>
                     </div>
                     <div className='flex justify-end mt-2'>
-                        <button className='ml-2 flex bg-purple-600 rounded-full px-5 py-2 font-bold text-sm text-white'>
+                        <button className='cursor-pointer ml-2 flex bg-purple-600 rounded-full px-5 py-2 font-bold text-sm text-white'>
                             Submit
                             <svg 
                             xmlns="http://www.w3.org/2000/svg"

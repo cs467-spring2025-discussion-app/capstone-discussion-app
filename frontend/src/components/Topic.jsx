@@ -2,7 +2,7 @@ import React from 'react'
 
 export default function Topic() {
     return (
-        <button className='w-full md:w-xl border-solid border-gray-700 p-8 pb-3 text-left bg-white mb-7 rounded-lg shadow-md'>
+        <button className='cursor-pointer w-full md:w-xl border-solid border-gray-700 p-8 pb-3 text-left bg-white mb-7 rounded-lg shadow-md'>
             <div className='flex justify-between mb-3'>
                 <h3 className='text-lg font-semibold'>Topic</h3>
                 <span className='flex text-sm text-purple-600 bg-purple-100 rounded-lg px-3 py-1'><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-5 pr-1">
