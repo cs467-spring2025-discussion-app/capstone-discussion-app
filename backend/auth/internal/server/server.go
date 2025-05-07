@@ -9,12 +9,15 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 
+	"fmt"
 	"godiscauth/internal/handlers"
 	"godiscauth/internal/middleware"
 	"godiscauth/internal/repository"
 	"godiscauth/internal/services"
 	"godiscauth/pkg/apperrors"
 	"godiscauth/pkg/config"
+
+	"github.com/rs/zerolog/log"
 )
 
 // APIServer represents the API server with a gin router.
@@ -94,13 +97,16 @@ func (s *APIServer) SetupRoutes() {
 // Run starts the API server and listens for incoming requests.
 func (s *APIServer) Run() {
 	s.SetupRoutes()
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = os.Getenv(config.AuthServerPort)
+	var port string
+	if val, isSet := os.LookupEnv(config.AuthServerPort); isSet {
+		port = val
+	} else if val, isSet := os.LookupEnv("PORT"); isSet {
+		port = val
 	}
 	if port == "" {
-		port = "3001"
+		log.Fatal().Err(fmt.Errorf("Auth server port not set")).Msg("Exiting due to empty port")
 	}
+	log.Info().Str("port", port).Msg("Starting auth server")
 	s.Router.Run(":" + port)
 }
 
