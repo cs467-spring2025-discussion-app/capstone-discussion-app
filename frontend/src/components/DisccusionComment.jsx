@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import CommentFlair from './CommentFlair';
 
-export default function DiscussionComment({ content }) {
+export default function DiscussionComment({ content, fadeIn }) {
     const [votes, setVotes] = useState(0)
     const handleUpvote = () => {
         setVotes((prev) => prev + 1)
@@ -11,7 +11,11 @@ export default function DiscussionComment({ content }) {
     };
 
     return (
-        <div className='pl-5 shadow-lg rounded-lg mb-5 pt-5 bg-white w-full max-w-5xl text-left'>
+        <div className={`
+        pl-5 shadow-lg rounded-lg mb-5 pt-5 bg-white w-full max-w-5xl text-left
+        ${fadeIn ? 'opacity-0 animate-fade-in' : ''}
+        `}
+        >
             <CommentFlair />
             <CommentFlair />
             <CommentFlair />

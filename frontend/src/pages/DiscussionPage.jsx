@@ -4,9 +4,10 @@ import TabToggle from '@/components/TabToggle'
 import DiscussionComment from "../components/DisccusionComment";
 
 export default function DiscussionPage() {
-    const postTextAreaId = React.useId();
-    const [text, setText] = React.useState('');
-    const [comments, setComments] = React.useState([]);
+    const postTextAreaId = React.useId()
+    const [text, setText] = React.useState('')
+    const [comments, setComments] = React.useState([])
+    const [lastCommentId, setLastCommentId] = React.useState(null)
 
     const handleSubmit = () => {
         if (!text.trim()) return
@@ -14,6 +15,7 @@ export default function DiscussionPage() {
             id: Date.now(),
             content: text
         }
+        setLastCommentId(newComment.id)
         setComments([newComment, ...comments])
         setText('')
     }
@@ -70,7 +72,11 @@ export default function DiscussionPage() {
                     </div>
                 </div>
                 {comments.map((comment) => (
-                    <DiscussionComment key={comment.id} content={comment.content} />
+                    <DiscussionComment
+                        key={comment.id}
+                        content={comment.content}
+                        fadeIn={comment.id === lastCommentId}
+                    />
                 ))}
             </div>
         </div>
