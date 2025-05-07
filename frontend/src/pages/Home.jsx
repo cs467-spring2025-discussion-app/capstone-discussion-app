@@ -7,13 +7,23 @@ export default function Home() {
     // create variables for topics coming from backend
     const [topics, setTopics] = useState([]);
 
+    // create variables for error message in case we don't get topics back
+    const [errorMessage, setErrorMessage] = useState("");
+
     // get discussion topics from backend 
     useEffect(() => {
         fetch("http://localhost:8000/topics/get_all_topics")
             // convert response to JSON
             .then(res => res.json())
             // store response
-            .then(data => setTopics(data.topics))
+            .then(data => {
+                setTopics(data.topics);
+                if (data.topics.len < 5) {
+                    setErrorMessage("Fewer than 5 discussion topics available. Please check back later.")
+                } else {
+                    setErrorMessage("");
+                }
+            })
             .catch(err => console.error("Failed to get topics:", err));
     }, []);
 
