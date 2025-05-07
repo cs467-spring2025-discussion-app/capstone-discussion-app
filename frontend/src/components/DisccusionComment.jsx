@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import CommentFlair from './CommentFlair';
 
-export default function DiscussionComment() {
+export default function DiscussionComment({ content }) {
     const [votes, setVotes] = useState(0)
     const handleUpvote = () => {
         setVotes((prev) => prev + 1)
@@ -15,7 +15,7 @@ export default function DiscussionComment() {
             <CommentFlair />
             <CommentFlair />
             <CommentFlair />
-            <p className='mt-2'>This is a multi-line comment to be updated dynamically in the near future. This is a multi-line comment to be updated dynamically in the near future. This is a multi-line comment to be updated dynamically in the near future. This is a multi-line comment to be updated dynamically in the near future.</p>
+            <p className='mt-2'>{content}</p>
             <div className='w-full flex justify-between items-center text-sm text-gray-500 my-5 pr-5'>
                 <div className=''>2h ago</div>
                 <div className='flex items-center gap-5'>

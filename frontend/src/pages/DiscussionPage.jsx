@@ -6,6 +6,18 @@ import DiscussionComment from "../components/DisccusionComment";
 export default function DiscussionPage() {
     const postTextAreaId = React.useId();
     const [text, setText] = React.useState('');
+    const [comments, setComments] = React.useState([]);
+
+    const handleSubmit = () => {
+        if (!text.trim()) return
+        const newComment = {
+            id: Date.now(),
+            content: text
+        }
+        setComments([newComment, ...comments])
+        setText('')
+    }
+
     return (
         <div className="flex justify-center">
             <div className='flex flex-col items-center w-full max-w-4xl p-4 text-center'>
@@ -36,7 +48,10 @@ export default function DiscussionPage() {
                         </div>
                     </div>
                     <div className='flex justify-end mt-2'>
-                        <button className='cursor-pointer ml-2 flex bg-purple-600 rounded-full px-5 py-2 font-bold text-sm text-white'>
+                        <button 
+                            className='cursor-pointer ml-2 flex bg-purple-600 rounded-full px-5 py-2 font-bold text-sm text-white'
+                            onClick={handleSubmit}
+                        >
                             Submit
                             <svg 
                             xmlns="http://www.w3.org/2000/svg"
@@ -54,9 +69,9 @@ export default function DiscussionPage() {
                         </button>
                     </div>
                 </div>
-                <DiscussionComment />
-                <DiscussionComment />
-                <DiscussionComment />
+                {comments.map((comment) => (
+                    <DiscussionComment key={comment.id} content={comment.content} />
+                ))}
             </div>
         </div>
     )
