@@ -72,7 +72,7 @@ def submit_topic(new_topic: NewTopic, db: Session = Depends(get_db)):
 # Get the five topics of the day
 def get_topics(db: Session = Depends(get_db)):
     try:
-        stmt = select(DiscussionTopics).where(DiscussionTopics.is_active == True)
+        stmt = select(DiscussionTopics).where(DiscussionTopics.is_active)
         daily_topics = db.execute(stmt).scalars().fetchmany(5)
         if not daily_topics:
             raise HTTPException(status_code=404, detail="No active topic found.")
