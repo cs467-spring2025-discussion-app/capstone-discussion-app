@@ -2,6 +2,14 @@ import React, { useState } from 'react';
 import CommentFlair from './CommentFlair';
 
 export default function DiscussionComment() {
+    const [votes, setVotes] = useState(0)
+    const handleUpvote = () => {
+        setVotes((prev) => prev + 1)
+    };
+    const handleDownvote = () => {
+        setVotes((prev) => (prev > 0 ? prev - 1 : 0))
+    };
+
     return (
         <div className='pl-5 shadow-lg rounded-lg mb-5 pt-5 bg-white w-full max-w-5xl text-left'>
             <CommentFlair />
@@ -11,15 +19,21 @@ export default function DiscussionComment() {
             <div className='w-full flex justify-between items-center text-sm text-gray-500 my-5 pr-5'>
                 <div className=''>2h ago</div>
                 <div className='flex items-center gap-5'>
-                    <button className="p-2 rounded hover:bg-gray-100">
+                    <button 
+                      className="p-2 rounded hover:bg-gray-100"
+                      onClick={handleUpvote}
+                    >
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
                         <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
                         </svg>
                     </button>
 
-                    <p>12</p>
+                    <p>{votes}</p>
 
-                    <button className="p-2 rounded hover:bg-gray-100">
+                    <button
+                      className="p-2 rounded hover:bg-gray-100"
+                      onClick={handleDownvote}
+                    >
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
                         <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                         </svg>
