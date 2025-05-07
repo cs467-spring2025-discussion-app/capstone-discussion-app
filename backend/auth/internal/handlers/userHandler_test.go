@@ -174,7 +174,7 @@ func TestUserHandler_Login(t *testing.T) {
 			UserCredentialsRequest{Email: email1, Password: "notthepassword"},
 		)
 		is.NoErr(err)
-		is.Equal(rr.Code, http.StatusBadRequest)
+		is.Equal(rr.Code, http.StatusUnauthorized)
 	})
 	t.Run("existing password, mismatched existing user", func(t *testing.T) {
 		rr, err := makeRequest(
@@ -184,7 +184,7 @@ func TestUserHandler_Login(t *testing.T) {
 			UserCredentialsRequest{Email: email1, Password: password2},
 		)
 		is.NoErr(err)
-		is.Equal(rr.Code, http.StatusBadRequest)
+		is.Equal(rr.Code, http.StatusUnauthorized)
 	})
 }
 
