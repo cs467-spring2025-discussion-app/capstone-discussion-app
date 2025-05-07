@@ -5,6 +5,7 @@ import DiscussionComment from "../components/DisccusionComment";
 
 export default function DiscussionPage() {
     const postTextAreaId = React.useId();
+    const [text, setText] = React.useState('');
     return (
         <div className="flex justify-center">
             <div className='flex flex-col items-center w-full max-w-4xl p-4 text-center'>
@@ -17,15 +18,18 @@ export default function DiscussionPage() {
                         Join the discussion:
                         <textarea
                             name="postContent"
+                            value={text}
                             id={postTextAreaId}
                             placeholder="Share your thoughts...(280 chars max.)"
+                            onChange={(e) => setText(e.target.value)}
+                            maxLength={280}
                             rows={4}
                             class='font-normal mt-5 mb-2 p-2.5 w-full text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500'
                         />
                     </label>
                     <div className='flex justify-between pb-5 border-b border-gray-300'>
                         <div className='text-sm text-gray-700'>
-                            Char Count/280
+                            {text.length}/280
                         </div>
                         <div className='text-sm text-gray-700'>
                             Responses limited to 10 per prompt
