@@ -1,4 +1,11 @@
+# Authentication Service
+
 The `auth` directory contains the code to build the user registration and authentication system for the platform.
+
+## Documentation
+
+See [api.md] for an overview of the available endpoints and the expected request/response format.
+Or see the [Swagger](https://swagger.io/docs/) documentation for the endpoints at e.g. `http://{URL}:{PORT}/swagger/index.html`
 
 ## Build
 
