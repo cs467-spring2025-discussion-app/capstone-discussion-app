@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useUser } from "@/hooks/useUser";
 
 const AuthButton = () => {
   const [formData, setFormData] = useState({
@@ -6,28 +7,33 @@ const AuthButton = () => {
     password: "",
   });
   const [isCheckingStatus, setIsCheckingStatus] = useState(true);
-  const [loggedInStatus, setLoggedInStatus] = useState(false);
+  const { user, setUser } = useUser();
   const [errorMsg, setErrorMsg] = useState("");
 
-  const checkLoginStatus = async () => {
-    try {
-      const response = await fetch("/authapi/whoami", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      setLoggedInStatus(response.status == 200);
-    } catch (error) {
-      console.error("Error checking login status:", error);
-      setLoggedInStatus(false);
-    } finally {
-      setIsCheckingStatus(false);
-    }
-  };
   useEffect(() => {
+    const checkLoginStatus = async () => {
+      try {
+        const response = await fetch("/authapi/whoami", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        if (response.ok) {
+          const userData = await response.json();
+          setUser(userData);
+        } else {
+          setUser(null);
+        }
+      } catch (error) {
+        console.error("Error checking login status:", error);
+      } finally {
+        setIsCheckingStatus(false);
+      }
+    };
+
     checkLoginStatus();
-  }, []);
+  }, [setUser]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -69,7 +75,8 @@ const AuthButton = () => {
         return;
       }
 
-      setLoggedInStatus(true);
+      const userData = await fetch("/authapi/whoami").then((res) => res.json());
+      setUser(userData);
       document.getElementById("loginForm").close();
       window.location.reload();
     } catch (error) {
@@ -120,7 +127,7 @@ const AuthButton = () => {
       await fetch("/authapi/logout", {
         method: "POST",
       });
-      setLoggedInStatus(false);
+      setUser(null);
       window.location.reload();
     } catch (error) {
       console.error("Logout error:", error);
@@ -140,7 +147,7 @@ const AuthButton = () => {
     <div>
       {isCheckingStatus ? (
         <span className="inline-block p-1">&nbsp;</span>
-      ) : !loggedInStatus ? (
+      ) : !user ? (
         <button
           type="button"
           className="text-purple-800 bg-purple-100 inline-block p-1 rounded-lg cursor-pointer"

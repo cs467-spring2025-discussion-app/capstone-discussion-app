@@ -38,7 +38,7 @@ export default function DiscussionPage() {
                             onChange={(e) => setText(e.target.value)}
                             maxLength={280}
                             rows={4}
-                            class='font-normal mt-5 mb-2 p-2.5 w-full text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                            className='font-normal mt-5 mb-2 p-2.5 w-full text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500'
                         />
                     </label>
                     <div className='flex justify-between pb-5 border-b border-gray-300'>
