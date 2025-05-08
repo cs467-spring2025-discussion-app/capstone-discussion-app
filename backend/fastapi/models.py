@@ -60,3 +60,28 @@ class ReplyList(BaseModel):
     replies: list[Reply]
     total_count: int
 
+
+################################################################################
+# Vote Models
+################################################################################
+
+class NewVote(BaseModel):
+    user_id: UUID
+    vote_type: int  # 1 for upvote, -1 for downvote, 0 to remove vote
+
+
+class Vote(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    user_id: UUID
+    reply_id: int
+    vote_type: int
+    created_at: datetime
+    updated_at: datetime
+
+
+class VoteList(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    votes: list[Vote]
+    total_count: int
