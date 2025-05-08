@@ -15,11 +15,11 @@ Base URL: `https://localhost:3001`
 
 ### User Management
 
-| Endpoint         | Method | Description         | Request Body                                                                   | Response                                     |
-| ---------------- | ------ | ------------------- | ------------------------------------------------------------------------------ | -------------------------------------------- |
-| `/profile`       | GET    | Get user profile    | `{}` (requires cookie)                                                         | `{ "email": "string", "lastLogin": "date" }` |
-| `/updateuser`    | POST   | Update user details | `{ "email": "string", "password": "string" }` (both optional, requires cookie) | `{ "message": "user updated" }`              |
-| `/deleteaccount` | POST   | Delete user account | `{}` (requires cookie)                                                         | `{ "message": "account deleted" }`           |
+| Endpoint         | Method | Description                  | Request Body                                                                   | Response                                                                               |
+| ---------------- | ------ | ---------------------------- | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------- |
+| `/whoami`        | GET    | Get current user information | `{}` (requires cookie)                                                         | `{ "clientIP": "string", "email": "string", "lastLogin": "date", "userID": "string" }` |
+| `/updateuser`    | POST   | Update user details          | `{ "email": "string", "password": "string" }` (both optional, requires cookie) | `{ "message": "user updated" }`                                                        |
+| `/deleteaccount` | POST   | Delete user account          | `{}` (requires cookie)                                                         | `{ "message": "account deleted" }`                                                     |
 
 ## Error Handling
 

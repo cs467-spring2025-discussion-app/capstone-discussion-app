@@ -123,25 +123,6 @@ paths:
           schema:
             $ref: '#/definitions/models.MessageResponse'
       summary: ping the server
-  /profile:
-    get:
-      description: Get a user's email and last login time (can be extended)
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: response with message field
-          schema:
-            $ref: '#/definitions/models.MessageResponse'
-        "400":
-          description: response with error field
-          schema:
-            $ref: '#/definitions/models.ErrorResponse'
-        "401":
-          description: response with error field
-          schema:
-            $ref: '#/definitions/models.ErrorResponse'
-      summary: Get a user's profile info
   /register:
     post:
       consumes:
@@ -202,4 +183,24 @@ paths:
           schema:
             $ref: '#/definitions/models.ErrorResponse'
       summary: update user credentials
+  /whoami:
+    get:
+      description: Get a user's client IP, email, last login time, and user ID (can
+        be extended)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: response with message field
+          schema:
+            $ref: '#/definitions/models.MessageResponse'
+        "400":
+          description: response with error field
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: response with error field
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Get information about the currently logged in user
 swagger: "2.0"

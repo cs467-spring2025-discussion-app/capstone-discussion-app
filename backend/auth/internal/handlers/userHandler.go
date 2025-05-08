@@ -196,7 +196,7 @@ func (uh *UserHandler) LogoutEverywhere(c *gin.Context) {
 	if !exists {
 		log.Info().
 			Str("clientIP", clientIP).
-			Msg("userID not found in cookie")
+			Msg("userID not found in context")
 
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
@@ -218,23 +218,23 @@ func (uh *UserHandler) LogoutEverywhere(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "logged out everywhere"})
 }
 
-// GetUserProfile godoc
-// @Summary Get a user's profile info
+// WhoAmI godoc
+// @Summary Get information about the currently logged in user
 // @Schemes
-// @Description Get a user's email and last login time (can be extended)
+// @Description Get a user's client IP, email, last login time, and user ID (can be extended)
 // @Produce json
 // @Success 200 {object} models.MessageResponse "response with message field"
 // @Failure 400 {object} models.ErrorResponse "response with error field"
 // @Failure 401 {object} models.ErrorResponse "response with error field"
-// @Router /profile [get]
-func (uh *UserHandler) GetUserProfile(c *gin.Context) {
+// @Router /whoami [get]
+func (uh *UserHandler) WhoAmI(c *gin.Context) {
 	clientIP := c.ClientIP()
 
 	userIDStr, exists := c.Get("userID")
 	if !exists {
 		log.Info().
 			Str("clientIP", clientIP).
-			Msg("userID not found in cookie")
+			Msg("userID not found in context")
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{})
 		return
 	}
@@ -255,8 +255,10 @@ func (uh *UserHandler) GetUserProfile(c *gin.Context) {
 		Msg("user profile request successful")
 
 	c.JSON(http.StatusOK, gin.H{
+		"clientIP": clientIP,
 		"email":     userProfile.Email,
 		"lastLogin": userProfile.LastLogin,
+		"userID":   userID,
 	})
 }
 
@@ -279,7 +281,7 @@ func (uh *UserHandler) UpdateUser(c *gin.Context) {
 	if !exists {
 		log.Info().
 			Str("clientIP", clientIP).
-			Msg("userID not found in cookie")
+			Msg("userID not found in context")
 
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{})
 		return
@@ -355,7 +357,7 @@ func (uh *UserHandler) PermanentlyDeleteUser(c *gin.Context) {
 	if !exists {
 		log.Info().
 			Str("clientIP", clientIP).
-			Msg("userID not found in cookie")
+			Msg("userID not found in context")
 
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{})
 		return
