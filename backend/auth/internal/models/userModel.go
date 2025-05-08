@@ -33,7 +33,7 @@ func NewUser(email string, password string) (*User, error) {
 
 	// Validate email
 	if _, err := mail.ParseAddress(email); err != nil {
-		return nil, err
+		return nil, apperrors.ErrEmailFormat
 	}
 
 	if len(email) > 254 {
@@ -42,7 +42,7 @@ func NewUser(email string, password string) (*User, error) {
 
 	// Enforce minimum password complexity
 	if err = passwordvalidator.Validate(password, config.MinEntropyBits); err != nil {
-		return nil, err
+		return nil, apperrors.ErrPasswordComplexity
 	}
 
 	return &User{Email: email, Password: string(hash)}, err
