@@ -14,11 +14,16 @@ export default defineConfig({
     host: "0.0.0.0",
     port: 5173,
     proxy: {
-      // Proxy API requests to the Go backend
+      // Proxy API requests
       "/authapi": {
-        target: "http://localhost:3001", // Local development
+        target: "http://localhost:3001",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/authapi/, ""),
+      },
+      "/fastapi": {
+        target: "http://localhost:8080",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/fastapi/, ""),
       },
     },
   },
