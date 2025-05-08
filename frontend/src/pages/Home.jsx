@@ -12,7 +12,7 @@ export default function Home() {
 
     // get discussion topics from backend 
     useEffect(() => {
-        fetch("fastapi/topics/get_topics")
+        fetch("fastapi/topics/get_daily_topics")
             // convert response to JSON
             .then(res => res.json())
             // store response
