@@ -11,7 +11,7 @@ const AuthButton = () => {
 
   const checkLoginStatus = async () => {
     try {
-      const response = await fetch("/authapi/profile", {
+      const response = await fetch("/authapi/whoami", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
