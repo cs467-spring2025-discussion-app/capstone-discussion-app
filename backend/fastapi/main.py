@@ -218,7 +218,7 @@ def delete_topic(topic_id: int, db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
-@app.get("/replies/by_topic")
+@app.get("/replies/counts")
 def get_reply_counts_by_topic(db: Session = Depends(get_db)):
     try:
         results = (
@@ -227,7 +227,7 @@ def get_reply_counts_by_topic(db: Session = Depends(get_db)):
         .all()
         )
         return {
-            "replies_by_topic": [
+            "replies_counts": [
                 {"discussion_id": r.discussion_id, "reply_count": r.reply_count}
                 for r in results
              ]

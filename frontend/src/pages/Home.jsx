@@ -15,11 +15,11 @@ export default function Home() {
         //fetch asynchronously
         Promise.all([
             fetch(`${import.meta.env.VITE_API_URL}/topics/get_topics`).then(res => res.json()),
-            fetch(`${import.meta.env.VITE_API_URL}/replies/by_topic`).then(res => res.json())
+            fetch(`${import.meta.env.VITE_API_URL}/replies/counts`).then(res => res.json())
         ])
         .then(([topicsData, repliesData]) => {
             const replyMap = new Map();
-            repliesData.replies_by_topic.forEach(r => {
+            repliesData.replies_counts.forEach(r => {
                 replyMap.set(r.discussion_id, r.reply_count);
             });
             const topicsWithReplies = topicsData.topics.map(topic => ({
