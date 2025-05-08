@@ -12,20 +12,32 @@ export default function Home() {
 
     // get discussion topics from backend 
     useEffect(() => {
-        fetch("fastapi/topics/get_topics")
-            // convert response to JSON
-            .then(res => res.json())
-            // store response
-            .then(data => {
-                setTopics(data.topics);
-                if (data.topics.len < 5) {
-                    setErrorMessage("Fewer than 5 discussion topics available. Please check back later.");
-                } else {
-                    setErrorMessage("");
-                }
-            })
-            .catch(err => console.error("Failed to get topics:", err));
+        //fetch asynchronously
+        Promise.all([
+            fetch(`${import.meta.env.VITE_API_URL}/topics/get_topics`).then(res => res.json()),
+            fetch(`${import.meta.env.VITE_API_URL}/replies/by_topic`).then(res => res.json())
+        ])
+        .then(([topicsData, repliesData]) => {
+            const replyMap = new Map();
+            repliesData.replies_by_topic.forEach(r => {
+                replyMap.set(r.discussion_id, r.reply_count);
+            });
+            const topicsWithReplies = topicsData.topics.map(topic => ({
+                ...topic,
+                reply_count: replyMap.get(topic.id) || 0
+            }));
+            setTopics(topicsWithReplies);
+        
+            if (topicsWithReplies.length < 5) {
+                setErrorMessage("Fewer than 5 discussion topics available. Please check back later.");
+            } else {
+                setErrorMessage("");
+            }
+        })
+        .catch(err => {
+            console.error("Failed to get topics:", err);
             setErrorMessage("Error getting topics. Please check back later.");
+        });
     }, []);
 
     return (
