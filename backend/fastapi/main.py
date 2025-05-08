@@ -1,8 +1,8 @@
 from fastapi import FastAPI, HTTPException, Depends
 from sqlalchemy import create_engine, select, text, func
 from sqlalchemy.orm import Session, sessionmaker
-from tables import Base, DiscussionTopics, Replies
-from models import NewTopic, Topic, TopicList, NewReply, Reply, ReplyList
+from tables import Base, DiscussionTopics, Replies, Votes
+from models import NewTopic, Topic, TopicList, NewReply, Reply, ReplyList, NewVote
 from datetime import datetime
 import os
 from fastapi.middleware.cors import CORSMiddleware  # for the app.add_middleware function below
@@ -275,6 +275,44 @@ def delete_reply(reply_id: int, db: Session = Depends(get_db)):
         db.delete(reply)
         db.commit()
         return {"message": f"Reply with ID {reply_id} deleted successfully."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+################################################################################
+# Vote Endpoints
+################################################################################
+
+@app.post("/votes/submit_vote/{reply_id}")
+# Submit a vote for a reply
+def submit_vote(new_vote: NewVote, reply_id: int, db: Session = Depends(get_db)):
+    try:
+        # Check if reply exists
+        reply = db.query(Replies).filter_by(id=reply_id).first()
+        if not reply:
+            raise HTTPException(status_code=404, detail="Reply not found.")
+
+        # Check if vote already exists
+        existing_vote = db.query(Votes).filter_by(
+            user_id=new_vote.user_id,
+            reply_id=reply_id
+        ).first()
+
+        if existing_vote:
+            # Update existing vote
+            existing_vote.vote_type = new_vote.vote_type
+            existing_vote.updated_at = datetime.now()
+        else:
+            # Create new vote
+            vote = Votes(
+                user_id=new_vote.user_id,
+                reply_id=reply_id,
+                vote_type=new_vote.vote_type
+            )
+            db.add(vote)
+
+        db.commit()
+        return {"message": "Vote submitted successfully."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
