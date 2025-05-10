@@ -1,5 +1,5 @@
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional
 from uuid import UUID
 
@@ -14,6 +14,8 @@ class NewTopic(BaseModel):
 
 
 class Topic(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     title: str
     prompt: str
@@ -24,6 +26,8 @@ class Topic(BaseModel):
 
 
 class TopicList(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     topics: list[Topic]
 
 
@@ -37,6 +41,8 @@ class NewReply(BaseModel):
 
 
 class Reply(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     discussion_id: int
     user_id: UUID | None
@@ -49,6 +55,8 @@ class Reply(BaseModel):
 
 
 class ReplyList(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     replies: list[Reply]
     total_count: int
 

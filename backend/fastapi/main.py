@@ -28,6 +28,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 def get_db():
     db = SessionLocal()
     try:
@@ -68,30 +69,17 @@ def submit_topic(new_topic: NewTopic, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/topics/get_topics", response_model=TopicList)
+@app.get("/topics/get_daily_topics", response_model=TopicList)
 # Get the five topics of the day
-def get_topics(db: Session = Depends(get_db)):
+def get_daily_topics(db: Session = Depends(get_db)):
     try:
-        stmt = select(DiscussionTopics).where(DiscussionTopics.is_active == True)
+        stmt = select(DiscussionTopics).where(DiscussionTopics.is_active)
         daily_topics = db.execute(stmt).scalars().fetchmany(5)
         if not daily_topics:
             raise HTTPException(status_code=404, detail="No active topic found.")
         if len(daily_topics) < 5:
             raise HTTPException(status_code=404, detail="Less than 5 active topics found.")
-        return {
-            "topics": [
-                {
-                    "id": topic.id,
-                    "title": topic.title,
-                    "prompt": topic.prompt,
-                    "created_at": topic.created_at.isoformat(),
-                    "last_shown": topic.last_shown.isoformat() if topic.last_shown else None,
-                    "is_active": topic.is_active,
-                    "show_count": topic.show_count,
-                }
-                for topic in daily_topics
-            ]
-        }
+        return TopicList(topics=daily_topics)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -103,15 +91,7 @@ def get_topic(topic_id: int, db: Session = Depends(get_db)):
         topic = db.query(DiscussionTopics).filter(DiscussionTopics.id == topic_id).first()
         if not topic:
             raise HTTPException(status_code=404, detail="Topic not found.")
-        return {
-            "id": topic.id,
-            "title": topic.title,
-            "prompt": topic.prompt,
-            "created_at": topic.created_at.isoformat(),
-            "last_shown": topic.last_shown.isoformat() if topic.last_shown else None,
-            "is_active": topic.is_active,
-            "show_count": topic.show_count,
-        }
+        return topic
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -123,20 +103,7 @@ def get_all_topics(db: Session = Depends(get_db)):
         topics = db.query(DiscussionTopics).all()
         if not topics:
             raise HTTPException(status_code=404, detail="No topics found.")
-        return {
-            "topics": [
-                {
-                    "id": topic.id,
-                    "title": topic.title,
-                    "prompt": topic.prompt,
-                    "created_at": topic.created_at.isoformat(),
-                    "last_shown": topic.last_shown.isoformat() if topic.last_shown else None,
-                    "is_active": topic.is_active,
-                    "show_count": topic.show_count,
-                }
-                for topic in topics
-            ]
-        }
+        return TopicList(topics=topics)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -265,23 +232,7 @@ def get_all_replies(discussion_id: int, db: Session = Depends(get_db)):
         replies = db.query(Replies).filter(Replies.discussion_id == discussion_id).all()
         if not replies:
             raise HTTPException(status_code=404, detail="No replies found.")
-        return {
-            "replies": [
-                {
-                    "id": reply.id,
-                    "discussion_id": reply.discussion_id,
-                    "user_id": reply.user_id,
-                    "content": reply.content,
-                    "created_at": reply.created_at.isoformat(),
-                    "is_deleted": reply.is_deleted,
-                    "deleted_at": reply.deleted_at.isoformat() if reply.deleted_at else None,
-                    "is_hidden": reply.is_hidden,
-                    "hidden_at": reply.hidden_at.isoformat() if reply.hidden_at else None,
-                }
-                for reply in replies
-            ],
-            "total_count": len(replies),
-        }
+        return ReplyList(replies=replies, total_count=len(replies))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -293,17 +244,7 @@ def get_reply(reply_id: int, db: Session = Depends(get_db)):
         reply = db.query(Replies).filter(Replies.id == reply_id).first()
         if not reply:
             raise HTTPException(status_code=404, detail="Reply not found.")
-        return {
-            "id": reply.id,
-            "discussion_id": reply.discussion_id,
-            "user_id": reply.user_id,
-            "content": reply.content,
-            "created_at": reply.created_at.isoformat(),
-            "is_deleted": reply.is_deleted,
-            "deleted_at": reply.deleted_at.isoformat() if reply.deleted_at else None,
-            "is_hidden": reply.is_hidden,
-            "hidden_at": reply.hidden_at.isoformat() if reply.hidden_at else None,
-        }
+        return reply
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -337,9 +278,11 @@ def delete_reply(reply_id: int, db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# 
+
+#
 if __name__ == "__main__":
     import uvicorn
+
     # use default port unless set in a variable (example: during GCP deployment)
-    port = int(os.environ.get("PORT", 8080))  
+    port = int(os.environ.get("PORT", 8080))
     uvicorn.run("main:app", host="0.0.0.0", port=port)
