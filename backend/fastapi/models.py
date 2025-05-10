@@ -36,7 +36,7 @@ class TopicList(BaseModel):
 ################################################################################
 
 class NewReply(BaseModel):
-    user_id: UUID | None
+    user_id: UUID
     content: str
 
 
@@ -45,13 +45,13 @@ class Reply(BaseModel):
 
     id: int
     discussion_id: int
-    user_id: UUID | None
-    content: str
+    user_id: Optional[UUID] = None  # Nullable for deleted users
+    content: Optional[str] = None  # Nullable for deleted replies
     created_at: datetime
     is_deleted: bool
-    deleted_at: datetime | None
+    deleted_at: Optional[datetime] = None
     is_hidden: bool
-    hidden_at: datetime | None
+    hidden_at: Optional[datetime] = None
 
 
 class ReplyList(BaseModel):
@@ -73,7 +73,7 @@ class NewVote(BaseModel):
 class Vote(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    user_id: UUID
+    user_id: Optional[UUID] = None  # Nullable for deleted users
     reply_id: int
     vote_type: int
     created_at: datetime

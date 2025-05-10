@@ -88,9 +88,9 @@ Table discussion_topics {
 
 Table replies {
   id smallint [pk, increment]
-  discussion_id smallint [not null, ref: > discussion_topics.id]
+  discussion_id smallint [not null, ref: > discussion_topics.id, delete: cascade]
   user_id uuid
-  content text [not null]
+  content text [null]
   created_at timestamp [not null, default: `now()`]
   is_deleted boolean [default: false]
   deleted_at timestamp
@@ -105,8 +105,8 @@ Table replies {
 Ref:replies.user_id > users.id [delete: set null]
 
 Table votes {
-  user_id uuid [not null] // who voted
-  reply_id smallint [not null, ref: > replies.id]
+  user_id uuid [null]
+  reply_id smallint [not null, ref: > replies.id, delete: cascade]
   // Positive int for upvote (e.g. 1), negative for downvote (e.g. -1), 0 if a user cancels their up/downvote
   vote_type integer [not null, note: 'Must be -1, 0, or 1']
   created_at timestamp [not null, default: `now()`]
@@ -118,4 +118,4 @@ Table votes {
     user_id
   }
 }
-Ref: votes.user_id > users.id [delete: cascade]
+Ref: votes.user_id > users.id [delete: set null]
