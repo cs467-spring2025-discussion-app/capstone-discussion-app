@@ -264,17 +264,20 @@ def update_reply(reply_id: int, updated_reply: NewReply, db: Session = Depends(g
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.delete("/replies/delete_reply/{reply_id}")
-# Delete a reply by its ID
+@app.post("/replies/delete_reply/{reply_id}")
+# Mark a reply as deleted
 def delete_reply(reply_id: int, db: Session = Depends(get_db)):
     try:
         reply = db.query(Replies).filter(Replies.id == reply_id).first()
         if not reply:
             raise HTTPException(status_code=404, detail="Reply not found.")
 
-        db.delete(reply)
+        # Instead of deleting, set content to null and mark as deleted
+        reply.content = None
+        reply.is_deleted = True
+        reply.deleted_at = datetime.now()
         db.commit()
-        return {"message": f"Reply with ID {reply_id} deleted successfully."}
+        return {"message": f"Reply with ID {reply_id} marked as deleted successfully."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

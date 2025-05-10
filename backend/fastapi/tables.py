@@ -117,7 +117,7 @@ class Replies(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     discussion_id = Column(Integer, nullable=False, index=True)
     user_id = Column(UUID(as_uuid=True), nullable=True, index=True)
-    content = Column(String, nullable=False)
+    content = Column(String, nullable=True)
     created_at = Column(TIMESTAMP, server_default=text("CURRENT_TIMESTAMP"), nullable=False)
     is_deleted = Column(Boolean, default=False)
     deleted_at = Column(TIMESTAMP, nullable=True)
@@ -135,7 +135,7 @@ class Replies(Base):
 class Votes(Base):
     __tablename__ = "votes"
 
-    user_id = Column(UUID(as_uuid=True), nullable=False)  # who voted
+    user_id = Column(UUID(as_uuid=True), nullable=True)
     reply_id = Column(Integer, nullable=False)
     # Positive int for upvote (e.g. 1), negative for downvote (e.g. -1), 0 if a user cancels their up/downvote
     vote_type = Column(Integer, nullable=False)
@@ -144,8 +144,8 @@ class Votes(Base):
 
     __table_args__ = (
         PrimaryKeyConstraint("user_id", "reply_id"),
-        ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
-        ForeignKeyConstraint(["reply_id"], ["replies.id"]),
+        ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="SET NULL"),
+        ForeignKeyConstraint(["reply_id"], ["replies.id"], ondelete="CASCADE"),
         CheckConstraint("vote_type in (-1, 0, 1)", name="check_vote_type"),
         # prevent duplicate votes on the same reply
         Index("idx_votes_reply_id", "reply_id"),
