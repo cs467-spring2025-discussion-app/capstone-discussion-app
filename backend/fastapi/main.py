@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException, Depends
-from sqlalchemy import create_engine, select, text
+from sqlalchemy import create_engine, select, text, func
 from sqlalchemy.orm import Session, sessionmaker
 from tables import Base, DiscussionTopics, Replies
 from models import NewTopic, Topic, TopicList, NewReply, Reply, ReplyList
@@ -184,6 +184,23 @@ def delete_topic(topic_id: int, db: Session = Depends(get_db)):
         return {"message": f"Topic with ID {topic_id} deleted successfully."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+@app.get("/replies/counts")
+def get_reply_counts_by_topic(db: Session = Depends(get_db)):
+    try:
+        results = (
+        db.query(Replies.discussion_id, func.count(Replies.id).label("reply_count"))
+        .group_by(Replies.discussion_id)
+        .all()
+        )
+        return {
+            "replies_counts": [
+                {"discussion_id": r.discussion_id, "reply_count": r.reply_count}
+                for r in results
+             ]
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting replies: {e}")
 
 
 ################################################################################
