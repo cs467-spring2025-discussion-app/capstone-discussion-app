@@ -14,7 +14,7 @@ export default function Home() {
     useEffect(() => {
         //fetch asynchronously
         Promise.all([
-            fetch(`${import.meta.env.VITE_API_URL}/topics/get_topics`).then(res => res.json()),
+            fetch(`${import.meta.env.VITE_API_URL}/topics/get_daily_topics`).then(res => res.json()),
             fetch(`${import.meta.env.VITE_API_URL}/replies/counts`).then(res => res.json())
         ])
         .then(([topicsData, repliesData]) => {
