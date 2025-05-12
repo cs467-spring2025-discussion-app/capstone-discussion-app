@@ -68,7 +68,7 @@ func (us *UserService) LoginUser(email, password string) (string, error) {
 	// Check if user exists
 	user, err := us.UserRepo.GetUserByEmail(email)
 	if err != nil {
-		return "", err
+		return "", apperrors.ErrUserNotFound
 	}
 
 	// Deny login if account is locked
@@ -89,6 +89,7 @@ func (us *UserService) LoginUser(email, password string) (string, error) {
 			if err != nil {
 				return "", err
 			}
+			return "", apperrors.ErrAccountIsLocked
 		}
 		return "", apperrors.ErrInvalidLogin
 	}

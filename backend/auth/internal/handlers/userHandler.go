@@ -49,7 +49,7 @@ func (uh *UserHandler) RegisterUser(c *gin.Context) {
 			Str("clientIP", clientIP).
 			Str("error", err.Error()).
 			Msg("Bad user registration request")
-
+		err = apperrors.ErrMissingCredentials
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -102,6 +102,7 @@ func (uh *UserHandler) Login(c *gin.Context) {
 			Str("error", err.Error()).
 			Msg("Bad user login request")
 
+		err = apperrors.ErrMissingCredentials
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -255,10 +256,10 @@ func (uh *UserHandler) WhoAmI(c *gin.Context) {
 		Msg("user profile request successful")
 
 	c.JSON(http.StatusOK, gin.H{
-		"clientIP": clientIP,
+		"clientIP":  clientIP,
 		"email":     userProfile.Email,
 		"lastLogin": userProfile.LastLogin,
-		"userID":   userID,
+		"userID":    userID,
 	})
 }
 
@@ -301,6 +302,7 @@ func (uh *UserHandler) UpdateUser(c *gin.Context) {
 			Str("error", err.Error()).
 			Msg("Bad user update request")
 
+		err = apperrors.ErrMissingCredentials
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}

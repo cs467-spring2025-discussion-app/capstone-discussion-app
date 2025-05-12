@@ -66,12 +66,12 @@ const AuthButton = () => {
 
       console.log("Login Status:", response.status);
       console.log("Login Email:", formData.email);
+      console.log("Response", response);
 
-      // TODO: should we specify err here, or is it more secure to not give any
-      // info away? Does it matter if user doesn't exist, bad credentials etc.?
       if (!response.ok) {
-        setErrorMsg("Login failed");
-        console.error("Login request rejected:", response.status);
+        const resp = await response.json();
+        setErrorMsg(resp.error || "Login failed");
+        console.error("Login request rejected:", response.status, resp);
         return;
       }
 
@@ -104,13 +104,11 @@ const AuthButton = () => {
       console.log("Register email:", formData.email);
       console.log("Register response:", response);
 
-      // TODO: auth backend needs more specific errors so we can show
-      // appropriate messages here (password not complex enough, bad
-      // credentials, user already exists, etc.)
       if (!response.ok) {
         setErrorMsg("Registration failed");
-        console.error("Registration request rejected:", response.status);
-        console.error(response.statusText);
+        const resp = await response.json();
+        setErrorMsg(resp.error || "Registration failed");
+        console.error("Registration request rejected:", response.status, resp);
         return;
       }
 

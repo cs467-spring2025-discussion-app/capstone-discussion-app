@@ -10,15 +10,17 @@ var (
 	// Authentication errors
 	ErrAccountIsLocked     = New("Account is locked")
 	ErrInvalidLogin        = New("Invalid login credentials")
-	ErrSessionIDGeneration = New("Could not generate token")
 	ErrInvalidTokenFormat  = New("Invalid token format")
+	ErrSessionIDGeneration = New("Could not generate token")
 
 	// User registration errors
-	ErrDuplicateEmail = New("Email already exists in database")
-	ErrEmailIsEmpty   = New("Email is empty")
-	ErrEmailMaxLength = New("Email exceeds max length of 254 characters")
+	ErrDuplicateEmail     = New("Email already exists in database")
+	ErrEmailIsEmpty       = New("Email is empty")
+	ErrEmailMaxLength     = New("Email exceeds max length of 254 characters")
+	ErrEmailFormat        = New("Email format is invalid")
+	ErrPasswordComplexity = New("Please use a more complex password! https://xkcd.com/936")
 
-	// User registration errors
+	// Session errors
 	ErrSessionAlreadyExists = New("Session already exists")
 
 	// Nil reference argument errors
@@ -34,7 +36,7 @@ var (
 	// Empty string argument errors
 	ErrExpiresAtIsEmpty = New("Expiration time is empty")
 	ErrPasswordIsEmpty  = New("Password is empty")
-	ErrSessionIdIsEmpty     = New("Token is empty")
+	ErrSessionIdIsEmpty = New("Token is empty")
 	ErrUserIdEmpty      = New("User ID is empty")
 
 	// Database errors
@@ -42,4 +44,5 @@ var (
 
 	ErrCouldNotIncrementFailedLogins = New("Could not increment users.failed_login_attempts")
 	ErrCouldNotUpdateUser            = New("Tried to update user but no changes were made")
+	ErrMissingCredentials            = New("Requires both/only email and password")
 )
