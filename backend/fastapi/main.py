@@ -88,7 +88,7 @@ def get_daily_topics(db: Session = Depends(get_db)):
 # Get a topic by its ID
 def get_topic(topic_id: int, db: Session = Depends(get_db)):
     try:
-        topic = db.query(DiscussionTopics).filter(DiscussionTopics.id == topic_id).first()
+        topic = db.query(DiscussionTopics).filter_by(id=topic_id).first()
         if not topic:
             raise HTTPException(status_code=404, detail="Topic not found.")
         return topic
@@ -112,7 +112,7 @@ def get_all_topics(db: Session = Depends(get_db)):
 # Update a topic by its ID
 def update_topic(topic_id: int, updated_topic: NewTopic, db: Session = Depends(get_db)):
     try:
-        topic = db.query(DiscussionTopics).filter(DiscussionTopics.id == topic_id).first()
+        topic = db.query(DiscussionTopics).filter_by(id=topic_id).first()
         if not topic:
             raise HTTPException(status_code=404, detail="Topic not found.")
 
@@ -128,7 +128,7 @@ def update_topic(topic_id: int, updated_topic: NewTopic, db: Session = Depends(g
 # Activate a topic by its ID
 def activate_topic(topic_id: int, db: Session = Depends(get_db)):
     try:
-        topic = db.query(DiscussionTopics).filter(DiscussionTopics.id == topic_id).first()
+        topic = db.query(DiscussionTopics).filter_by(id=topic_id).first()
         if not topic:
             raise HTTPException(status_code=404, detail="Topic not found.")
         if topic.is_active:
@@ -144,7 +144,7 @@ def activate_topic(topic_id: int, db: Session = Depends(get_db)):
 # Deactivate a topic by its ID
 def deactivate_topic(topic_id: int, db: Session = Depends(get_db)):
     try:
-        topic = db.query(DiscussionTopics).filter(DiscussionTopics.id == topic_id).first()
+        topic = db.query(DiscussionTopics).filter_by(id=topic_id).first()
         if not topic:
             raise HTTPException(status_code=404, detail="Topic not found.")
         if not topic.is_active:
@@ -160,7 +160,7 @@ def deactivate_topic(topic_id: int, db: Session = Depends(get_db)):
 # Mark a topic as shown by its ID
 def show_topic(topic_id: int, db: Session = Depends(get_db)):
     try:
-        topic = db.query(DiscussionTopics).filter(DiscussionTopics.id == topic_id).first()
+        topic = db.query(DiscussionTopics).filter_by(id=topic_id).first()
         if not topic:
             raise HTTPException(status_code=404, detail="Topic not found.")
         topic.show_count += 1
@@ -175,7 +175,7 @@ def show_topic(topic_id: int, db: Session = Depends(get_db)):
 # Delete a topic by its ID
 def delete_topic(topic_id: int, db: Session = Depends(get_db)):
     try:
-        topic = db.query(DiscussionTopics).filter(DiscussionTopics.id == topic_id).first()
+        topic = db.query(DiscussionTopics).filter_by(id=topic_id).first()
         if not topic:
             raise HTTPException(status_code=404, detail="Topic not found.")
 
@@ -229,7 +229,7 @@ def submit_reply(new_reply: NewReply, discussion_id: int, db: Session = Depends(
 # Get all replies for a discussion
 def get_all_replies(discussion_id: int, db: Session = Depends(get_db)):
     try:
-        replies = db.query(Replies).filter(Replies.discussion_id == discussion_id).all()
+        replies = db.query(Replies).filter_by(id=discussion_id).all()
         if not replies:
             raise HTTPException(status_code=404, detail="No replies found.")
         return ReplyList(replies=replies, total_count=len(replies))
@@ -241,7 +241,7 @@ def get_all_replies(discussion_id: int, db: Session = Depends(get_db)):
 # Get a reply by its ID
 def get_reply(reply_id: int, db: Session = Depends(get_db)):
     try:
-        reply = db.query(Replies).filter(Replies.id == reply_id).first()
+        reply = db.query(Replies).filter_by(id=reply_id).first()
         if not reply:
             raise HTTPException(status_code=404, detail="Reply not found.")
         return reply
@@ -253,7 +253,7 @@ def get_reply(reply_id: int, db: Session = Depends(get_db)):
 # Update a reply by its ID
 def update_reply(reply_id: int, updated_reply: NewReply, db: Session = Depends(get_db)):
     try:
-        reply = db.query(Replies).filter(Replies.id == reply_id).first()
+        reply = db.query(Replies).filter_by(id=reply_id).first()
         if not reply:
             raise HTTPException(status_code=404, detail="Reply not found.")
 
@@ -268,7 +268,7 @@ def update_reply(reply_id: int, updated_reply: NewReply, db: Session = Depends(g
 # Mark a reply as deleted
 def delete_reply(reply_id: int, db: Session = Depends(get_db)):
     try:
-        reply = db.query(Replies).filter(Replies.id == reply_id).first()
+        reply = db.query(Replies).filter_by(id=reply_id).first()
         if not reply:
             raise HTTPException(status_code=404, detail="Reply not found.")
 
