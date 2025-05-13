@@ -23,6 +23,7 @@ class Topic(BaseModel):
     last_shown: Optional[datetime] = None
     is_active: bool
     show_count: int
+    activated_at: Optional[datetime] = None
 
 
 class TopicList(BaseModel):
