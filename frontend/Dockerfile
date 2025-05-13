@@ -3,8 +3,13 @@ FROM node:18 as builder
 
 WORKDIR /app
 COPY . .
-RUN npm install
-RUN npm run build
+
+ENV NODE_ENV=production
+
+RUN npm install --include=dev
+
+# doing this will pickup the .env.production config
+RUN npm run build -- --mode production
 
 # Serve stage
 FROM nginx:stable-alpine
