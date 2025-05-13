@@ -104,6 +104,7 @@ class DiscussionTopics(Base):
     last_shown = Column(TIMESTAMP, nullable=True)
     is_active = Column(Boolean, default=False)
     show_count = Column(Integer, default=0)
+    activated_at = Column(TIMESTAMP, nullable=True)
 
     __table_args__ = (
         Index("idx_discussion_topics_created_at", "created_at"),
