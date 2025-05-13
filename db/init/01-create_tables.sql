@@ -65,6 +65,7 @@ create table if not exists discussion_topics (
     prompt text not null,
     created_at timestamp not null default (now()),
     last_shown timestamp,
+    activated_at timestamp,
     is_active boolean not null default false,
     show_count integer default 0
 );

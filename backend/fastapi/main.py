@@ -134,6 +134,11 @@ def activate_topic(topic_id: int, db: Session = Depends(get_db)):
         if topic.is_active:
             raise HTTPException(status_code=400, detail="Topic is already active.")
         topic.is_active = True
+
+        # need to set the activation time if this is the first time it is being activated
+        if topic.activated_at is None:
+            topic.activated_at = datetime.now()
+            
         db.commit()
         return {"message": f"Topic with ID {topic_id} activated successfully."}
     except Exception as e:
