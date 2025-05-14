@@ -5,7 +5,6 @@ import FormButton from "@/components/auth/form/FormButton";
 import * as authService from "@/api/authService";
 
 const CredentialsBox = ({ action }) => {
-  const formId = `${action}Form`;
   const { setUser } = useUser();
 
   const [formData, setFormData] = useState({
@@ -44,7 +43,7 @@ const CredentialsBox = ({ action }) => {
     try {
       const userData = await authService.Login(formData);
       setUser(userData);
-      closeAuthBox();
+      reloadPage();
     } catch (error) {
       setAuthErrorMsg(error.message || "Login failed");
     }
@@ -62,7 +61,7 @@ const CredentialsBox = ({ action }) => {
     try {
       const userData = await authService.Register(formData);
       setUser(userData);
-      closeAuthBox();
+      reloadPage();
     } catch (error) {
       setAuthErrorMsg(error.message || "Registration failed");
     }
@@ -80,7 +79,7 @@ const CredentialsBox = ({ action }) => {
     try {
       const userData = await authService.UpdateUser(formData);
       setUser(userData);
-      closeAuthBox();
+      reloadPage();
     } catch (error) {
       setAuthErrorMsg(error.message || "Credentials update failed");
     }
@@ -89,13 +88,8 @@ const CredentialsBox = ({ action }) => {
   /**
    * Close the current auth box and reset form data
    */
-  function closeAuthBox() {
-    setFormData({
-      email: "",
-      password: "",
-    });
-    setAuthErrorMsg("");
-    document.getElementById(formId).close();
+  function reloadPage() {
+    window.location.reload()
   }
 
   // Set handle function and label based on action
@@ -125,7 +119,7 @@ const CredentialsBox = ({ action }) => {
           <FormButton text="Register" func={handleRegister} />
         )}
 
-        <FormButton text="Close" func={closeAuthBox} />
+        <FormButton text="Close" func={reloadPage} />
       </div>
     </div>
   );
