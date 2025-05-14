@@ -1,14 +1,16 @@
 import { useEffect, useState } from "react";
 import { useUser } from "@/hooks/useUser";
+import LoginButton from "@/components/auth/LoginButton"
+import LogoutButton from "@/components/auth/LogoutButton"
 
-const AuthButton = () => {
+const AuthControl = () => {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
   const [isCheckingStatus, setIsCheckingStatus] = useState(true);
   const { user, setUser } = useUser();
-  const [errorMsg, setErrorMsg] = useState("");
+  const [errorMsg, setAuthErrorMsg] = useState("");
 
   useEffect(() => {
     const checkLoginStatus = async () => {
@@ -51,7 +53,7 @@ const AuthButton = () => {
     }
 
     if (!document.getElementById("email").checkValidity()) {
-      setErrorMsg("Please enter a valid email address");
+      setAuthErrorMsg("Please enter a valid email address");
       return;
     }
 
@@ -70,7 +72,7 @@ const AuthButton = () => {
 
       if (!response.ok) {
         const resp = await response.json();
-        setErrorMsg(resp.error || "Login failed");
+        setAuthErrorMsg(resp.error || "Login failed");
         console.error("Login request rejected:", response.status, resp);
         return;
       }
@@ -80,7 +82,7 @@ const AuthButton = () => {
       document.getElementById("loginForm").close();
       window.location.reload();
     } catch (error) {
-      setErrorMsg("Login failed");
+      setAuthErrorMsg("Login failed");
       console.error("Login error:", error);
     }
   };
@@ -105,9 +107,9 @@ const AuthButton = () => {
       console.log("Register response:", response);
 
       if (!response.ok) {
-        setErrorMsg("Registration failed");
+        setAuthErrorMsg("Registration failed");
         const resp = await response.json();
-        setErrorMsg(resp.error || "Registration failed");
+        setAuthErrorMsg(resp.error || "Registration failed");
         console.error("Registration request rejected:", response.status, resp);
         return;
       }
@@ -115,7 +117,7 @@ const AuthButton = () => {
       // NOTE: Reload and force new login - but eventually want email confirmation
       window.location.reload();
     } catch (error) {
-      setErrorMsg("Registration failed");
+      setAuthErrorMsg("Registration failed");
       console.error("Registration error:", error);
     }
   };
@@ -137,30 +139,22 @@ const AuthButton = () => {
       email: "",
       password: "",
     });
-    setErrorMsg("");
+    setAuthErrorMsg("");
     document.getElementById("loginForm").close();
   };
+
+  const openAuthModal = () => {
+    document.getElementById("loginForm").showModal();
+  }
 
   return (
     <div>
       {isCheckingStatus ? (
         <span className="inline-block p-1">&nbsp;</span>
       ) : !user ? (
-        <button
-          type="button"
-          className="text-purple-800 bg-purple-100 inline-block p-1 rounded-lg cursor-pointer"
-          onClick={() => document.getElementById("loginForm").showModal()}
-        >
-          Login
-        </button>
+        <LoginButton onClick={openAuthModal} />
       ) : (
-        <button
-          type="button"
-          className="text-purple-800 bg-purple-100 inline-block p-1 rounded-lg cursor-pointer"
-          onClick={handleLogout}
-        >
-          Logout
-        </button>
+        <LogoutButton onClick={handleLogout} />
       )}
 
       <dialog
@@ -231,4 +225,4 @@ const AuthButton = () => {
   );
 };
 
-export default AuthButton;
+export default AuthControl;
