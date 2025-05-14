@@ -168,6 +168,15 @@ func (us *UserService) UpdateUser(userID string, request map[string]any) error {
 		return apperrors.ErrUserIdEmpty
 	}
 
+	// Check if user exists with this email before attempting update
+	if email, ok := request["email"].(string); ok && email != "" {
+		user, _ := us.UserRepo.GetUserByEmail(request["email"].(string))
+		// If user was found, we have duplicate user
+		if user != nil {
+			return apperrors.ErrDuplicateEmail
+		}
+	}
+
 	if password, ok := request["password"].(string); ok && password != "" {
 		if err := passwordvalidator.Validate(password, config.MinEntropyBits); err != nil {
 			return err
