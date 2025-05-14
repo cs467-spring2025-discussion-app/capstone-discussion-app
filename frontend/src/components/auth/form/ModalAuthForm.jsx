@@ -42,7 +42,7 @@ const ModalAuthForm = ({ action }) => {
     try {
       const userData = await authService.Login(formData);
       setUser(userData);
-      document.getElementById(formId).close();
+      closeAuthBox()
     } catch (error) {
       setAuthErrorMsg(error.message || "Login failed");
     }
@@ -57,7 +57,7 @@ const ModalAuthForm = ({ action }) => {
     try {
       const userData = await authService.Register(formData);
       setUser(userData);
-      document.getElementById(formId).close();
+      closeAuthBox()
     } catch (error) {
       setAuthErrorMsg(error.message || "Registration failed");
     }
@@ -72,7 +72,7 @@ const ModalAuthForm = ({ action }) => {
     try {
       const userData = await authService.UpdateUser(formData);
       setUser(userData);
-      document.getElementById(formId).close();
+      closeAuthBox()
     } catch (error) {
       setAuthErrorMsg(error.message || "Credentials update failed");
     }
@@ -87,7 +87,7 @@ const ModalAuthForm = ({ action }) => {
     try {
       await authService.DeleteAccount();
       setUser(null);
-      document.getElementById(formId).close();
+      closeAuthBox()
     } catch (error) {
       setAuthErrorMsg(error.message || "Account delete failed");
     }
