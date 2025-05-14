@@ -4,7 +4,7 @@ import CredentialsInput from "@/components/auth/form/CredentialsInput";
 import FormButton from "@/components/auth/form/FormButton";
 import * as authService from "@/api/authService";
 
-const ModalAuthForm = ({action}) => {
+const ModalAuthForm = ({ action }) => {
   const formId = `${action}Form`;
   const { setUser } = useUser();
 
@@ -12,15 +12,19 @@ const ModalAuthForm = ({action}) => {
     email: "",
     password: "",
   });
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const [errorMsg, setAuthErrorMsg] = useState("");
 
-  const handleChange = (e) => {
+  const handleCredentialsFormChange = (e) => {
     const { name, value } = e.target;
     setFormData((formValueState) => ({
       ...formValueState,
       [name]: value,
     }));
+  };
+  const handleConfirmDelete = (e) => {
+    setConfirmDelete(e.target.checked);
   };
 
   const handleLogin = async (e) => {
@@ -39,7 +43,6 @@ const ModalAuthForm = ({action}) => {
       const userData = await authService.Login(formData);
       setUser(userData);
       document.getElementById(formId).close();
-      window.location.reload();  // Reload to set auth
     } catch (error) {
       setAuthErrorMsg(error.message || "Login failed");
     }
@@ -60,6 +63,36 @@ const ModalAuthForm = ({action}) => {
     }
   };
 
+  const handleUpdate = async (e) => {
+    if (e) {
+      e.preventDefault();
+    } else {
+      return;
+    }
+    try {
+      const userData = await authService.UpdateUser(formData);
+      setUser(userData);
+      document.getElementById(formId).close();
+    } catch (error) {
+      setAuthErrorMsg(error.message || "Credentials update failed");
+    }
+  };
+
+  const handleDelete = async (e) => {
+    if (e) {
+      e.preventDefault();
+    } else {
+      return;
+    }
+    try {
+      await authService.DeleteAccount();
+      setUser(null);
+      document.getElementById(formId).close();
+    } catch (error) {
+      setAuthErrorMsg(error.message || "Account delete failed");
+    }
+  };
+
   const closeAuthBox = () => {
     setFormData({
       email: "",
@@ -69,10 +102,17 @@ const ModalAuthForm = ({action}) => {
     document.getElementById(formId).close();
   };
 
-  // Set handle function and label based on action
-  const handleSubmit = action === "login" ? handleLogin : handleRegister;
+  // // Set handle function and label based on action
+  const handleSubmit =
+    (action === "login" && handleLogin) ||
+    (action === "register" && handleRegister) ||
+    (action === "update" && handleUpdate) ||
+    (action === "delete" && handleDelete);
+
+  //   action === "register" ? handleRegister;
+
   // Capitalize action for label
-  const label = `${action.charAt(0).toUpperCase()}${action.slice(1)}`
+  const label = `${action.charAt(0).toUpperCase()}${action.slice(1)}`;
 
   return (
     <dialog
@@ -82,16 +122,54 @@ const ModalAuthForm = ({action}) => {
       <div className="flex flex-col bg-purple-100">
         <div className="font-bold rounded-lg p-4 mb-4">
           <div className="flex flex-col">
-            {/* Email and password input */}
-            <CredentialsInput formData={formData} handleChange={handleChange} />
+            {action === "delete" ? (
+              // Delete account with confirmation
+              <div className="flex-col items-center text-lg">
+                <div className="flex justify-center">Delete account?</div>
+                <div className="mt-4 flex items-center">
+                  <input
+                    type="checkbox"
+                    id="confirmDeleteCheckbox"
+                    checked={confirmDelete}
+                    onChange={handleConfirmDelete}
+                    className="mr-2"
+                  />
+                  <label htmlFor="confirmDeleteCheckbox">
+                    Check to confirm. This cannot be undone!!
+                  </label>
+                </div>
+              </div>
+            ) : (
+              // Email and password input
+              <CredentialsInput
+                formData={formData}
+                handleChange={handleCredentialsFormChange}
+              />
+            )}
 
             {/* Error message display */}
             {errorMsg && <div className="text-red-600">{errorMsg}</div>}
 
             {/* Action buttons */}
             <div className="flex gap-4 justify-center mt-4">
+              {action === "delete" ? (
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={!confirmDelete}
+                  className={`py-2 px-4 rounded-md text-white
+                  ${
+                    !confirmDelete
+                      ? "cursor-not-allowed bg-red-300"
+                      : "cursor-pointer bg-red-500 hover:bg-red-600"
+                  }`}
+                >
+                  {label}
+                </button>
+              ) : (
                 <FormButton text={label} func={handleSubmit} />
-                <FormButton text="Close" func={closeAuthBox} />
+              )}
+              <FormButton text="Close" func={closeAuthBox} />
             </div>
           </div>
         </div>

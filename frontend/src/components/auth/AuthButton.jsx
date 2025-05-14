@@ -11,12 +11,11 @@ const AuthButton = ({ action }) => {
       try {
         await authService.Logout();
         setUser(null);
-        window.location.reload();
       } catch (error) {
         console.error("Logout error:", error);
       }
     } else {
-      // Login/Register by showing modal
+      // Login/Register/Delete by showing modal
       const modal = document.getElementById(`${action}Form`);
       if (modal) {
         modal.showModal();
