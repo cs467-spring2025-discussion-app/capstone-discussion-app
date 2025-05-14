@@ -44,7 +44,6 @@ const AuthMenu = () => {
       ) : !user ? ( // no user is logged in
         <div className="absolute right-0 p-2 flex gap-2 items-center">
           <AuthButton action="login" />
-          <AuthButton action="register" />
         </div>
       ) : (
         // user is logged in
@@ -64,7 +63,6 @@ const AuthMenu = () => {
       )}
 
       <ModalAuthForm action="login" />
-      <ModalAuthForm action="register" />
       <ModalAuthForm action="update" />
       <ModalAuthForm action="delete" />
     </div>
