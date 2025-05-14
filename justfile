@@ -213,7 +213,7 @@ topics:
 
 # Stop the app_db service and delete the app_postgres_data volume
 empty:
-    docker compose down app_db
+    docker compose down db
     docker volume rm capstone-discussion-app_postgres_data
 
 # Stop and rebuild the docker services
