@@ -28,13 +28,6 @@ const AuthMenu = () => {
     checkLoginStatus();
   }, [setUser]);
 
-  // Close dropdown whenever user logs out (user becomes null)
-  useEffect(() => {
-    if (!user) {
-      setIsDropdownOpen(false);
-    }
-  }, [user]);
-
   /**
    * Toggle dropdown menu state
    */
