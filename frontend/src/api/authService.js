@@ -32,7 +32,6 @@ export async function Register(credentials) {
  * @returns {Promise<Object>} User data
  * @throws {Error} On login failure
  */
-// export const Login = async (credentials) => {
 export async function Login(credentials) {
   const response = await fetch("/authapi/login", {
     method: "POST",

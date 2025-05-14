@@ -15,15 +15,21 @@ const CredentialsBox = ({ action }) => {
 
   const [errorMsg, setAuthErrorMsg] = useState("");
 
-  const handleCredentialsFormChange = (e) => {
+  /**
+   * Update formData state on form input change
+   */
+  function handleCredentialsFormChange(e) {
     const { name, value } = e.target;
     setFormData((formValueState) => ({
       ...formValueState,
       [name]: value,
     }));
-  };
+  }
 
-  const handleLogin = async (e) => {
+  /**
+   * Handle login button press
+   */
+  async function handleLogin(e) {
     if (e) {
       e.preventDefault();
     } else {
@@ -42,9 +48,12 @@ const CredentialsBox = ({ action }) => {
     } catch (error) {
       setAuthErrorMsg(error.message || "Login failed");
     }
-  };
+  }
 
-  const handleRegister = async (e) => {
+  /**
+   * Handle login button press
+   */
+  async function handleRegister(e) {
     if (e) {
       e.preventDefault();
     } else {
@@ -57,9 +66,12 @@ const CredentialsBox = ({ action }) => {
     } catch (error) {
       setAuthErrorMsg(error.message || "Registration failed");
     }
-  };
+  }
 
-  const handleUpdate = async (e) => {
+  /**
+   * Handle update button press
+   */
+  async function handleUpdate(e) {
     if (e) {
       e.preventDefault();
     } else {
@@ -72,16 +84,19 @@ const CredentialsBox = ({ action }) => {
     } catch (error) {
       setAuthErrorMsg(error.message || "Credentials update failed");
     }
-  };
+  }
 
-  const closeAuthBox = () => {
+  /**
+   * Close the current auth box and reset form data
+   */
+  function closeAuthBox() {
     setFormData({
       email: "",
       password: "",
     });
     setAuthErrorMsg("");
     document.getElementById(formId).close();
-  };
+  }
 
   // Set handle function and label based on action
   const handleSubmit =
@@ -104,10 +119,12 @@ const CredentialsBox = ({ action }) => {
       {/* Action buttons */}
       <div className="flex gap-4 justify-center mt-4">
         <FormButton text={label} func={handleSubmit} />
+
         {/* Show additional register button for login */}
         {action === "login" && (
           <FormButton text="Register" func={handleRegister} />
         )}
+
         <FormButton text="Close" func={closeAuthBox} />
       </div>
     </div>

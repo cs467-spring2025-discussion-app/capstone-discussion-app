@@ -15,7 +15,10 @@ const DeleteBox = () => {
     document.getElementById("deleteForm").close();
   };
 
-  const handleDelete = async (e) => {
+  /**
+   * Handle delete button press
+   */
+  async function handleDelete(e) {
     if (e) {
       e.preventDefault();
     } else {
@@ -28,7 +31,7 @@ const DeleteBox = () => {
     } catch (error) {
       console.log(error);
     }
-  };
+  }
 
   return (
     <div>

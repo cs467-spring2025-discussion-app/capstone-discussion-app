@@ -9,9 +9,11 @@ const AuthMenu = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const { user, setUser } = useUser();
 
-  // Check login status before displaying menu options
   useEffect(() => {
-    const checkLoginStatus = async () => {
+    /**
+     * Check login status before displaying menu options
+     */
+    async function checkLoginStatus() {
       try {
         const userData = await authService.Whoami();
         setUser(userData);
@@ -21,7 +23,7 @@ const AuthMenu = () => {
       } finally {
         setIsCheckingStatus(false);
       }
-    };
+    }
 
     checkLoginStatus();
   }, [setUser]);
@@ -33,9 +35,12 @@ const AuthMenu = () => {
     }
   }, [user]);
 
-  const toggleDropdown = () => {
+  /**
+   * Toggle dropdown menu state
+   */
+  function toggleDropdown() {
     setIsDropdownOpen(!isDropdownOpen);
-  };
+  }
 
   return (
     <div className="m-2">
@@ -48,8 +53,12 @@ const AuthMenu = () => {
       ) : (
         // user is logged in
         <div className="absolute right-0 p-2">
-          <button className="bg-blue-300 p-2 rounded-lg shadow-lg font-bold"
-                type="button" id="authDropdown" onClick={toggleDropdown}>
+          <button
+            className="bg-blue-300 p-2 rounded-lg shadow-lg font-bold"
+            type="button"
+            id="authDropdown"
+            onClick={toggleDropdown}
+          >
             <div>{user.email}</div>
           </button>
           {isDropdownOpen && (
