@@ -5,7 +5,10 @@ import * as authService from "@/api/authService";
 const AuthButton = ({ action }) => {
   const { setUser } = useUser();
 
-  const handleAction = async () => {
+  /**
+   * Show auth box appropriate for `action` or logout
+   */
+  async function handleAction() {
     // Logout
     if (action === "logout") {
       try {
@@ -23,7 +26,7 @@ const AuthButton = ({ action }) => {
         console.error(`Modal with ID ${action}Form not found`);
       }
     }
-  };
+  }
 
   return (
     <button
