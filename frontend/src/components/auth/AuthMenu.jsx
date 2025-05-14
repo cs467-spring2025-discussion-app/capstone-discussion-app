@@ -25,20 +25,27 @@ const AuthMenu = () => {
   }, [setUser]);
 
   return (
-    <div>
+    <div className="m-2">
       {isCheckingStatus ? (
         <span className="inline-block p-1">&nbsp;</span>
       ) : !user ? (
-        <div>
+        <div className="flex gap-2 items-center">
           <AuthButton action="login"/>
           <AuthButton action="register"/>
         </div>
       ) : (
-        <AuthButton action="logout"/>
+        <div className="flex gap-2 items-center">
+          <AuthButton action="update"/>
+          <AuthButton action="logout"/>
+          <AuthButton action="delete"/>
+          <span>{user.email}</span>
+        </div>
       )}
 
       <ModalAuthForm action="login" />
       <ModalAuthForm action="register" />
+      <ModalAuthForm action="update" />
+      <ModalAuthForm action="delete" />
     </div>
   );
 };
