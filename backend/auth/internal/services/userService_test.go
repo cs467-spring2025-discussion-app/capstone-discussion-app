@@ -185,6 +185,17 @@ func TestUserService_UpdateUser(t *testing.T) {
 			is.Equal(updatedUser.LastLogin, &referenceTime)
 		})
 	})
+
+	// Cannot update to an existing email
+	t.Run("cannot update to existing email", func(t *testing.T) {
+		email := "testUpdateExistingUser@test.com"
+		us := setupUserService(t)
+
+		err := us.RegisterUser(email, testutils.TestingPassword)
+		is.NoErr(err)
+		err = us.RegisterUser(email, testutils.TestingPassword)
+		is.Equal(err, apperrors.ErrDuplicateEmail)
+	})
 }
 
 // TestUserService_LoginUser tests that a user can be logged in, generating a
