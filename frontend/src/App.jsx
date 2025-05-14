@@ -1,13 +1,13 @@
 import DiscussionPage from '@/pages/DiscussionPage'
 import Home from '@/pages/Home'
-import AuthButton from '@/components/AuthButton'
+import AuthControl from '@/components/auth/AuthControl'
 import AuthProvider from '@/contexts/AuthProvider'
 
 export default function App() {
   return (
     <>
       <AuthProvider>
-        <AuthButton />
+        <AuthControl />
         <Home />
         <DiscussionPage />
       </AuthProvider>
