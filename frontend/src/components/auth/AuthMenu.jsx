@@ -2,20 +2,22 @@ import { useUser } from "@/hooks/useUser";
 import { useEffect, useState } from "react";
 import AuthButton from "@/components/auth/AuthButton";
 import ModalAuthForm from "@/components/auth/form/ModalAuthForm";
-import * as authService from "@/api/authService"
+import * as authService from "@/api/authService";
 
 const AuthMenu = () => {
   const [isCheckingStatus, setIsCheckingStatus] = useState(true);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const { user, setUser } = useUser();
 
+  // Check login status before displaying menu options
   useEffect(() => {
     const checkLoginStatus = async () => {
       try {
         const userData = await authService.Whoami();
-        setUser(userData)
+        setUser(userData);
       } catch (error) {
         console.error("Error checking login status:", error);
-        setUser(null)
+        setUser(null);
       } finally {
         setIsCheckingStatus(false);
       }
@@ -24,21 +26,40 @@ const AuthMenu = () => {
     checkLoginStatus();
   }, [setUser]);
 
+  // Close dropdown whenever user logs out (user becomes null)
+  useEffect(() => {
+    if (!user) {
+      setIsDropdownOpen(false);
+    }
+  }, [user]);
+
+  const toggleDropdown = () => {
+    setIsDropdownOpen(!isDropdownOpen);
+  };
+
   return (
     <div className="m-2">
-      {isCheckingStatus ? (
+      {isCheckingStatus ? ( // waiting for logged-in check
         <span className="inline-block p-1">&nbsp;</span>
-      ) : !user ? (
-        <div className="flex gap-2 items-center">
-          <AuthButton action="login"/>
-          <AuthButton action="register"/>
+      ) : !user ? ( // no user is logged in
+        <div className="absolute right-0 p-2 flex gap-2 items-center">
+          <AuthButton action="login" />
+          <AuthButton action="register" />
         </div>
       ) : (
-        <div className="flex gap-2 items-center">
-          <AuthButton action="update"/>
-          <AuthButton action="logout"/>
-          <AuthButton action="delete"/>
-          <span>{user.email}</span>
+        // user is logged in
+        <div className="absolute right-0 p-2">
+          <button className="bg-blue-300 p-2 rounded-lg shadow-lg font-bold"
+                type="button" id="authDropdown" onClick={toggleDropdown}>
+            <div>{user.email}</div>
+          </button>
+          {isDropdownOpen && (
+            <div className="absolute right-0 m-2 flex flex-col max-w-max ">
+              <AuthButton action="update" />
+              <AuthButton action="logout" />
+              <AuthButton action="delete" />
+            </div>
+          )}
         </div>
       )}
 

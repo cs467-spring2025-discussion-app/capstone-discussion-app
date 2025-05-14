@@ -15,7 +15,7 @@ const AuthButton = ({ action }) => {
         console.error("Logout error:", error);
       }
     } else {
-      // Login/Register/Delete by showing modal
+      // Login/Register/Update/Delete by showing modal
       const modal = document.getElementById(`${action}Form`);
       if (modal) {
         modal.showModal();
@@ -28,7 +28,7 @@ const AuthButton = ({ action }) => {
   return (
     <button
       type="button"
-      className="text-purple-800 bg-purple-100 inline-block p-1 rounded-lg cursor-pointer"
+      className="text-purple-800 bg-purple-100 shadow-lg inline-block p-1 rounded-lg cursor-pointer"
       onClick={handleAction}
     >
       {action.charAt(0).toUpperCase() + action.slice(1)}
