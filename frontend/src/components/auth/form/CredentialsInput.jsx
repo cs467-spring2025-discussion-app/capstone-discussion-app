@@ -1,6 +1,6 @@
 import React from "react";
 
-const CredentialsForm = ({ formData, handleFormChange }) => {
+const CredentialsInput = ({ formData, handleFormChange }) => {
   return (
     <div>
       <div className="flex flex-col">
@@ -33,4 +33,4 @@ const CredentialsForm = ({ formData, handleFormChange }) => {
   );
 };
 
-export default CredentialsForm;
+export default CredentialsInput;
