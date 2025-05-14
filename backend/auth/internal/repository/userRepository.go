@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -39,9 +38,6 @@ func (ur *UserRepository) RegisterUser(u *models.User) error {
 	}
 
 	err := ur.DB.Create(u).Error
-	if err != nil && strings.Contains(err.Error(), `duplicate key value violates unique constraint "users_pkey"`) {
-		return apperrors.ErrDuplicateEmail
-	}
 	return err
 }
 

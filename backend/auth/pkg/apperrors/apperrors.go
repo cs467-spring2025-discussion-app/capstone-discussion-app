@@ -14,7 +14,7 @@ var (
 	ErrSessionIDGeneration = New("Could not generate token")
 
 	// User registration errors
-	ErrDuplicateEmail     = New("Email already exists in database")
+	ErrDuplicateEmail     = New("User already registered with this email")
 	ErrEmailIsEmpty       = New("Email is empty")
 	ErrEmailMaxLength     = New("Email exceeds max length of 254 characters")
 	ErrEmailFormat        = New("Email format is invalid")

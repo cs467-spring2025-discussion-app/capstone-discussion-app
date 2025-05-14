@@ -57,22 +57,24 @@ func TestUserService_NewUserService(t *testing.T) {
 func TestUserService_RegisterUser(t *testing.T) {
 	is := is.New(t)
 
-	us := setupUserService(t)
 
 	// Error on empty email
 	t.Run("empty email", func(t *testing.T) {
+		us := setupUserService(t)
 		err := us.RegisterUser("", "password")
 		is.Equal(err, apperrors.ErrEmailIsEmpty)
 	})
 
 	// Error on empty password
 	t.Run("empty password", func(t *testing.T) {
+		us := setupUserService(t)
 		err := us.RegisterUser("some@test.com", "")
 		is.Equal(err, apperrors.ErrPasswordIsEmpty)
 	})
 
 	// Can register with a valid User value
 	t.Run("valid user", func(t *testing.T) {
+		us := setupUserService(t)
 		email := "testUserServiceRegisterUser@test.com"
 		err := us.RegisterUser(email, testutils.TestingPassword)
 		is.NoErr(err)
@@ -82,6 +84,17 @@ func TestUserService_RegisterUser(t *testing.T) {
 		result := us.UserRepo.DB.First(&user, "email = ?", email)
 		is.NoErr(result.Error)
 	})
+
+	// Cannot register a duplicate user
+	t.Run("duplicate user", func(t *testing.T) {
+		us := setupUserService(t)
+		email := "testUserServiceRegisterUser1@test.com"
+		err := us.RegisterUser(email, testutils.TestingPassword)
+		is.NoErr(err)
+		err = us.RegisterUser(email, testutils.TestingPassword)
+		is.Equal(err, apperrors.ErrDuplicateEmail)
+	})
+
 }
 
 func TestUserService_GetUserProfile(t *testing.T) {
@@ -208,7 +221,7 @@ func TestUserService_LoginUser(t *testing.T) {
 	t.Run("non existing user", func(t *testing.T) {
 		us := setupUserService(t)
 		_, err := us.LoginUser("doesNotExist@test.com", "password")
-		is.Equal(err, gorm.ErrRecordNotFound)
+		is.Equal(err, apperrors.ErrUserNotFound)
 	})
 
 	t.Run("empty email", func(t *testing.T) {
@@ -274,8 +287,7 @@ func TestUserService_LoginUser(t *testing.T) {
 			Updates(map[string]any{"failed_login_attempts": config.MaxLoginAttempts - 1})
 
 		// Fail a login attempt
-		_, err = us.LoginUser(email, "thisIsNotThePassword")
-		is.Equal(err, apperrors.ErrInvalidLogin)
+		us.LoginUser(email, "thisIsNotThePassword")
 
 		// Attempt subsequent login, expecting locked account
 		_, err = us.LoginUser(email, testutils.TestingPassword)

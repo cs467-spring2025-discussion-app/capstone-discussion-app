@@ -45,6 +45,13 @@ func (us *UserService) RegisterUser(email, password string) error {
 		return apperrors.ErrPasswordIsEmpty
 	}
 
+	// Check if user exists before attempting registration
+	// If user was found, we have duplicate user
+	user, _ := us.UserRepo.GetUserByEmail(email)
+	if user != nil {
+		return apperrors.ErrDuplicateEmail
+	}
+
 	user, err := models.NewUser(email, password)
 	if err != nil {
 		return err
