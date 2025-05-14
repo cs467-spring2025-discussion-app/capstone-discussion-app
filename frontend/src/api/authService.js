@@ -46,6 +46,7 @@ export async function Login(credentials) {
     throw new Error(errorData.error || "Login failed");
   }
 
+  // Return credentials
   return await Whoami();
 }
 
@@ -69,7 +70,8 @@ export const UpdateUser = async (userData) => {
     throw new Error(errorData.error || "Update failed");
   }
 
-  return await response.json();
+  // Return new credentials
+  return await Whoami();
 };
 
 /**
