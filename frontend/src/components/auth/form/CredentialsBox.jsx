@@ -86,17 +86,16 @@ const CredentialsBox = ({ action }) => {
   // Set handle function and label based on action
   const handleSubmit =
     (action === "login" && handleLogin) ||
-    (action === "register" && handleRegister) ||
     (action === "update" && handleUpdate);
 
   // Capitalize action for label
   const label = `${action.charAt(0).toUpperCase()}${action.slice(1)}`;
 
   return (
-    <div>
+    <div className="flex flex-col items-center">
       <CredentialsInput
         formData={formData}
-        handleChange={handleCredentialsFormChange}
+        handleFormChange={handleCredentialsFormChange}
       />
 
       {/* Error message display */}
@@ -105,6 +104,10 @@ const CredentialsBox = ({ action }) => {
       {/* Action buttons */}
       <div className="flex gap-4 justify-center mt-4">
         <FormButton text={label} func={handleSubmit} />
+        {/* Show additional register button for login */}
+        {action === "login" && (
+          <FormButton text="Register" func={handleRegister} />
+        )}
         <FormButton text="Close" func={closeAuthBox} />
       </div>
     </div>

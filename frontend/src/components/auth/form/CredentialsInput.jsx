@@ -1,6 +1,6 @@
 import React from "react";
 
-const CredentialsForm = ({ formData, handleChange }) => {
+const CredentialsForm = ({ formData, handleFormChange }) => {
   return (
     <div>
       <div className="flex flex-col">
@@ -13,7 +13,7 @@ const CredentialsForm = ({ formData, handleChange }) => {
           name="email"
           required
           value={formData.email}
-          onChange={handleChange}
+          onChange={handleFormChange}
           className="text-black border border-black rounded-md p-2"
         />
       </div>
@@ -25,7 +25,7 @@ const CredentialsForm = ({ formData, handleChange }) => {
           name="password"
           required
           value={formData.password}
-          onChange={handleChange}
+          onChange={handleFormChange}
           className="border border-black rounded-md p-2"
         />
       </div>
