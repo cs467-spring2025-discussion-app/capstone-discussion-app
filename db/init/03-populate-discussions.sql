@@ -1,31 +1,16 @@
-insert into discussion_topics
-(title, prompt, is_active)
-values
-(
-    'sample topic 1',
-    'description 1',
-    true
-),
-(
-    'sample topic 2',
-    'description 2',
-    true
-),
-(
-    'sample topic 3',
-    'description 3',
-    true
-),
-(
-    'sample topic 4',
-    'description 4',
-    true
-),
-(
-    'sample topic 5',
-    'description 5',
-    true
-);
+do $$
+begin
+  for i in 1..12 loop
+    insert into discussion_topics
+    (title, prompt, is_active)
+    values
+    (
+      'sample topic ' || i,
+      'description ' || i,
+      true
+    );
+  end loop;
+end $$;
 
 with vars as (
     select
