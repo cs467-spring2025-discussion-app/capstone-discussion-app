@@ -1,5 +1,5 @@
 import { useUser } from "@/hooks/useUser";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import AuthButton from "@/components/auth/AuthButton";
 import ModalAuthForm from "@/components/auth/form/ModalAuthForm";
 import * as authService from "@/api/authService";
@@ -8,6 +8,7 @@ const AuthMenu = () => {
   const [isCheckingStatus, setIsCheckingStatus] = useState(true);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const { user, setUser } = useUser();
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
     /**
@@ -28,6 +29,29 @@ const AuthMenu = () => {
     checkLoginStatus();
   }, [setUser]);
 
+  // Close dropdown when clicking outside of it
+  // Ref: https://www.codemzy.com/blog/reactjs-dropdown-component
+  useEffect(() => {
+    function handleOutsideClick(e) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setIsDropdownOpen(false);
+      }
+    }
+    function handleEscapeKey(event) {
+      if (event.key === "Escape") {
+        setIsDropdownOpen(false);
+      }
+    }
+    if (isDropdownOpen) {
+      document.addEventListener("mousedown", handleOutsideClick);
+      document.addEventListener("keyup", handleEscapeKey);
+    }
+    return function removeListener() {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("keyup", handleEscapeKey);
+    };
+  }, [isDropdownOpen]);
+
   /**
    * Toggle dropdown menu state
    */
@@ -45,20 +69,24 @@ const AuthMenu = () => {
         </div>
       ) : (
         // user is logged in
-        <div className="relative">
+        <div className="relative" ref={dropdownRef}>
           <button
             className="bg-blue-300 font-bold p-1
               border-1 border-transparent rounded-md shadow-lg
               cursor-pointer
               hover:border-black"
             type="button"
-            id="authDropdown"
             onClick={toggleDropdown}
           >
             <div>{user.email}</div>
           </button>
           {isDropdownOpen && (
-            <div className="text-lg bg-blue-300 max-w-max border-1 rounded-md shadow-xl absolute right-0 mt-2 flex flex-col">
+            <div
+              id="authDropdown"
+              className="text-lg bg-blue-300 max-w-max 
+                border-1 rounded-md shadow-xl 
+                absolute right-0 mt-2 flex flex-col"
+            >
               <AuthButton action="update" />
               <AuthButton action="logout" />
               <AuthButton action="delete" />
