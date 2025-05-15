@@ -330,9 +330,10 @@ def submit_vote(new_vote: NewVote, reply_id: int, db: Session = Depends(get_db))
 ################################################################################
 
 # function to test topic rotation
-@app.get("/topics/rotate")
+@app.put("/topics/rotate")
 def rotate_active_topics(db: Session = Depends(get_db)):
     rotate_topics(db, 5)
+    return {"message": "Operation successful"}
 
 if __name__ == "__main__":
     import uvicorn
