@@ -36,18 +36,21 @@ const AuthMenu = () => {
   }
 
   return (
-    <div className="m-2">
+    <div className="flex justify-end m-2">
       {isCheckingStatus ? ( // waiting for logged-in check
-        <span className="inline-block p-1">&nbsp;</span>
+        <span className="inline-block">&nbsp;</span>
       ) : !user ? ( // no user is logged in
-        <div className="absolute right-0 p-2 flex gap-2 items-center">
+        <div className="bg-blue-300 rounded-lg shadow-lg font-bold">
           <AuthButton action="login" />
         </div>
       ) : (
         // user is logged in
-        <div className="absolute right-0 p-2">
+        <div className="relative">
           <button
-            className="bg-blue-300 p-2 rounded-lg shadow-lg font-bold"
+            className="bg-blue-300 font-bold p-1
+              border-1 border-transparent rounded-md shadow-lg
+              cursor-pointer
+              hover:border-black"
             type="button"
             id="authDropdown"
             onClick={toggleDropdown}
@@ -55,7 +58,7 @@ const AuthMenu = () => {
             <div>{user.email}</div>
           </button>
           {isDropdownOpen && (
-            <div className="absolute right-0 m-2 flex flex-col max-w-max ">
+            <div className="text-lg bg-blue-300 max-w-max border-1 rounded-md shadow-xl absolute right-0 mt-2 flex flex-col">
               <AuthButton action="update" />
               <AuthButton action="logout" />
               <AuthButton action="delete" />
