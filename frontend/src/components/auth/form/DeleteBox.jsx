@@ -37,7 +37,7 @@ const DeleteBox = () => {
     <div>
       <div className="flex-col items-center text-lg">
         <div className="flex justify-center">Delete account?</div>
-        <div className="mt-4 flex items-center">
+        <div className="mt-4 flex">
           <input
             type="checkbox"
             id="confirmDeleteCheckbox"
@@ -46,7 +46,10 @@ const DeleteBox = () => {
             className="mr-2"
           />
           <label htmlFor="confirmDeleteCheckbox">
-            Check to confirm. This cannot be undone!!
+            <div className="flex flex-col">
+              <p>Check to confirm. </p>
+              <p>This cannot be undone!!</p>
+            </div>
           </label>
         </div>
       </div>

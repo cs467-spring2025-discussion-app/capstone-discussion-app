@@ -14,7 +14,7 @@ const AuthButton = ({ action }) => {
       try {
         await authService.Logout();
         setUser(null);
-        window.location.reload()
+        window.location.reload();
       } catch (error) {
         console.error("Logout error:", error);
       }
@@ -32,7 +32,7 @@ const AuthButton = ({ action }) => {
   return (
     <button
       type="button"
-      className="text-purple-800 bg-purple-100 shadow-lg inline-block p-1 rounded-lg cursor-pointer"
+      className="p-1 rounded-md hover:bg-blue-400 cursor-pointer"
       onClick={handleAction}
     >
       {action.charAt(0).toUpperCase() + action.slice(1)}
