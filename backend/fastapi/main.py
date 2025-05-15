@@ -6,6 +6,7 @@ from models import NewTopic, Topic, TopicList, NewReply, Reply, ReplyList, NewVo
 from datetime import datetime
 import os
 from fastapi.middleware.cors import CORSMiddleware  # for the app.add_middleware function below
+from rotate import rotate_topics
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
@@ -323,9 +324,16 @@ def submit_vote(new_vote: NewVote, reply_id: int, db: Session = Depends(get_db))
         return {"message": "Vote submitted successfully."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+################################################################################
+# Topic Rotation
+################################################################################
 
+# function to test topic rotation
+@app.get("/topics/rotate")
+def rotate_active_topics(db: Session = Depends(get_db)):
+    rotate_topics(db, 5)
 
-#
 if __name__ == "__main__":
     import uvicorn
 

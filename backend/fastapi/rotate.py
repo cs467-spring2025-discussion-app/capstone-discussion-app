@@ -3,7 +3,8 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
 from datetime import datetime, timedelta
-from .tables import DiscussionTopics
+from tables import DiscussionTopics
+
 
 def rotate_topics(db: Session, count: int = 5):
     """
