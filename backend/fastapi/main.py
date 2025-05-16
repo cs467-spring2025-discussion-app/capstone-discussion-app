@@ -33,8 +33,9 @@ app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:5173",
-        "https://frontend-app-182441842390.us-west2.run.app",
+        "http://localhost:5173",  # local Vite dev build
+        "http://localhost:4173",  # local Vite prod build
+        "https://frontend-app-182441842390.us-west2.run.app",  # GCP
     ],
     allow_credentials=True,
     allow_methods=["*"],

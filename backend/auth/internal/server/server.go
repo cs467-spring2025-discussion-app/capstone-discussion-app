@@ -72,11 +72,10 @@ func (s *APIServer) SetupRoutes() {
 
 	// CORS middleware
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{
-			"http://localhost:5173",
-			"http://frontend:5173",
-			"http://localhost:8080",
-			"https://frontend-app-182441842390.us-west2.run.app",
+		AllowOrigins: []string{
+			"http://localhost:5173",                              // local Vite dev build
+			"http://localhost:4173",                              // local Vite prod build
+			"https://frontend-app-182441842390.us-west2.run.app", // GCP
 		},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
