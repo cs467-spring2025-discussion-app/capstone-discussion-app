@@ -118,6 +118,9 @@ update_topic id title prompt:
 delete_topic id:
     just request {{ FAST }} topics/delete_topic/{{ id }} DELETE | jq
 
+rotate:
+    just request {{ FAST }} topics/rotate PUT | jq
+
 # ######
 # Replies
 # ######
