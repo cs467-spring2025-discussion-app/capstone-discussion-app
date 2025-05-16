@@ -1,3 +1,7 @@
 PUT	http://localhost:8080/topics/rotate	0	0	0
-GET	http://localhost:3001/ping	12	0	0
+PUT	http://fastapi_app:8080/topics/rotate	0	0	0
+
+GET	http://localhost:3001/ping	16	21	0
+GET	http://goauth:3001/ping	16	21	0
+
 POST	https://httpbin.org/post	12	0	0	{"name":"bob","age":"55"}
