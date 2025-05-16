@@ -1,25 +1,24 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog/log"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"gorm.io/gorm"
 
-	"fmt"
 	"godiscauth/internal/handlers"
 	"godiscauth/internal/middleware"
 	"godiscauth/internal/repository"
 	"godiscauth/internal/services"
 	"godiscauth/pkg/apperrors"
 	"godiscauth/pkg/config"
-
-	"github.com/rs/zerolog/log"
 )
 
 // APIServer represents the API server with a gin router.
@@ -73,7 +72,12 @@ func (s *APIServer) SetupRoutes() {
 
 	// CORS middleware
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:5173", "http://frontend:5173", "http://localhost:8080"},
+		AllowOrigins:     []string{
+			"http://localhost:5173",
+			"http://frontend:5173",
+			"http://localhost:8080",
+			"https://frontend-app-182441842390.us-west2.run.app",
+		},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
