@@ -53,6 +53,15 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+  jobrunner:
+    build:
+      context: ./backend/jobrunner/
+      dockerfile: Dockerfile
+    container_name: jobrunner
+    ports:
+      - "3030:3030"
+    networks:
+      - app_network
 networks:
   app_network:
     driver: bridge
