@@ -150,9 +150,13 @@ reply_counts:
     just request {{ FAST }} replies/counts GET | jq
 
 # fastapi/replies/update_reply/{reply_id}
-update_reply reply_id content:
+update_reply email reply_id content:
     #!/usr/bin/env sh
-    user_id=$(just get_reply 8 | jq '.["user_id"]')
+    query="select id from users where email='{{ email }}'"
+    user_id=$(docker exec app_db psql \
+        -U postgresdiscussionapp -d app_db_discussion \
+        -t -A \
+        -c "$query")
     just request {{ FAST }} replies/update_reply/{{ reply_id }} \
     PUT '{\"user_id\":\"'$user_id'\", \"content\":\"{{ content }}\"}' | jq
 
