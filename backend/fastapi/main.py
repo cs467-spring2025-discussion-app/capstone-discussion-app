@@ -232,7 +232,7 @@ def submit_reply(new_reply: NewReply, discussion_id: int, db: Session = Depends(
 # Get all replies for a discussion
 def get_all_replies(discussion_id: int, db: Session = Depends(get_db)):
     try:
-        replies = db.query(Replies).filter_by(id=discussion_id).all()
+        replies = db.query(Replies).filter_by(discussion_id=discussion_id).all()
         if not replies:
             raise HTTPException(status_code=404, detail="No replies found.")
         return ReplyList(replies=replies, total_count=len(replies))
