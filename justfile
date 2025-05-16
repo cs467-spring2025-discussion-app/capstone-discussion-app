@@ -206,6 +206,7 @@ topics:
         discussion_topics.id, \
         discussion_topics.title, \
         discussion_topics.prompt, \
+        discussion_topics.is_active, \
         ( \
         select \
             count(distinct replies.id) num_replies \
