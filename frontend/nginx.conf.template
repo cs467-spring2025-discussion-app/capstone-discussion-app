@@ -1,9 +1,18 @@
 server {
   listen 80;
   server_name _;
-
   root /usr/share/nginx/html;
   index index.html;
+
+  # Proxy requests to auth API
+  location /authapi/ {
+    proxy_pass ${VITE_AUTH_API_URL}/;
+  }
+
+  # Proxy requests to FastAPI
+  location /fastapi/ {
+    proxy_pass ${VITE_FASTAPI_URL}/;
+  }
 
   location / {
     try_files $uri /index.html;
