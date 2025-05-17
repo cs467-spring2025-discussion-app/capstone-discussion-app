@@ -5,13 +5,14 @@ import DeleteBox from "@/components/auth/form/DeleteBox";
 
 const ModalAuthForm = ({ action }) => {
   const formId = `${action}Form`;
-  const { authModalRef, setCredentials } = useUser();
+  const { authModalRef, setAuthError, setCredentials } = useUser();
 
   // Clear credentials on escape press (which closes dialog by default)
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === "Escape") {
         setCredentials({ email: "", password: "" });
+        setAuthError("")
       }
     };
     document.addEventListener("keydown", handleKeyDown);
@@ -19,7 +20,7 @@ const ModalAuthForm = ({ action }) => {
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [authModalRef, setCredentials]);
+  }, [authModalRef, setAuthError, setCredentials]);
 
   return (
     <dialog
