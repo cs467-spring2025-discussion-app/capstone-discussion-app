@@ -290,8 +290,8 @@ fresh:
 
 # Start all services, rebuild if necessary
 [group('docker')]
-start:
-    docker compose up -d --build
+start *flags:
+    docker compose up -d --build {{  flags }}
 
 # Stop all services
 [group('docker')]
