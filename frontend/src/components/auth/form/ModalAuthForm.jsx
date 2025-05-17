@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useUser } from "@/hooks/useUser";
-import CredentialsBox from "@/components/auth/form/CredentialsBox";
+import CredentialsInput from "@/components/auth/form/CredentialsInput";
 import DeleteBox from "@/components/auth/form/DeleteBox";
 
 const ModalAuthForm = ({ action }) => {
@@ -34,7 +34,7 @@ const ModalAuthForm = ({ action }) => {
             {action === "delete" ? (
               <DeleteBox />
             ) : (
-              <CredentialsBox action={action} />
+              <CredentialsInput action={action} />
             )}
           </div>
         </div>
