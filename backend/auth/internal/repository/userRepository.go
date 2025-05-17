@@ -184,3 +184,20 @@ func (r *UserRepository) UnlockAccount(userID string) error {
 
 	return nil
 }
+
+// UnlockAllExpiredLocks unlocks any locked accounts where `account_locked_until` time has passed
+func (r *UserRepository) UnlockAllExpiredLocks() (int64, error) {
+	result := r.DB.Model(&models.User{}).
+		Where("account_locked = ?", true).
+		Where("account_locked_until < ?", time.Now().UTC()).
+		Updates(map[string]any{
+			"account_locked":        false,
+			"account_locked_until":  nil,
+			"failed_login_attempts": 0,
+		})
+
+	if result.Error != nil {
+		return 0, result.Error
+	}
+	return result.RowsAffected, nil
+}
