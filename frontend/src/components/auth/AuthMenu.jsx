@@ -7,7 +7,7 @@ import * as authService from "@/api/authService";
 const AuthMenu = () => {
   const [isCheckingStatus, setIsCheckingStatus] = useState(true);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const { user, setUser } = useUser();
+  const { user, setUser, setCredentials } = useUser();
   const dropdownRef = useRef(null);
 
   useEffect(() => {
@@ -41,6 +41,7 @@ const AuthMenu = () => {
     function handleEscapeKey(event) {
       if (event.key === "Escape") {
         setIsDropdownOpen(false);
+        setCredentials({email: "", password: ""})
       }
     }
 
@@ -52,7 +53,7 @@ const AuthMenu = () => {
       document.removeEventListener("mousedown", handleOutsideClick);
       document.removeEventListener("keyup", handleEscapeKey);
     };
-  }, [isDropdownOpen]);
+  }, [isDropdownOpen, setCredentials]);
 
   /**
    * Toggle dropdown menu state

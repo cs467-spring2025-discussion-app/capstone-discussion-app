@@ -5,26 +5,13 @@ import FormButton from "@/components/auth/form/FormButton";
 import * as authService from "@/api/authService";
 
 const CredentialsBox = ({ action }) => {
-  const { setUser } = useUser();
-
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const { setUser, credentials } = useUser();
 
   const [errorMsg, setAuthErrorMsg] = useState("");
 
   /**
-   * Update formData state on form input change
+   * Update credentials state on form input change
    */
-  function handleCredentialsFormChange(e) {
-    const { name, value } = e.target;
-    setFormData((formValueState) => ({
-      ...formValueState,
-      [name]: value,
-    }));
-  }
-
   /**
    * Handle login button press
    */
@@ -41,7 +28,7 @@ const CredentialsBox = ({ action }) => {
     }
 
     try {
-      const userData = await authService.Login(formData);
+      const userData = await authService.Login(credentials);
       setUser(userData);
       reloadPage();
     } catch (error) {
@@ -59,7 +46,7 @@ const CredentialsBox = ({ action }) => {
       return;
     }
     try {
-      const userData = await authService.Register(formData);
+      const userData = await authService.Register(credentials);
       setUser(userData);
       reloadPage();
     } catch (error) {
@@ -77,7 +64,7 @@ const CredentialsBox = ({ action }) => {
       return;
     }
     try {
-      const userData = await authService.UpdateUser(formData);
+      const userData = await authService.UpdateUser(credentials);
       setUser(userData);
       reloadPage();
     } catch (error) {
@@ -89,7 +76,7 @@ const CredentialsBox = ({ action }) => {
    * Close the current auth box and reset form data
    */
   function reloadPage() {
-    window.location.reload()
+    window.location.reload();
   }
 
   // Set handle function and label based on action
@@ -102,13 +89,10 @@ const CredentialsBox = ({ action }) => {
 
   return (
     <div className="flex flex-col items-center">
-      <CredentialsInput
-        formData={formData}
-        handleFormChange={handleCredentialsFormChange}
-      />
+      <CredentialsInput />
 
       {/* Error message display */}
-      {errorMsg && <div className="text-red-600">{errorMsg}</div>}
+      {errorMsg && <div className="text-red-600 text-center">{errorMsg}</div>}
 
       {/* Action buttons */}
       <div className="flex gap-4 justify-center mt-4">
