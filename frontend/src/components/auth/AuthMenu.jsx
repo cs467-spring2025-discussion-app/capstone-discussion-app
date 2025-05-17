@@ -29,19 +29,21 @@ const AuthMenu = () => {
     checkLoginStatus();
   }, [setUser]);
 
-  // Close dropdown when clicking outside of it
-  // Ref: https://www.codemzy.com/blog/reactjs-dropdown-component
   useEffect(() => {
+    // Close dropdown when clicking outside of it
+    // Ref: https://www.codemzy.com/blog/reactjs-dropdown-component
     function handleOutsideClick(e) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setIsDropdownOpen(false);
       }
     }
+    // Close dropdown when pressing <Escape>
     function handleEscapeKey(event) {
       if (event.key === "Escape") {
         setIsDropdownOpen(false);
       }
     }
+
     if (isDropdownOpen) {
       document.addEventListener("mousedown", handleOutsideClick);
       document.addEventListener("keyup", handleEscapeKey);
