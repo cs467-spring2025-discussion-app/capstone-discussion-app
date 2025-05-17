@@ -282,13 +282,12 @@ func TestUserService_LoginUser(t *testing.T) {
 		user, err := us.UserRepo.GetUserByEmail(email)
 		is.NoErr(err)
 
-		// Manually set failed attempts to max-1
+		// Manually set failed attempts to max-1 (locked on next attempt)
 		us.UserRepo.DB.Model(&models.User{}).Where("id = ?", user.ID).
 			Updates(map[string]any{"failed_login_attempts": config.MaxLoginAttempts - 1})
 
 		// Fail a login attempt
 		us.LoginUser(email, "thisIsNotThePassword")
-
 		// Attempt subsequent login, expecting locked account
 		_, err = us.LoginUser(email, testutils.TestingPassword)
 		is.Equal(err, apperrors.ErrAccountIsLocked)
