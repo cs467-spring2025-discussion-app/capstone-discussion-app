@@ -90,15 +90,16 @@ func (us *UserService) LoginUser(email, password string) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		// Lock account on too many failed attempts
-		if user.FailedLoginAttempts == config.MaxLoginAttempts-1 {
-			err = us.UserRepo.LockAccount(user.ID.String())
-			if err != nil {
-				return "", err
-			}
-			return "", apperrors.ErrAccountIsLocked
-		}
 		return "", apperrors.ErrInvalidLogin
+	}
+
+	// Lock account on too many failed attempts
+	if user.FailedLoginAttempts >= config.MaxLoginAttempts {
+		err = us.UserRepo.LockAccount(user.ID.String())
+		if err != nil {
+			return "", err
+		}
+		return "", apperrors.ErrAccountIsLocked
 	}
 
 	// Generate session ID
