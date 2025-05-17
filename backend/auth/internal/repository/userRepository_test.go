@@ -1,6 +1,7 @@
 package repository_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -433,8 +434,63 @@ func TestUserRepository_UnlockAccount(t *testing.T) {
 		is.Equal(user.AccountLockedUntil, nil)
 		is.Equal(user.FailedLoginAttempts, 0)
 	})
+}
 
+// TestUserRepository_UnlockAllExpiredLocks tests that any locked accounts that
+// are past the lock expiration date are locked by UnlockAllExpiredLocks
+func TestUserRepository_UnlockAllExpiredLocks(t *testing.T) {
+	is := is.New(t)
 
+	t.Run("unlocks all locked users", func(t *testing.T) {
+		ur, err := setupUserRepository(t)
+		is.NoErr(err)
+		// Register test users
+		var users []*models.User
+		for i := range 10 {
+			email := fmt.Sprintf("testUnlockAccount%d@test.com", i)
+			user := &models.User{
+				Email:    email,
+				Password: testutils.TestingPassword,
+			}
+			err = ur.RegisterUser(user)
+			is.NoErr(err)
+			// Lock account manually, setting expiration date to a past time
+
+			// Set expiration time to future (*1) for even iterations, past (*-1) for odd
+			hourMultiplier := -1
+			if i%2 == 0 {
+				hourMultiplier = 1
+			}
+			expirationTime := time.Now().UTC().Add(time.Duration(hourMultiplier) * time.Hour)
+
+			result := ur.DB.Model(&models.User{}).
+				Where("id = ?", user.ID).
+				Updates(map[string]any{
+					"account_locked":       true,
+					"account_locked_until": expirationTime,
+				})
+			is.NoErr(result.Error)
+			users = append(users, user)
+
+			// Check user was created and locked
+			var gotUser models.User
+			ur.DB.First(&gotUser, "email = ?", email)
+			is.Equal(gotUser.AccountLocked, true)
+		}
+
+		// Unlock all locked accounts with past expiration
+		affected, err := ur.UnlockAllExpiredLocks()
+		is.NoErr(err)
+		is.Equal(affected, int64(len(users))/2)
+
+		// Check that all users with past expiration are now unlocked
+		for i, u := range users {
+			var user models.User
+			ur.DB.First(&user, "id = ?", u.ID)
+			// Even numbered users should be locked, odd unlocked
+			is.Equal(user.AccountLocked, i%2 == 0)
+		}
+	})
 }
 
 func setupUserRepository(t *testing.T) (*repository.UserRepository, error) {
