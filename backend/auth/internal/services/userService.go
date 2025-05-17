@@ -80,7 +80,15 @@ func (us *UserService) LoginUser(email, password string) (string, error) {
 
 	// Deny login if account is locked
 	if user.AccountLocked {
-		return "", apperrors.ErrAccountIsLocked
+		// Unlock account if it is after lockout time
+		if user.AccountLockedUntil == nil || time.Now().UTC().After(*user.AccountLockedUntil) {
+			err := us.UserRepo.UnlockAccount(user.ID.String())
+			if err != nil {
+				return "", err
+			}
+		} else {
+			return "", apperrors.ErrAccountIsLocked
+		}
 	}
 
 	// Validate password
