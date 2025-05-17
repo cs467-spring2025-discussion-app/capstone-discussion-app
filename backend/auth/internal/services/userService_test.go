@@ -267,9 +267,22 @@ func TestUserService_LoginUser(t *testing.T) {
 		// Lock account
 		us.UserRepo.LockAccount(user.ID.String())
 
-		// Attempt locked-account login
+		// Attempt immediate locked-account login
 		_, err = us.LoginUser(email, testutils.TestingPassword)
 		is.Equal(err, apperrors.ErrAccountIsLocked)
+
+		// Set account_locked_until to before now and attempt login
+		// (should unlock account)
+		result := us.UserRepo.DB.Model(&models.User{}).Where("id = ?", user.ID).
+			Updates(map[string]any{
+				"account_locked_until": time.Now().UTC().Add(-time.Hour),
+			})
+		is.NoErr(result.Error)
+
+		// Attempt login, expect unlocked
+		_, err = us.LoginUser(email, testutils.TestingPassword)
+		is.NoErr(err)
+
 	})
 
 	t.Run("locks account after max attempts", func(t *testing.T) {
