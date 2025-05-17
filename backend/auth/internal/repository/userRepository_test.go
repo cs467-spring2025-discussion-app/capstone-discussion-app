@@ -369,15 +369,23 @@ func TestUserRepository_LockAccount(t *testing.T) {
 		err = ur.RegisterUser(user)
 		is.NoErr(err)
 
+		beforeLock := time.Now().UTC()
+
 		// Lock account
 		err = ur.LockAccount(user.ID.String())
-		user, err = ur.GetUserByEmail(user.Email)
 		is.NoErr(err)
 
+		// Check lock status
+		user, err = ur.GetUserByEmail(user.Email)
+		is.NoErr(err)
 		is.True(user.AccountLocked)
-		// HACK: assumes test won't be blocked for 2 seconds, unlock time is > 2 seconds from now
-		approxLockMax := time.Now().Add(config.AccountLockoutLength*time.Second - 2)
-		is.True(user.AccountLockedUntil.After(approxLockMax))
+
+		// Account should be locked until AccountLockoutLength, within errorWindow
+		lockDuration := user.AccountLockedUntil.Sub(beforeLock)
+		errorWindow := 5 * time.Second
+		minDuration := config.AccountLockoutLength - errorWindow
+		maxDuration := config.AccountLockoutLength + errorWindow
+		is.True(lockDuration >= minDuration && lockDuration <= maxDuration)
 	})
 
 	t.Run("fails on non-existent user", func(t *testing.T) {

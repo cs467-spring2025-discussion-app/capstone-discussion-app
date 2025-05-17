@@ -1,5 +1,7 @@
 package config
 
+import "time"
+
 // DatabaseURL is the env variable name for the database url
 const DatabaseURL = "DATABASE_URL"
 
@@ -15,7 +17,6 @@ const SessionCookieName = "DISCUSSION_APP_SESSION_COOKIE"
 // SessionExpiration is the time in seconds when a token will expire
 const SessionExpiration = 3600 * 24 * 7
 
-
 // MinEntropyBits is the minimum number of bits of entropy required for a password.
 const MinEntropyBits = 64
 
@@ -23,6 +24,5 @@ const MinEntropyBits = 64
 // before their account is temporarily locked
 const MaxLoginAttempts = 5
 
-// AccountLockoutLength is the time in seconds that an account will be locked
-const AccountLockoutLength = 60 * 15
-
+// AccountLockoutLength is the time in minutes that an account will be locked
+const AccountLockoutLength = 1 * time.Minute

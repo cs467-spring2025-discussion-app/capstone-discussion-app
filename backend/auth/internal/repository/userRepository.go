@@ -148,7 +148,7 @@ func (r *UserRepository) LockAccount(userID string) error {
 	result := r.DB.Model(&models.User{}).Where("id = ?", userID).
 		Updates(map[string]any{
 			"account_locked":       true,
-			"account_locked_until": time.Now().Add(config.AccountLockoutLength * time.Minute),
+			"account_locked_until": time.Now().UTC().Add(config.AccountLockoutLength),
 		})
 
 	if result.Error != nil {
