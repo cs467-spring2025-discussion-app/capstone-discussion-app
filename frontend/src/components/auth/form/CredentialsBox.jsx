@@ -1,12 +1,17 @@
-import { useState } from "react";
 import { useUser } from "@/hooks/useUser";
 import CredentialsInput from "@/components/auth/form/CredentialsInput";
 import FormButton from "@/components/auth/form/FormButton";
 import * as authService from "@/api/authService";
 
 const CredentialsBox = ({ action }) => {
-  const { setUser, credentials, setCredentials, setDropdown } = useUser();
-  const [authError, setAuthError] = useState("");
+  const {
+    authError,
+    setAuthError,
+    setUser,
+    credentials,
+    setCredentials,
+    setDropdown,
+  } = useUser();
 
   /**
    * Update credentials state on form input change
