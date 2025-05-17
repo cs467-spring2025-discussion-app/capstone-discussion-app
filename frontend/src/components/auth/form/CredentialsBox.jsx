@@ -5,7 +5,7 @@ import FormButton from "@/components/auth/form/FormButton";
 import * as authService from "@/api/authService";
 
 const CredentialsBox = ({ action }) => {
-  const { setUser, credentials } = useUser();
+  const { setUser, credentials, setCredentials, setDropdown } = useUser();
 
   const [errorMsg, setAuthErrorMsg] = useState("");
 
@@ -30,7 +30,7 @@ const CredentialsBox = ({ action }) => {
     try {
       const userData = await authService.Login(credentials);
       setUser(userData);
-      reloadPage();
+      closeAuthForm();
     } catch (error) {
       setAuthErrorMsg(error.message || "Login failed");
     }
@@ -48,7 +48,7 @@ const CredentialsBox = ({ action }) => {
     try {
       const userData = await authService.Register(credentials);
       setUser(userData);
-      reloadPage();
+      closeAuthForm();
     } catch (error) {
       setAuthErrorMsg(error.message || "Registration failed");
     }
@@ -66,7 +66,7 @@ const CredentialsBox = ({ action }) => {
     try {
       const userData = await authService.UpdateUser(credentials);
       setUser(userData);
-      reloadPage();
+      closeAuthForm();
     } catch (error) {
       setAuthErrorMsg(error.message || "Credentials update failed");
     }
@@ -75,8 +75,15 @@ const CredentialsBox = ({ action }) => {
   /**
    * Close the current auth box and reset form data
    */
-  function reloadPage() {
-    window.location.reload();
+  function closeAuthForm() {
+    const modal = document.getElementById(`${action}Form`);
+    if (modal) {
+      setCredentials({email: "", password: ""})
+      setDropdown(false)
+      modal.close();
+    } else {
+      console.error(`could not get element with id ${action}Form`)
+    }
   }
 
   // Set handle function and label based on action
@@ -103,7 +110,7 @@ const CredentialsBox = ({ action }) => {
           <FormButton text="Register" func={handleRegister} />
         )}
 
-        <FormButton text="Close" func={reloadPage} />
+        <FormButton text="Close" func={closeAuthForm} />
       </div>
     </div>
   );

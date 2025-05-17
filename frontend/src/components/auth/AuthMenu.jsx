@@ -6,8 +6,7 @@ import * as authService from "@/api/authService";
 
 const AuthMenu = () => {
   const [isCheckingStatus, setIsCheckingStatus] = useState(true);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const { user, setUser, setCredentials } = useUser();
+  const { user, setUser, setCredentials, dropdown, setDropdown} = useUser();
   const dropdownRef = useRef(null);
 
   useEffect(() => {
@@ -34,18 +33,18 @@ const AuthMenu = () => {
     // Ref: https://www.codemzy.com/blog/reactjs-dropdown-component
     function handleOutsideClick(e) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setIsDropdownOpen(false);
+        setDropdown(false);
       }
     }
     // Close dropdown when pressing <Escape>
     function handleEscapeKey(event) {
       if (event.key === "Escape") {
-        setIsDropdownOpen(false);
+        setDropdown(false);
         setCredentials({email: "", password: ""})
       }
     }
 
-    if (isDropdownOpen) {
+    if (dropdown) {
       document.addEventListener("mousedown", handleOutsideClick);
       document.addEventListener("keyup", handleEscapeKey);
     }
@@ -53,13 +52,13 @@ const AuthMenu = () => {
       document.removeEventListener("mousedown", handleOutsideClick);
       document.removeEventListener("keyup", handleEscapeKey);
     };
-  }, [isDropdownOpen, setCredentials]);
+  }, [setCredentials, dropdown, setDropdown]);
 
   /**
    * Toggle dropdown menu state
    */
   function toggleDropdown() {
-    setIsDropdownOpen(!isDropdownOpen);
+    setDropdown(!dropdown);
   }
 
   return (
@@ -83,7 +82,7 @@ const AuthMenu = () => {
           >
             <div>{user.email}</div>
           </button>
-          {isDropdownOpen && (
+          {dropdown && (
             <div
               id="authDropdown"
               className="text-lg bg-blue-300 max-w-max 
