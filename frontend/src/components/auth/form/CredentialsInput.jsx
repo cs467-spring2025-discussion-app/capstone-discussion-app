@@ -1,6 +1,16 @@
 import React from "react";
+import { useUser } from "@/hooks/useUser";
 
-const CredentialsInput = ({ formData, handleFormChange }) => {
+const CredentialsInput = () => {
+  const { credentials, setCredentials } = useUser();
+  function handleCredentialsChange(e) {
+    const { name, value } = e.target;
+    setCredentials((formValueState) => ({
+      ...formValueState,
+      [name]: value,
+    }));
+  }
+
   return (
     <div>
       <div className="flex flex-col">
@@ -12,8 +22,8 @@ const CredentialsInput = ({ formData, handleFormChange }) => {
           id="email"
           name="email"
           required
-          value={formData.email}
-          onChange={handleFormChange}
+          value={credentials.email}
+          onChange={handleCredentialsChange}
           className="text-black border border-black rounded-md p-2"
         />
       </div>
@@ -24,8 +34,8 @@ const CredentialsInput = ({ formData, handleFormChange }) => {
           id="password"
           name="password"
           required
-          value={formData.password}
-          onChange={handleFormChange}
+          value={credentials.password}
+          onChange={handleCredentialsChange}
           className="border border-black rounded-md p-2"
         />
       </div>
