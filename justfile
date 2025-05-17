@@ -254,22 +254,35 @@ topics:
 # #############################################################################
 
 # Stop the app_db service and delete the app_postgres_data volume
+[group('docker')]
 empty:
     docker compose down db
     docker volume rm capstone-discussion-app_postgres_data
 
-# Stop and rebuild the docker services
-rebuild:
-    docker compose down
+# Rebuild services from scratch and start
+[group('docker')]
+fresh:
     docker compose build --no-cache
     docker compose up
 
-# Execute a psql command in the docker database
-exec command flags="":
-    docker exec -it app_db psql \
-        -U postgresdiscussionapp -d app_db_discussion \
-        {{ flags }} \
-        --command "{{ command }}"
+# Start all services, rebuild if necessary
+[group('docker')]
+start *flags:
+    docker compose up -d --build
+
+# Stop all services
+stop:
+    docker compose stop
+
+# Show logs (optional flags e.g. `-f --timestamps`)
+[group('docker')]
+logs *flags:
+    docker compose logs {{ flags }}
+
+# Show logs with `follow` and `timestampts option`
+[group('docker')]
+flogs:
+    just logs -f --timestamps
 
 # #############################################################################
 # Misc recipes
