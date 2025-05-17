@@ -94,7 +94,7 @@ func (am *AuthMiddleware) RequireAuth() gin.HandlerFunc {
 
 		// Rotate session if halfway expired
 		halfway := session.CreatedAt.Add(session.ExpiresAt.Sub(session.CreatedAt) / 2)
-		if time.Now().After(halfway) {
+		if time.Now().UTC().After(halfway) {
 			userService, err := services.NewUserService(am.UserRepo, am.SessionRepo)
 			if err != nil {
 				log.Debug().Err(err).Msg("Failed to rotate session")

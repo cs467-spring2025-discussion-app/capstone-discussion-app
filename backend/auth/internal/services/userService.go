@@ -117,7 +117,7 @@ func (us *UserService) LoginUser(email, password string) (string, error) {
 	}
 
 	// Update last login time
-	requestData := map[string]any{"last_login": time.Now()}
+	requestData := map[string]any{"last_login": time.Now().UTC()}
 	if err := us.UpdateUser(user.ID.String(), requestData); err != nil {
 		return "", err
 	}

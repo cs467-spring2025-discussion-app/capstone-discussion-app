@@ -57,7 +57,7 @@ func TestMiddlewareAuth_RequireAuth(t *testing.T) {
 	session, err := models.NewSession(
 		user.ID,
 		sessionID,
-		time.Now().Add(time.Hour*24),
+		time.Now().UTC().Add(time.Hour*24),
 	)
 	is.NoErr(err)
 
@@ -104,7 +104,7 @@ func TestMiddlewareAuth_RequireAuth(t *testing.T) {
 		expiredSession, err := models.NewSession(
 			user.ID,
 			sessionID,
-			time.Now().Add(-1*time.Hour),
+			time.Now().UTC().Add(-1*time.Hour),
 		)
 		is.NoErr(err)
 
@@ -160,17 +160,20 @@ func TestMiddlewareAuth_RequireAuth_SessionRotation(t *testing.T) {
 	is.NoErr(err)
 	sessionToken := oldSessionID.String() + "." + signature
 
+
+
+	// Set the created_at timestamp to 6 minutes ago and expiration time to +10
+	// min to simulate a halfway expired session
+	now := time.Now().UTC().Add(-time.Minute * 6)
+
 	// Create a session record for this token
-	expiresAt := time.Now().UTC().Add(10 * time.Minute)
 	session, err := models.NewSession(
 		user.ID,
 		oldSessionID,
-		expiresAt,
+		now.Add(time.Minute * 10),
 	)
+	session.CreatedAt = now
 	is.NoErr(err)
-
-	// Set the created_at timestamp to 6 minutes ago to simulate a halfway expired session
-	session.CreatedAt = time.Now().Add(-6 * time.Minute)
 
 	// Save the session to the database
 	err = sessionRepo.CreateSession(session)
@@ -182,8 +185,9 @@ func TestMiddlewareAuth_RequireAuth_SessionRotation(t *testing.T) {
 
 	// Calculate halfway point
 	halfway := updatedSession.CreatedAt.Add(updatedSession.ExpiresAt.Sub(updatedSession.CreatedAt) / 2)
-	// Check that the current time is after the halfway point, i.e. the session is halfway expired
-	is.True(time.Now().After(halfway))
+
+	// Confirm the current time is after the halfway point, i.e. the session is halfway expired
+	is.True(time.Now().UTC().After(halfway.Add(time.Second)))
 
 	t.Run("rotates halfway expired session", func(t *testing.T) {
 		// Make a request with the token
