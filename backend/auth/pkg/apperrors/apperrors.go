@@ -44,5 +44,5 @@ var (
 
 	ErrCouldNotIncrementFailedLogins = New("Could not increment users.failed_login_attempts")
 	ErrCouldNotUpdateUser            = New("Tried to update user but no changes were made")
-	ErrMissingCredentials            = New("Requires both/only email and password")
+	ErrMissingCredentials            = New("Requires both email and password")
 )
