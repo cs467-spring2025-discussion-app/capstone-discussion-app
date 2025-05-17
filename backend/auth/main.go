@@ -22,6 +22,8 @@ func main() {
 	}
 
 	logger.SetupLogger()
+
+	// Connect and migrate
 	db, err := database.NewDB()
 	if err != nil {
 		log.Fatal().Err(err).Msg("Error connecting to database")
@@ -30,9 +32,12 @@ func main() {
 	if err != nil {
 		log.Fatal().Err(err).Msg("Error migrating database")
 	}
-
 	log.Info().Msg(fmt.Sprintf("Connected to postgres database"))
-	log.Info().Str(config.AuthServerPort, os.Getenv(config.AuthServerPort)).Msg("Starting server")
+
+	// Start API server
+	log.Info().
+		Str(config.AuthServerPort, os.Getenv(config.AuthServerPort)).
+		Msg("Starting server")
 	apiServer, err := server.NewAPIServer(db)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Error initializing server")
