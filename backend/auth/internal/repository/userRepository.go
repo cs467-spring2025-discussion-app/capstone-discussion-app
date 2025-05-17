@@ -160,3 +160,27 @@ func (r *UserRepository) LockAccount(userID string) error {
 
 	return nil
 }
+
+// UnlockAccount sets lock flag to false, locked until time to null, and failed login count to 0
+func (r *UserRepository) UnlockAccount(userID string) error {
+	// Validate user ID
+	if userID == "" {
+		return apperrors.ErrUserIdEmpty
+	}
+
+	result := r.DB.Model(&models.User{}).Where("id = ?", userID).
+		Updates(map[string]any{
+			"account_locked":        false,
+			"account_locked_until":  nil,
+			"failed_login_attempts": 0,
+		})
+
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return apperrors.ErrUserNotFound
+	}
+
+	return nil
+}

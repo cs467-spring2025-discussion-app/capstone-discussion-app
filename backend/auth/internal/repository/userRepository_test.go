@@ -397,6 +397,46 @@ func TestUserRepository_LockAccount(t *testing.T) {
 	})
 }
 
+func TestUserRepository_UnlockAccount(t *testing.T) {
+	is := is.New(t)
+
+	t.Run("unlocks locked user", func(t *testing.T) {
+		ur, err := setupUserRepository(t)
+		is.NoErr(err)
+
+		// Register test user
+		email := "testUnlockAccount@test.com"
+		user := &models.User{
+			Email:    email,
+			Password: testutils.TestingPassword,
+		}
+		err = ur.RegisterUser(user)
+		is.NoErr(err)
+
+		// Lock account
+		err = ur.LockAccount(user.ID.String())
+		is.NoErr(err)
+
+		// Check lock status (expect locked)
+		user, err = ur.GetUserByEmail(user.Email)
+		is.NoErr(err)
+		is.True(user.AccountLocked)
+
+		// Unlock account
+		err = ur.UnlockAccount(user.ID.String())
+		is.NoErr(err)
+
+		// Check lock status (expect unlocked)
+		user, err = ur.GetUserByEmail(user.Email)
+		is.NoErr(err)
+		is.True(!user.AccountLocked)
+		is.Equal(user.AccountLockedUntil, nil)
+		is.Equal(user.FailedLoginAttempts, 0)
+	})
+
+
+}
+
 func setupUserRepository(t *testing.T) (*repository.UserRepository, error) {
 	testDB := testutils.TestDBSetup()
 	ur, err := repository.NewUserRepository(testDB)
