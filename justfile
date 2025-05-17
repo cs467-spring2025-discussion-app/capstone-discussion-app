@@ -290,7 +290,7 @@ fresh:
 
 # Start all services, rebuild if necessary
 [group('docker')]
-start *flags:
+start:
     docker compose up -d --build
 
 # Stop all services
@@ -305,8 +305,8 @@ logs *flags:
 
 # Show logs with `follow` and `timestampts option`
 [group('docker')]
-flogs:
-    just logs -f --timestamps
+flogs service='':
+    just logs {{ service }} -f --timestamps
 
 # #############################################################################
 # Misc recipes
