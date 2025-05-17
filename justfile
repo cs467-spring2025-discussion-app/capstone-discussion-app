@@ -228,6 +228,29 @@ users:
 id email:
     just exec "select id from users where email='{{ email }}'" "-t -A"
 
+# Lock a user
+[group('sql')]
+lock email time='2099-01-01 00:00:00':
+    just exec "\
+        update users \
+        set \
+            account_locked=true, \
+            account_locked_until='{{ time }}' \
+        where email='{{ email }}' \
+    "
+
+# Unlock a user
+[group('sql')]
+unlock email:
+    just exec "\
+        update users \
+            set \
+                account_locked=false, \
+                account_locked_until=null, \
+                failed_login_attempts=0 \
+        where email='{{ email }}' \
+    "
+
 # ######
 # Topics
 # ######
