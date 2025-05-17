@@ -38,7 +38,7 @@ func NewSession(userID uuid.UUID, sessionID uuid.UUID, expiresAt time.Time) (*Se
 		UserID:    userID,
 		ID:        sessionID,
 		ExpiresAt: expiresAt.UTC(), // ensure UTC
-		CreatedAt: time.Now(),
+		CreatedAt: time.Now().UTC(),
 	}, nil
 }
 

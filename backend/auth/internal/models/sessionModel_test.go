@@ -19,18 +19,18 @@ func TestSessionModel_NewSession(t *testing.T) {
 
 	// Valid uuid and non-empty session id should return non-nil Session value, nil error
 	t.Run("new valid session", func(t *testing.T) {
-		session, err := models.NewSession(uuid.New(), uuid.New(), time.Now().Add(24*time.Hour))
+		session, err := models.NewSession(uuid.New(), uuid.New(), time.Now().UTC().Add(24*time.Hour))
 		is.True(session != nil)
 		is.NoErr(err)
 	})
 
 	t.Run("fails when user ID is empty", func(t *testing.T) {
-		_, err := models.NewSession(uuid.Nil, uuid.New(), time.Now().Add(24*time.Hour))
+		_, err := models.NewSession(uuid.Nil, uuid.New(), time.Now().UTC().Add(24*time.Hour))
 		is.Equal(err, apperrors.ErrUserIdEmpty)
 	})
 
 	t.Run("fails when session is empty", func(t *testing.T) {
-		_, err := models.NewSession(uuid.New(), uuid.Nil, time.Now().Add(24*time.Hour))
+		_, err := models.NewSession(uuid.New(), uuid.Nil, time.Now().UTC().Add(24*time.Hour))
 		is.Equal(err, apperrors.ErrSessionIdIsEmpty)
 	})
 	t.Run("fails when expiration time is empty", func(t *testing.T) {
@@ -62,7 +62,7 @@ func TestSessionModel_CascadeToSessions(t *testing.T) {
 			session, err := models.NewSession(
 				testUser.ID,
 				uuid.New(),
-				time.Now().Add(1*time.Hour),
+				time.Now().UTC().Add(1*time.Hour),
 			)
 			is.NoErr(err)
 			err = tx.Create(session).Error

@@ -48,7 +48,7 @@ func (sr *SessionRepository) GetUnexpiredSessionByID(sessionID uuid.UUID) (*mode
 		return nil, apperrors.ErrSessionIdIsEmpty
 	}
 	var session models.Session
-	result := sr.DB.Where("id = ? AND expires_at > ?", sessionID, time.Now()).First(&session)
+	result := sr.DB.Where("id = ? AND expires_at > ?", sessionID, time.Now().UTC()).First(&session)
 	if result.Error != nil {
 		return nil, result.Error
 	}

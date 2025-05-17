@@ -271,7 +271,7 @@ func TestUserRepository_UpdateUser(t *testing.T) {
 		is.NoErr(err)
 
 		// Update user
-		referenceTime := time.Now().Add(time.Hour * 24).UTC().Truncate(time.Second)
+		referenceTime := time.Now().UTC().Add(time.Hour * 24).UTC().Truncate(time.Second)
 		err = ur.UpdateUser(user.ID.String(), map[string]any{
 			"email":                 "newUserName@test.com",
 			"password":              "newpassword",

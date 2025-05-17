@@ -58,7 +58,7 @@ func TestSessionRepository_CreateSession(t *testing.T) {
 		err := sr.DB.Create(user).Error
 		is.NoErr(err)
 
-		session, err := models.NewSession(user.ID, uuid.New(), time.Now().Add(1*time.Hour))
+		session, err := models.NewSession(user.ID, uuid.New(), time.Now().UTC().Add(1*time.Hour))
 		is.NoErr(err)
 
 		err = sr.CreateSession(session)
@@ -79,7 +79,7 @@ func TestSessionRepository_CreateSession(t *testing.T) {
 		sessionID := uuid.New()
 
 		// Insert first session
-		sessionOne, err := models.NewSession(user.ID, sessionID, time.Now().Add(1*time.Hour))
+		sessionOne, err := models.NewSession(user.ID, sessionID, time.Now().UTC().Add(1*time.Hour))
 		is.NoErr(err)
 
 		err = sr.CreateSession(sessionOne)
@@ -89,7 +89,7 @@ func TestSessionRepository_CreateSession(t *testing.T) {
 		sessionTwo, err := models.NewSession(
 			user.ID,
 			sessionID,
-			time.Now().Add(1*time.Hour),
+			time.Now().UTC().Add(1*time.Hour),
 		)
 		is.NoErr(err)
 
@@ -130,7 +130,7 @@ func TestSessionRepository_GetUnexpiredSessionByID(t *testing.T) {
 		is.NoErr(err)
 
 		// Insert associated session
-		session, err := models.NewSession(user.ID, uuid.New(), time.Now().Add(1*time.Hour))
+		session, err := models.NewSession(user.ID, uuid.New(), time.Now().UTC().Add(1*time.Hour))
 		is.NoErr(err)
 		err = sr.CreateSession(session)
 		is.NoErr(err)
@@ -172,7 +172,7 @@ func TestSessionRepository_DeleteSessionByID(t *testing.T) {
 		is.NoErr(err)
 
 		// Insert session to delete
-		session, err := models.NewSession(user.ID, uuid.New(), time.Now().Add(1*time.Hour))
+		session, err := models.NewSession(user.ID, uuid.New(), time.Now().UTC().Add(1*time.Hour))
 		is.NoErr(err)
 		err = sr.CreateSession(session)
 		is.NoErr(err)
@@ -217,13 +217,13 @@ func TestSessionRepository_DeleteSessionsByUserID(t *testing.T) {
 		is.NoErr(err)
 
 		// Insert first session associated with user
-		sessionOne, err := models.NewSession(user.ID, uuid.New(), time.Now().Add(1*time.Hour))
+		sessionOne, err := models.NewSession(user.ID, uuid.New(), time.Now().UTC().Add(1*time.Hour))
 		is.NoErr(err)
 		err = sr.CreateSession(sessionOne)
 		is.NoErr(err)
 
 		// Insert second session associated with user
-		sessionTwo, err := models.NewSession(user.ID, uuid.New(), time.Now().Add(1*time.Hour))
+		sessionTwo, err := models.NewSession(user.ID, uuid.New(), time.Now().UTC().Add(1*time.Hour))
 		is.NoErr(err)
 		err = sr.CreateSession(sessionTwo)
 		is.NoErr(err)

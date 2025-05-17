@@ -158,7 +158,7 @@ func TestUserService_UpdateUser(t *testing.T) {
 		is.NoErr(err)
 
 		// Update user
-		referenceTime := time.Now().Add(time.Hour * 24).UTC().Truncate(time.Second)
+		referenceTime := time.Now().UTC().Add(time.Hour * 24).UTC().Truncate(time.Second)
 		var user models.User
 		result := us.UserRepo.DB.First(&user, "email = ?", email)
 		is.NoErr(result.Error)
