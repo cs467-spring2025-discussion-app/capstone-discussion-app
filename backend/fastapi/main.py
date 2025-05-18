@@ -30,14 +30,18 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI()
 
 def get_allowed_origins():
+    """
+    Get CORS allowed origins from an environment variable
+    `CORS_ALLOWED_ORIGINS. Expects a string of comma separated URLs.
+
+    Returns:
+        list[str]: List of allowed origins
+    """
     cors_allowed_origins = os.environ.get("CORS_ALLOWED_ORIGINS", "")
     if not cors_allowed_origins:
         return ["http://localhost:5173", "http://localhost:4173"]
-    return [
-        origin.strip()
-        for origin in cors_allowed_origins.split("\n")
-        if origin.strip()
-    ]
+    origins = [origin.strip() for origin in cors_allowed_origins.split(",") if origin.strip()]
+    return origins
 
 
 app.add_middleware(
