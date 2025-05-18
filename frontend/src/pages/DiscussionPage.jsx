@@ -49,17 +49,24 @@ export default function DiscussionPage() {
     getReplies();
   }, [discussionId]);
 
-  // TODO: use submit endpoint
-  const handleSubmit = () => {
+  // Submit reply
+  async function handleSubmit() {
     if (!text.trim()) return;
-    const newComment = {
-      id: Date.now(),
-      content: text,
-    };
-    setLastCommentId(newComment.id);
-    setComments([newComment, ...comments]);
-    setText("");
-  };
+
+    try {
+      const resp = await fastapiService.SubmitReply(
+        discussionId,
+        user.userID,
+        text,
+      );
+      const newComment = await fastapiService.GetReply(resp.id);
+      setLastCommentId(newComment.id);
+      setComments([newComment, ...comments]);
+      setText("");
+    } catch (error) {
+      console.error("Error submitting reply: ", error);
+    }
+  }
 
   // Wait to render while loading
   if (loading) {
@@ -127,6 +134,7 @@ export default function DiscussionPage() {
             {/* Display discussion replies */}
             {comments.map((comment) => (
               <DiscussionComment
+                key={comment.id}
                 comment={comment}
                 fadeIn={comment.id === lastCommentId}
               />
