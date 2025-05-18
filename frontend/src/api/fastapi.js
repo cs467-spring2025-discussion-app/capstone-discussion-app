@@ -39,6 +39,27 @@ export async function GetReplies(discussionId) {
 }
 
 /**
+ * Get a reply by its id
+ * @param {number} id - id of the reply to get
+ * @returns {Promise<Object>} Response data
+ * @throws {Error} On get failure
+ */
+export async function GetReply(id) {
+  const resp = await fetch(`/fastapi/replies/get_reply/${id}`, {
+    method: "GET",
+  });
+
+  if (!resp.ok) {
+    const errorData = await resp.json();
+    throw new Error(
+      errorData.error || `replies/get_reply/${id} failed`,
+    );
+  }
+
+  return await resp.json();
+}
+
+/**
  * Submit a reply
  * @param {number} discussionId - id of the discussion topic to reply to
  * @param {number} userId - id of the user submitting the reply
