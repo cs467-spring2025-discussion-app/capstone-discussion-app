@@ -26,3 +26,7 @@ const MaxLoginAttempts = 5
 
 // AccountLockoutLength is the time in minutes that an account will be locked
 const AccountLockoutLength = 1 * time.Minute
+
+// AccountUnlockPeriod is how often in minutes the UnlockExpiredLocks job will
+// check for expired locked accounts to unlock
+const AccountUnlockPeriod = 5 * time.Minute
