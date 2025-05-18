@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -72,11 +73,7 @@ func (s *APIServer) SetupRoutes() {
 
 	// CORS middleware
 	r.Use(cors.New(cors.Config{
-		AllowOrigins: []string{
-			"http://localhost:5173",                              // local Vite dev build
-			"http://localhost:4173",                              // local Vite prod build
-			"https://frontend-app-182441842390.us-west2.run.app", // GCP
-		},
+		AllowOrigins:     getAllowedOrigins(),
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -195,4 +192,17 @@ type MiddlewareProvider struct {
 // @Router /ping [get]
 func Ping(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "pong"})
+}
+
+// getAllowedOrigins reads the allowed CORS origins from an environment variable with fallbacks
+func getAllowedOrigins() []string {
+	corsAllowedOrigins := os.Getenv(config.CorsAllowedOrigins)
+	if corsAllowedOrigins == "" {
+		return []string{
+			"http://localhost:5173",
+			"http://localhost:4173",
+		}
+	}
+
+	return strings.Fields(corsAllowedOrigins)
 }

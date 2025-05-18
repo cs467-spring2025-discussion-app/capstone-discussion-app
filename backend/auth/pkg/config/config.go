@@ -14,6 +14,8 @@ const SessionKey = "DISCUSSION_APP_SESSION_KEY"
 // SessionCookieName is the env variable name used to set the cookie for sessions
 const SessionCookieName = "DISCUSSION_APP_SESSION_COOKIE"
 
+const CorsAllowedOrigins = "CORS_ALLOWED_ORIGINS"
+
 // SessionExpiration is the time in seconds when a token will expire
 const SessionExpiration = 3600 * 24 * 7
 
