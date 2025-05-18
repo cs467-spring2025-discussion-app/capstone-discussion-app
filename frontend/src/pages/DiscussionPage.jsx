@@ -86,51 +86,54 @@ export default function DiscussionPage() {
               </h3>
               <p>{discussion.prompt}</p>
             </div>
-            {user && (
-              <div className="border-t-5 border-t-purple-400 p-5 rounded-lg shadow-lg w-full max-w-5xl bg-white text-left mb-8">
-                <label htmlFor={postTextAreaId} className="font-semibold">
-                  Join the discussion:
-                  <textarea
-                    name="postContent"
-                    value={text}
-                    id={postTextAreaId}
-                    placeholder="Share your thoughts...(280 chars max.)"
-                    onChange={(e) => setText(e.target.value)}
-                    maxLength={280}
-                    rows={4}
-                    className="font-normal mt-5 mb-2 p-2.5 w-full text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </label>
-                <div className="flex justify-between pb-5 border-b border-gray-300">
-                  <div className="text-sm text-gray-700">{text.length}/280</div>
-                  <div className="text-sm text-gray-700">
-                    Responses limited to 10 per prompt
-                  </div>
-                </div>
-                <div className="flex justify-end mt-2">
-                  <button
-                    className="cursor-pointer ml-2 flex bg-purple-600 rounded-full px-5 py-2 font-bold text-sm text-white"
-                    onClick={handleSubmit}
-                  >
-                    Submit
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth={1.5}
-                      stroke="currentColor"
-                      className="size-6"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5"
-                      />
-                    </svg>
-                  </button>
+            <div className="border-t-5 border-t-purple-400 p-5 rounded-lg shadow-lg w-full max-w-5xl bg-white text-left mb-8">
+              <label htmlFor={postTextAreaId} className="font-semibold">
+                Join the discussion:
+                <textarea
+                  name="postContent"
+                  value={text}
+                  id={postTextAreaId}
+                  placeholder={
+                    user
+                      ? "Share your thoughts...(280 chars max.)"
+                      : "Please log in to reply to this post"
+                  }
+                  onChange={(e) => setText(e.target.value)}
+                  maxLength={280}
+                  rows={4}
+                  className="font-normal mt-5 mb-2 p-2.5 w-full text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                  disabled={!user}
+                />
+              </label>
+              <div className="flex justify-between pb-5 border-b border-gray-300">
+                <div className="text-sm text-gray-700">{text.length}/280</div>
+                <div className="text-sm text-gray-700">
+                  Responses limited to 10 per prompt
                 </div>
               </div>
-            )}
+              <div className="flex justify-end mt-2">
+                <button
+                  className="cursor-pointer ml-2 flex bg-purple-600 rounded-full px-5 py-2 font-bold text-sm text-white"
+                  onClick={handleSubmit}
+                >
+                  Submit
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    className="size-6"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
             {/* Display discussion replies */}
             {comments.map((comment) => (
               <DiscussionComment
