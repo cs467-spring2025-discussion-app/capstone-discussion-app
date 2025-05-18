@@ -85,3 +85,32 @@ export async function SubmitReply(discussionId, userId, content) {
 
   return await resp.json();
 }
+
+/**
+ * Get the count of a user's replies to a discussion
+ * @param {number} discussionId - id of the discussion topic to reply to
+ * @param {number} userId - id of the user submitting the reply
+ * @returns {Promise<Object>} Response data
+ * @throws {Error} On get failure
+ */
+export async function GetUserReplyCount(discussionId, userId) {
+  const resp = await fetch(`/fastapi/topics/user_reply_counts/${discussionId}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ user_id: userId}),
+  });
+
+  if (!resp.ok) {
+    const errorData = await resp.json();
+    throw new Error(
+      errorData.error || `replies/user_counts/ failed`,
+    );
+  }
+
+  return await resp.json();
+}
+
+
+
