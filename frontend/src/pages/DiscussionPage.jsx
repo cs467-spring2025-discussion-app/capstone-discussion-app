@@ -17,6 +17,33 @@ export default function DiscussionPage() {
   const [discussion, setDiscussion] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const [replyCount, setReplyCount] = useState(0);
+  const [hitReplyLimit, setHitReplyLimit] = useState(false);
+
+  // Check if user hit reply limit
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+    setLoading(true);
+    async function checkUserReplyLimit() {
+      try {
+        const data = await fastapiService.GetUserReplyCount(
+          discussionId,
+          user.userID,
+        );
+
+        setReplyCount(data.reply_count);
+        setHitReplyLimit(data.reply_count >= 10);
+      } catch (error) {
+        console.error("Error getting user reply count: ", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    checkUserReplyLimit();
+  }, [user, discussionId]);
+
   // Get discussion topic data
   useEffect(() => {
     setLoading(true);
@@ -63,6 +90,11 @@ export default function DiscussionPage() {
       setLastCommentId(newComment.id);
       setComments([newComment, ...comments]);
       setText("");
+
+      // Check if user's hit reply limit
+      const newReplyCount = replyCount + 1;
+      setReplyCount(newReplyCount);
+      setHitReplyLimit(newReplyCount >= 10);
     } catch (error) {
       console.error("Error submitting reply: ", error);
     }
@@ -94,15 +126,24 @@ export default function DiscussionPage() {
                   value={text}
                   id={postTextAreaId}
                   placeholder={
-                    user
-                      ? "Share your thoughts...(280 chars max.)"
-                      : "Please log in to reply to this post"
+                    !user
+                      ? "Please log in to reply to this post"
+                      : !hitReplyLimit
+                        ? "Share your thoughts...(280 chars max.)"
+                        : "You have hit the reply limit for this discussion today"
                   }
                   onChange={(e) => setText(e.target.value)}
                   maxLength={280}
                   rows={4}
-                  className="font-normal mt-5 mb-2 p-2.5 w-full text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-                  disabled={!user}
+                  className={`font-normal mt-5 mb-2 p-2.5 w-full
+                    text-gray-900 bg-gray-50 rounded-lg border border-gray-300
+                    focus:ring-blue-500 focus:border-blue-500
+                    ${
+                      !user || hitReplyLimit
+                        ? "cursor-not-allowed opacity-75"
+                        : "cursor-text"
+                    }`}
+                  disabled={!user || hitReplyLimit} // If not logged in or user's hit reply limit, disable text box
                 />
               </label>
               <div className="flex justify-between pb-5 border-b border-gray-300">
@@ -113,8 +154,15 @@ export default function DiscussionPage() {
               </div>
               <div className="flex justify-end mt-2">
                 <button
-                  className="cursor-pointer ml-2 flex bg-purple-600 rounded-full px-5 py-2 font-bold text-sm text-white"
+                  className={`ml-2 flex bg-purple-600 
+                    rounded-full px-5 py-2 font-bold text-sm text-white
+                    ${
+                      !user || hitReplyLimit
+                        ? "cursor-not-allowed opacity-75"
+                        : "hover:bg-purple-700"
+                    }`}
                   onClick={handleSubmit}
+                  disabled={!user || hitReplyLimit}
                 >
                   Submit
                   <svg
