@@ -29,14 +29,20 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-# This allows the browser and server to communicate locally
+def get_allowed_origins():
+    cors_allowed_origins = os.environ.get("CORS_ALLOWED_ORIGINS", "")
+    if not cors_allowed_origins:
+        return ["http://localhost:5173", "http://localhost:4173"]
+    return [
+        origin.strip()
+        for origin in cors_allowed_origins.split("\n")
+        if origin.strip()
+    ]
+
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",  # local Vite dev build
-        "http://localhost:4173",  # local Vite prod build
-        "https://frontend-app-182441842390.us-west2.run.app",  # GCP
-    ],
+    allow_origins= get_allowed_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
