@@ -70,7 +70,6 @@ func NewAPIServer(db *gorm.DB) (*APIServer, error) {
 // SetupRoutes sets up the routes for the API server.
 func (s *APIServer) SetupRoutes() {
 	r := s.Router
-
 	// CORS middleware
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     getAllowedOrigins(),
@@ -194,9 +193,9 @@ func Ping(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "pong"})
 }
 
-// getAllowedOrigins reads the allowed CORS origins from an environment variable with fallbacks
+// getAllowedOrigins reads the allowed CORS origins from an environment variable with defaults
 func getAllowedOrigins() []string {
-	corsAllowedOrigins := os.Getenv(config.CorsAllowedOrigins)
+	corsAllowedOrigins := os.Getenv("CORS_ALLOWED_ORIGINS")
 	if corsAllowedOrigins == "" {
 		return []string{
 			"http://localhost:5173",
@@ -204,5 +203,5 @@ func getAllowedOrigins() []string {
 		}
 	}
 
-	return strings.Fields(corsAllowedOrigins)
+	return strings.Split(corsAllowedOrigins, ",")
 }
