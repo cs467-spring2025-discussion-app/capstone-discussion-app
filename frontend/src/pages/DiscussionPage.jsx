@@ -1,7 +1,7 @@
 import { useEffect, useId, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useUser } from "@/hooks/useUser";
-import DiscussionComment from "@/components/DisccusionComment";
+import DiscussionComment from "@/components/DiscussionComment";
 import HomeLink from "@/components/HomeLink";
 import NotFound from "@/pages/NotFound";
 import * as fastapiService from "@/api/fastapi";
