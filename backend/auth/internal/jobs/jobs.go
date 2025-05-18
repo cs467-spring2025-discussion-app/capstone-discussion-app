@@ -10,15 +10,18 @@ import (
 	"gorm.io/gorm"
 
 	"godiscauth/internal/repository"
+	"godiscauth/pkg/config"
 )
 
 // StartJobs starts jobs with a context from main
 func StartJobs(ctx context.Context, wg *sync.WaitGroup, db *gorm.DB) {
-	// Fire jobs
+
+	// NOTE: Add goroutines here for any future jobs
+
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		UnlockExpiredLocks(ctx, 5*time.Minute, db)
+		UnlockExpiredLocks(ctx, config.AccountUnlockPeriod, db)
 	}()
 }
 
@@ -29,7 +32,6 @@ func UnlockExpiredLocks(
 	period time.Duration,
 	db *gorm.DB,
 ) {
-	// Create repository inside the job function
 	ur, err := repository.NewUserRepository(db)
 	if err != nil {
 		log.Error().Msg(fmt.Sprintf("[Jobs] [ERROR] Could not init user repo: %s", err.Error()))
@@ -38,7 +40,7 @@ func UnlockExpiredLocks(
 	ticker := time.NewTicker(period)
 	defer ticker.Stop()
 
-	// Perform an initial check
+	// Perform an initial check before starting the ticker
 	unlockHelper(ur)
 
 	for {

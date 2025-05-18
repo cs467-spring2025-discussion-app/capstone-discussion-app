@@ -40,9 +40,8 @@ func main() {
 	<-quit
 	log.Info().Msg("Server is shutting down...")
 
-	// Signal jobs to terminate
+	// Close context done channel, signaling jobs in waitgroup to finish
 	cancel()
-
 	waitForJobs(wg)
 
 	log.Info().Msg("Server exited")
@@ -81,22 +80,24 @@ func startAPIServer(db *gorm.DB) {
 	go apiServer.Run()
 }
 
+
+// Start background jobs as goroutines
 func startJobs(db *gorm.DB) (*sync.WaitGroup, context.CancelFunc) {
-	// Start background jobs
 	ctx, cancel := context.WithCancel(context.Background())
 	var wg sync.WaitGroup
 	go jobs.StartJobs(ctx, &wg, db)
 	return &wg, cancel
 }
 
+// Make a channel to listen for a quit signal
 func makeQuitListener() chan os.Signal {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	return quit
 }
 
+// Wait with timeout for goroutines to finish, or forcequit
 func waitForJobs(wg *sync.WaitGroup) {
-	// Wait with timeout for jobs to finish
 	done := make(chan struct{})
 	go func() {
 		wg.Wait()
