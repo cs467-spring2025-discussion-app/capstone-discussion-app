@@ -127,8 +127,7 @@ export default function DiscussionPage() {
             {/* Display discussion replies */}
             {comments.map((comment) => (
               <DiscussionComment
-                key={comment.id}
-                content={comment.content}
+                comment={comment}
                 fadeIn={comment.id === lastCommentId}
               />
             ))}
