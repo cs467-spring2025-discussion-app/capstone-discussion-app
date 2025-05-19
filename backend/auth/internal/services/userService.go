@@ -91,6 +91,16 @@ func (us *UserService) LoginUser(email, password string) (string, error) {
 		}
 	}
 
+	// Lock account on too many failed attempts
+	if user.FailedLoginAttempts >= config.MaxLoginAttempts {
+		err = us.UserRepo.LockAccount(user.ID.String())
+		if err != nil {
+			return "", err
+		}
+		return "", apperrors.ErrAccountIsLocked
+	}
+
+
 	// Validate password
 	if err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
 		// Increment failed login attempts
@@ -99,15 +109,6 @@ func (us *UserService) LoginUser(email, password string) (string, error) {
 			return "", err
 		}
 		return "", apperrors.ErrInvalidLogin
-	}
-
-	// Lock account on too many failed attempts
-	if user.FailedLoginAttempts >= config.MaxLoginAttempts {
-		err = us.UserRepo.LockAccount(user.ID.String())
-		if err != nil {
-			return "", err
-		}
-		return "", apperrors.ErrAccountIsLocked
 	}
 
 	// Generate session ID
