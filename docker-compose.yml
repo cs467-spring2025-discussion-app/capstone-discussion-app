@@ -1,6 +1,7 @@
 ---
-x-database-url: &db_url
-  postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+
+x-database-url: &db_url "postgresql://${POSTGRES_USER:-postgres_capstone_app}:${POSTGRES_PASSWORD:-capstone_app_password}@db:5432/${POSTGRES_DB:-capstone_app}"
+
 services:
   react_app:
     build:
@@ -49,7 +50,7 @@ services:
     environment:
       AUTH_SERVER_PORT: 3001
       DATABASE_URL: *db_url
-      DISCUSSION_APP_SESSION_KEY: ${DISCUSSION_APP_SESSION_KEY}
+      DISCUSSION_APP_SESSION_KEY: ${DISCUSSION_APP_SESSION_KEY:-26a57a41b90e2240c8b644b0fae0d4abfaa298ea}
       CORS_ALLOWED_ORIGINS: "http://localhost:5173,http://localhost:4173"
     restart: always
     networks:
@@ -59,9 +60,9 @@ services:
     container_name: app_db
     restart: always
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres_capstone_app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-capstone_app_password}
+      POSTGRES_DB: ${POSTGRES_DB:-capstone_app}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./db/init:/docker-entrypoint-initdb.d
@@ -70,7 +71,7 @@ services:
     healthcheck:
       test:
         - "CMD-SHELL"
-        - "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"
+        - "pg_isready -U ${POSTGRES_USER:-postgres_capstone_app} -d ${POSTGRES_DB:-capstone_app}"
       interval: 5s
       timeout: 5s
       retries: 5
