@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import DiscussionPage from "@/pages/DiscussionPage";
 import Home from "@/pages/Home";
 import NotFound from "@/pages/NotFound";
-import AuthMenu from "@/components/auth/AuthButton";
+import AuthMenu from "@/components/auth/AuthMenu";
 import AuthProvider from "@/contexts/AuthProvider";
 
 export default function App() {
