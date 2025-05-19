@@ -6,8 +6,8 @@ import path from "path";
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd());
 
-  const fast_api_target = env.VITE_FASTAPI_URL;
-  const auth_api_target = env.VITE_AUTH_API_URL;
+  const fast_api_target = env.VITE_FASTAPI_URL || "http://localhost:8080";
+  const auth_api_target = env.VITE_AUTH_API_URL || "http://localhost:3001"
 
   return {
     plugins: [react(), tailwindcss()],
