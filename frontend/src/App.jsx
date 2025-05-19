@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import DiscussionPage from "@/pages/DiscussionPage";
 import Home from "@/pages/Home";
+import HomeLink from "@/components/HomeLink";
 import NotFound from "@/pages/NotFound";
 import AuthMenu from "@/components/auth/AuthMenu";
 import AuthProvider from "@/contexts/AuthProvider";
@@ -9,7 +10,10 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <AuthMenu />
+        <div className="flex justify-between m-2">
+          <HomeLink />
+          <AuthMenu />
+        </div>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route
