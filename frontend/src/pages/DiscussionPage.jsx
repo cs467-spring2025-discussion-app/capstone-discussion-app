@@ -1,84 +1,196 @@
-import Topic from "@/components/Topic"
-import React from 'react'
-import TabToggle from '@/components/TabToggle'
-import DiscussionComment from "../components/DisccusionComment";
+import { useEffect, useId, useState } from "react";
+import { useParams } from "react-router-dom";
+import { useUser } from "@/hooks/useUser";
+import DiscussionComment from "@/components/DiscussionComment";
+import NotFound from "@/pages/NotFound";
+import * as fastapiService from "@/api/fastapi";
 
 export default function DiscussionPage() {
-    const postTextAreaId = React.useId()
-    const [text, setText] = React.useState('')
-    const [comments, setComments] = React.useState([])
-    const [lastCommentId, setLastCommentId] = React.useState(null)
+  const postTextAreaId = useId();
+  const [text, setText] = useState("");
+  const [comments, setComments] = useState([]);
+  const [lastCommentId, setLastCommentId] = useState(null);
 
-    const handleSubmit = () => {
-        if (!text.trim()) return
-        const newComment = {
-            id: Date.now(),
-            content: text
-        }
-        setLastCommentId(newComment.id)
-        setComments([newComment, ...comments])
-        setText('')
+  const { user } = useUser();
+  const { discussionId } = useParams();
+  const [discussion, setDiscussion] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const [replyCount, setReplyCount] = useState(0);
+  const [hitReplyLimit, setHitReplyLimit] = useState(false);
+
+  // Check if user hit reply limit
+  useEffect(() => {
+    if (!user) {
+      return;
     }
+    setLoading(true);
+    async function checkUserReplyLimit() {
+      try {
+        const data = await fastapiService.GetUserReplyCount(
+          discussionId,
+          user.userID,
+        );
 
+        setReplyCount(data.reply_count);
+        setHitReplyLimit(data.reply_count >= 10);
+      } catch (error) {
+        console.error("Error getting user reply count: ", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    checkUserReplyLimit();
+  }, [user, discussionId]);
+
+  // Get discussion topic data
+  useEffect(() => {
+    setLoading(true);
+    async function getDiscussionData() {
+      try {
+        const data = await fastapiService.GetDiscussion(discussionId);
+        setDiscussion(data);
+      } catch (error) {
+        console.error("Error getting discussion: ", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    getDiscussionData();
+  }, [discussionId]);
+
+  // Get topic replies
+  useEffect(() => {
+    async function getReplies() {
+      setLoading(true);
+      try {
+        const data = await fastapiService.GetReplies(discussionId);
+        setComments(data.replies); // Need to access .replies array
+      } catch (error) {
+        console.error(`Error getting replies of ${discussionId}: `, error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    getReplies();
+  }, [discussionId]);
+
+  // Submit reply
+  async function handleSubmit() {
+    if (!text.trim()) return;
+
+    try {
+      const resp = await fastapiService.SubmitReply(
+        discussionId,
+        user.userID,
+        text,
+      );
+      const newComment = await fastapiService.GetReply(resp.id);
+      setLastCommentId(newComment.id);
+      setComments([newComment, ...comments]);
+      setText("");
+
+      // Check if user's hit reply limit
+      const newReplyCount = replyCount + 1;
+      setReplyCount(newReplyCount);
+      setHitReplyLimit(newReplyCount >= 10);
+    } catch (error) {
+      console.error("Error submitting reply: ", error);
+    }
+  }
+
+  // Wait to render while loading
+  if (loading) {
+    return <div>Loading...</div>;
+    // Not found on invalid topic id
+  } else if (!discussion) {
+    return <NotFound />;
+  } else {
     return (
-        <div className="flex justify-center">
-            <div className='flex flex-col items-center w-full max-w-4xl p-4 text-center'>
-                <div className='w-full max-w-5xl border-t-15 border-t-purple-400 h-35 p-5 rounded-lg shadow-lg bg-white text-left mb-8'>
-                    <h3 className='mt-2 mb-5 font-bold text-2xl'>Topic</h3>
-                    <p>Question</p>
-                </div>
-                <div className='border-t-5 border-t-purple-400 p-5 rounded-lg shadow-lg w-full max-w-5xl bg-white text-left mb-8'>
-                    <label htmlFor={postTextAreaId} className="font-semibold">
-                        Join the discussion:
-                        <textarea
-                            name="postContent"
-                            value={text}
-                            id={postTextAreaId}
-                            placeholder="Share your thoughts...(280 chars max.)"
-                            onChange={(e) => setText(e.target.value)}
-                            maxLength={280}
-                            rows={4}
-                            className='font-normal mt-5 mb-2 p-2.5 w-full text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500'
-                        />
-                    </label>
-                    <div className='flex justify-between pb-5 border-b border-gray-300'>
-                        <div className='text-sm text-gray-700'>
-                            {text.length}/280
-                        </div>
-                        <div className='text-sm text-gray-700'>
-                            Responses limited to 10 per prompt
-                        </div>
-                    </div>
-                    <div className='flex justify-end mt-2'>
-                        <button 
-                            className='cursor-pointer ml-2 flex bg-purple-600 rounded-full px-5 py-2 font-bold text-sm text-white'
-                            onClick={handleSubmit}
-                        >
-                            Submit
-                            <svg 
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={1.5}
-                            stroke="currentColor"
-                            className="size-6">
-                            <path 
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
-                        </svg>
-
-                        </button>
-                    </div>
-                </div>
-                {comments.map((comment) => (
-                    <DiscussionComment
-                        key={comment.id}
-                        content={comment.content}
-                        fadeIn={comment.id === lastCommentId}
-                    />
-                ))}
+      <div>
+        <div className="flex flex-col align-middle justify-center">
+          <div className="flex flex-col items-center w-full max-w-4xl p-4 text-center">
+            <div className="w-full max-w-5xl border-t-15 border-t-purple-400 h-35 p-5 rounded-lg shadow-lg bg-white text-left mb-8">
+              <h3 className="mt-2 mb-5 font-bold text-2xl">
+                {discussion.title}
+              </h3>
+              <p>{discussion.prompt}</p>
             </div>
+            <div className="border-t-5 border-t-purple-400 p-5 rounded-lg shadow-lg w-full max-w-5xl bg-white text-left mb-8">
+              <label htmlFor={postTextAreaId} className="font-semibold">
+                Join the discussion:
+                <textarea
+                  name="postContent"
+                  value={text}
+                  id={postTextAreaId}
+                  placeholder={
+                    !user
+                      ? "Please log in to reply to this post"
+                      : !hitReplyLimit
+                        ? "Share your thoughts...(280 chars max.)"
+                        : "You have hit the reply limit for this discussion today"
+                  }
+                  onChange={(e) => setText(e.target.value)}
+                  maxLength={280}
+                  rows={4}
+                  className={`font-normal mt-5 mb-2 p-2.5 w-full
+                    text-gray-900 bg-gray-50 rounded-lg border border-gray-300
+                    focus:ring-blue-500 focus:border-blue-500
+                    ${
+                      !user || hitReplyLimit
+                        ? "cursor-not-allowed opacity-75"
+                        : "cursor-text"
+                    }`}
+                  disabled={!user || hitReplyLimit} // If not logged in or user's hit reply limit, disable text box
+                />
+              </label>
+              <div className="flex justify-between pb-5 border-b border-gray-300">
+                <div className="text-sm text-gray-700">{text.length}/280</div>
+                <div className="text-sm text-gray-700">
+                  Responses limited to 10 per prompt
+                </div>
+              </div>
+              <div className="flex justify-end mt-2">
+                <button
+                  className={`ml-2 flex bg-purple-600 
+                    rounded-full px-5 py-2 font-bold text-sm text-white
+                    ${
+                      !user || hitReplyLimit
+                        ? "cursor-not-allowed opacity-75"
+                        : "hover:bg-purple-700"
+                    }`}
+                  onClick={handleSubmit}
+                  disabled={!user || hitReplyLimit}
+                >
+                  Submit
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    className="size-6"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            {/* Display discussion replies */}
+            {comments.map((comment) => (
+              <DiscussionComment
+                key={comment.id}
+                comment={comment}
+                fadeIn={comment.id === lastCommentId}
+              />
+            ))}
+          </div>
         </div>
-    )
+      </div>
+    );
+  }
 }
