@@ -62,16 +62,6 @@ class ReplyList(BaseModel):
     total_count: int
 
 
-
-class User(BaseModel):
-    """
-    Attributes
-        user_id (UUID): a user's id
-    """
-    user_id: UUID
-
-
-
 ################################################################################
 # Vote Models
 ################################################################################
