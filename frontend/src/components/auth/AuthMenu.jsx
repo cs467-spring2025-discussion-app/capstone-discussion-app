@@ -62,7 +62,7 @@ const AuthMenu = () => {
   }
 
   return (
-    <div className="flex justify-end">
+    <div className="flex justify-end m-2">
       {isCheckingStatus ? ( // waiting for logged-in check
         <span className="inline-block">&nbsp;</span>
       ) : !user ? ( // no user is logged in
