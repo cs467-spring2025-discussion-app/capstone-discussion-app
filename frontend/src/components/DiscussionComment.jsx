@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import CommentFlair from "@/components/CommentFlair";
 import { useUser } from "@/hooks/useUser";
+import { SubmitVote } from "@/api/fastapi";
 
 /**
  * Calculate the time elapsed since a given time
@@ -32,11 +33,24 @@ export default function DiscussionComment({ comment, fadeIn }) {
   const [votes, setVotes] = useState(0);
   const { user } = useUser();
 
-  const handleUpvote = () => {
-    setVotes((prev) => prev + 1);
+  const handleUpvote = async () => {
+    if (!user) return;
+    try {
+      await SubmitVote(comment.id, user.userID, 1);
+      setVotes((prev) => prev + 1);
+    } catch (error) {
+      console.error("Failed to upvote:", error);
+    }
   };
-  const handleDownvote = () => {
-    setVotes((prev) => (prev > 0 ? prev - 1 : 0));
+
+  const handleDownvote = async () => {
+    if (!user) return;
+    try {
+      await SubmitVote(comment.id, user.userID, -1);
+      setVotes((prev) => (prev > 0 ? prev - 1 : 0));
+    } catch (error) {
+      console.error("Failed to downvote:", error);
+    }
   };
 
   const commentTimeElapsed = calculateTimeElapsed(comment.created_at);
