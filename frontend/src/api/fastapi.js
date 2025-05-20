@@ -139,5 +139,20 @@ export async function SubmitVote(replyId, userId, voteType) {
   return await resp.json();
 }
 
+/**
+ * Get vote counts for a reply
+ * @param {number} replyId - ID of the reply
+ * @returns {Promise<Object>} { total_votes, upvotes, downvotes }
+ */
+export async function GetVoteCounts(replyId) {
+  const resp = await fetch(`/fastapi/votes/get_vote_counts/${replyId}`, {
+    method: "GET",
+  });
 
+  if (!resp.ok) {
+    const errorData = await resp.json();
+    throw new Error(errorData.error || `votes/get_vote_counts/${replyId} failed`);
+  }
 
+  return await resp.json();
+}
