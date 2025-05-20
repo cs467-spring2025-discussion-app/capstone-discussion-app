@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import CommentFlair from "@/components/CommentFlair";
+import { useUser } from "@/hooks/useUser";
 
 /**
  * Calculate the time elapsed since a given time
@@ -29,6 +30,8 @@ function calculateTimeElapsed(time) {
 
 export default function DiscussionComment({ comment, fadeIn }) {
   const [votes, setVotes] = useState(0);
+  const { user } = useUser();
+
   const handleUpvote = () => {
     setVotes((prev) => prev + 1);
   };
