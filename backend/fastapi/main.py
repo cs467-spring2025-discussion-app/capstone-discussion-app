@@ -374,18 +374,18 @@ def submit_vote(new_vote: NewVote, reply_id: int, db: Session = Depends(get_db))
         raise HTTPException(status_code=500, detail=str(e))
     
 
-@app.get("/votes/get_votes/{reply_id}")
-def get_votes(reply_id: int, db: Session = Depends(get_db)):
+@app.get("/votes/get_vote_counts/{reply_id}")
+def get_vote_counts(reply_id: int, db: Session = Depends(get_db)):
     try:
-        # Total score (sum of vote_type)
-        total_score = db.query(func.coalesce(func.sum(Votes.vote_type), 0)).filter_by(reply_id=reply_id).scalar()
+        # Total votes (sum of vote_type)
+        total_votes = db.query(func.coalesce(func.sum(Votes.vote_type), 0)).filter(Votes.reply_id == reply_id).scalar()
         # Count of upvotes
-        upvotes = db.query(func.count()).filter_by(reply_id=reply_id, vote_type=1).scalar()
+        upvotes = db.query(func.count()).filter(Votes.reply_id == reply_id, Votes.vote_type == 1).scalar()
         # Count of downvotes
-        downvotes = db.query(func.count()).filter_by(reply_id=reply_id, vote_type=-1).scalar()
+        downvotes = db.query(func.count()).filter(Votes.reply_id == reply_id, Votes.vote_type == -1).scalar()
 
         return {
-            "total_votes": total_score,
+            "total_votes": total_votes,
             "upvotes": upvotes,
             "downvotes": downvotes
         }
