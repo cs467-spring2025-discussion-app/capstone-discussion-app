@@ -214,6 +214,7 @@ def delete_topic(topic_id: int, db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.post("/topics/user_reply_counts/{topic_id}")
 def get_user_reply_count_by_topic(user: User, topic_id: int, db: Session = Depends(get_db)):
     """
@@ -338,6 +339,7 @@ def get_reply_counts_by_topic(db: Session = Depends(get_db)):
 # Vote Endpoints
 ################################################################################
 
+
 @app.post("/votes/submit_vote/{reply_id}")
 # Submit a vote for a reply
 def submit_vote(new_vote: NewVote, reply_id: int, db: Session = Depends(get_db)):
@@ -371,15 +373,37 @@ def submit_vote(new_vote: NewVote, reply_id: int, db: Session = Depends(get_db))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
+
+@app.get("/votes/get_votes/{reply_id}")
+def get_votes(reply_id: int, db: Session = Depends(get_db)):
+    try:
+        # Total score (sum of vote_type)
+        total_score = db.query(func.coalesce(func.sum(Votes.vote_type), 0)).filter_by(reply_id=reply_id).scalar()
+        # Count of upvotes
+        upvotes = db.query(func.count()).filter_by(reply_id=reply_id, vote_type=1).scalar()
+        # Count of downvotes
+        downvotes = db.query(func.count()).filter_by(reply_id=reply_id, vote_type=-1).scalar()
+
+        return {
+            "total_votes": total_score,
+            "upvotes": upvotes,
+            "downvotes": downvotes
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 ################################################################################
 # Topic Rotation
 ################################################################################
+
 
 # function to test topic rotation
 @app.put("/topics/rotate")
 def rotate_active_topics(db: Session = Depends(get_db)):
     rotate_topics(db, 5)
     return {"message": "Operation successful"}
+
 
 if __name__ == "__main__":
     import uvicorn
