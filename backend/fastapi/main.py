@@ -378,7 +378,7 @@ def submit_vote(new_vote: NewVote, reply_id: int, db: Session = Depends(get_db))
 def get_vote_counts(reply_id: int, db: Session = Depends(get_db)):
     try:
         # Total votes (sum of vote_type)
-        total_votes = db.query(func.coalesce(func.sum(Votes.vote_type), 0)).filter(Votes.reply_id == reply_id).scalar()
+        total_votes = db.query(func.coalesce(func.sum(Votes.vote_type), 0)).filter_by(reply_id=reply_id).scalar()
         # Count of upvotes
         upvotes = db.query(func.count()).filter(Votes.reply_id == reply_id, Votes.vote_type == 1).scalar()
         # Count of downvotes
