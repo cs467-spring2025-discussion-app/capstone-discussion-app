@@ -9,6 +9,9 @@
 
 set quiet := true
 
+db_user := "postgres_capstone_app"
+db_name := "capstone_app"
+db_volume := "db"
 FAST := "localhost:8080"
 AUTH := "localhost:3001"
 def_user := "bob@just.com"
@@ -147,7 +150,7 @@ submit_reply email discussion_id content:
     #!/usr/bin/env sh
     query="select id from users where email='{{ email }}'"
     user_id=$(docker exec app_db psql \
-        -U postgresdiscussionapp -d app_db_discussion \
+        -U {{ db_user }} -d {{ db_name }} \
         -t -A \
         -c "$query")
 
@@ -175,7 +178,7 @@ update_reply email reply_id content:
     #!/usr/bin/env sh
     query="select id from users where email='{{ email }}'"
     user_id=$(docker exec app_db psql \
-        -U postgresdiscussionapp -d app_db_discussion \
+        -U {{ db_user }} -d {{ db_name }} \
         -t -A \
         -c "$query")
     just request {{ FAST }} replies/update_reply/{{ reply_id }} \
@@ -196,7 +199,7 @@ vote email=(def_user) reply_id="" type="0":
     #!/usr/bin/env sh
     query="select id from users where email='{{ email }}'"
     user_id=$(docker exec app_db psql \
-        -U postgresdiscussionapp -d app_db_discussion \
+        -U {{ db_user }} -d {{ db_name }} \
         -t -A \
         -c "$query")
 
@@ -214,7 +217,7 @@ vote email=(def_user) reply_id="" type="0":
 [group('sql')]
 exec command flags="":
     docker exec -it app_db psql \
-        -U postgresdiscussionapp -d app_db_discussion \
+        -U {{ db_user }} -d {{ db_name }} \
         {{ flags }} \
         --command "{{ command }}"
 
@@ -276,22 +279,23 @@ topics:
 # Docker recipes
 # #############################################################################
 
-# Stop the app_db service and delete the app_postgres_data volume
+# Stop the app_db service and delete the database volume
 [group('docker')]
 empty:
-    docker compose down db
-    docker volume rm capstone-discussion-app_postgres_data
+    docker compose down -v {{ db_volume }}
 
 # Rebuild services from scratch and start
 [group('docker')]
 fresh:
+    docker compose down
+    docker network prune -f
     docker compose build --no-cache
     docker compose up
 
 # Start all services, rebuild if necessary
 [group('docker')]
 start *flags:
-    docker compose up -d --build {{  flags }}
+    docker compose up -d --build {{ flags }}
 
 # Stop all services
 [group('docker')]
