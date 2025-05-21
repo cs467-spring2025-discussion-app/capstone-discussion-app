@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import Topic from "@/components/Topic";
 import TabToggle from '@/components/TabToggle';
+import AttributePage from './AttributePage';
 
 export default function Home() {
+    const [activeTab, setActiveTab] = useState('daily');
 
     // create variables for topics coming from backend
     const [topics, setTopics] = useState([]);
@@ -54,23 +56,29 @@ export default function Home() {
                     </div>
                 </div>
                 <div>
-                    <TabToggle />
+                    <TabToggle activeTab={activeTab} setActiveTab={setActiveTab}/>
                 </div>
-                <p className='font-light mt-3 mb-5'>Select a prompt to join the discussion. All discussions reset at midnight.</p>
-
-                {errorMessage && (
-                    <div className="text-red-600 bg-red-100 rounded-lg p-2 mb-4 max-w-md">
-                        {errorMessage}
+                <div>
+                    {activeTab === 'daily' && (
+                    <div>
+                        <p className='font-light mt-3 mb-5'>
+                        Select a prompt to join the discussion. All discussions reset at midnight.
+                        </p>
+                        {errorMessage && (
+                        <div className="text-red-600 bg-red-100 rounded-lg p-2 mb-4 max-w-md">
+                            {errorMessage}
+                        </div>
+                        )}
+                        <div className='md:flex md:flex-wrap md:flex-row md:justify-center md:gap-2 md:max-w-screen'>
+                        {topics.map(topic => (
+                            <Topic key={topic.id} topic={topic} />
+                        ))}
+                        </div>
                     </div>
-                )}
-
-                <div className='md:flex md:flex-wrap md:flex-row md:justify-center md:gap-2 md:max-w-screen'>
-                    {/* Present the list of cards that are sent from the backend */}
-                    {topics.map(topic => (
-                        <Topic key={topic.id} topic={topic} />
-                    ))}
-                </div>
-            </div>
+                    )}
+                    {activeTab === 'attributes' && <AttributePage />}
+                 </div>
+             </div>
         </div>
     )
 }
