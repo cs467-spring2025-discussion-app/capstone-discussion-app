@@ -77,7 +77,7 @@ export default function Home() {
                     </div>
                     )}
                     {activeTab === 'attributes' && <AttributePage />}
-                 </div>
+                </div>
              </div>
         </div>
     )
