@@ -12,7 +12,7 @@ from models import (
     NewVote,
     User,
 )
-from datetime import datetime
+from datetime import datetime, timezone
 import os
 from fastapi.middleware.cors import CORSMiddleware  # for the app.add_middleware function below
 from rotate import rotate_topics
@@ -161,7 +161,7 @@ def activate_topic(topic_id: int, db: Session = Depends(get_db)):
 
         # need to set the activation time if this is the first time it is being activated
         if topic.activated_at is None:
-            topic.activated_at = datetime.now(datetime.UTC)
+            topic.activated_at = datetime.now(timezone.utc)
             
         db.commit()
         return {"message": f"Topic with ID {topic_id} activated successfully."}
@@ -193,7 +193,7 @@ def show_topic(topic_id: int, db: Session = Depends(get_db)):
         if not topic:
             raise HTTPException(status_code=404, detail="Topic not found.")
         topic.show_count += 1
-        topic.last_shown = datetime.now(datetime.UTC)
+        topic.last_shown = datetime.now(timezone.utc)
         db.commit()
         return {"message": f"Topic with ID {topic_id} shown successfully."}
     except Exception as e:
@@ -310,7 +310,7 @@ def delete_reply(reply_id: int, db: Session = Depends(get_db)):
         # Instead of deleting, set content to null and mark as deleted
         reply.content = None
         reply.is_deleted = True
-        reply.deleted_at = datetime.now(datetime.UTC)
+        reply.deleted_at = datetime.now(timezone.utc)
         db.commit()
         return {"message": f"Reply with ID {reply_id} marked as deleted successfully."}
     except Exception as e:
@@ -362,7 +362,7 @@ def submit_vote(new_vote: NewVote, reply_id: int, db: Session = Depends(get_db))
             else:
                 # Otherwise update to new vote type
                 existing_vote.vote_type = new_vote.vote_type
-            existing_vote.updated_at = datetime.now(datetime.UTC)
+            existing_vote.updated_at = datetime.now(timezone.utc)
         else:
             # Create new vote
             vote = Votes(
