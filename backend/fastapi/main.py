@@ -355,6 +355,8 @@ def submit_vote(new_vote: NewVote, reply_id: int, db: Session = Depends(get_db))
             reply_id=reply_id
         ).first()
 
+        # TODO: update reputation of reply author
+
         if existing_vote:
             # If user is voting the same way again, unvote
             if existing_vote.vote_type == new_vote.vote_type:
