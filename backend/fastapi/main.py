@@ -356,8 +356,12 @@ def submit_vote(new_vote: NewVote, reply_id: int, db: Session = Depends(get_db))
         ).first()
 
         if existing_vote:
-            # Update existing vote
-            existing_vote.vote_type = new_vote.vote_type
+            # If user is voting the same way again, unvote
+            if existing_vote.vote_type == new_vote.vote_type:
+                existing_vote.vote_type = 0
+            else:
+                # Otherwise update to new vote type
+                existing_vote.vote_type = new_vote.vote_type
             existing_vote.updated_at = datetime.now()
         else:
             # Create new vote
