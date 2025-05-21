@@ -3,7 +3,7 @@ import { useState } from 'react';
 const ATTRIBUTE_CATEGORIES = {
   'Political Leaning': ['Progressive', 'Liberal', 'Moderate', 'Conservative', 'Libertarian'],
   'Professional Background': ['Tech', 'Healthcare', 'Education', 'Finance', 'Arts', 'Trade', 'Student'],
-  Values: ['Environmentalist', 'Privacy Advocate', 'Free Speech', 'Globalist', 'Traditionalist'],
+  Values: ['Environmentalist', 'Privacy Advocate', 'Free Speech', 'Internationalist', 'Traditionalist'],
 };
 
 export default function AttributePage() {
@@ -27,7 +27,7 @@ export default function AttributePage() {
   };
 
   return (
-    <div className="max-w-md mt-15 mx-auto p-5 bg-white border-solid border-gray-700 rounded-lg shadow-md">
+    <div className="max-w-md mt-15 mx-auto p-5 bg-white border-solid border-gray-700 border-t-4 border-t-purple-500 rounded-lg shadow-md">
       <h2 className="text-xl font-semibold mb-1">My Attributes</h2>
       <p className="text-sm text-gray-600 mb-4">Select up to 5 attributes that represent your perspective. These will be shown with your comments.</p>
 
