@@ -1,5 +1,3 @@
-import React, { useState } from 'react';
-
 export default function TabToggle({ activeTab, setActiveTab }) {
   return (
     <div className="bg-gray-100 rounded-full justify-center shadow-inner mb-3">
