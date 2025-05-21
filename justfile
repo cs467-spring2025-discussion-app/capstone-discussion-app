@@ -288,6 +288,24 @@ topics:
         ) \
     from discussion_topics"
 
+# ######
+# Badges
+# ######
+
+# Get all user badges
+[group('sql')]
+ubadges:
+    just exec "\
+    select \
+        users.email, \
+        badges.name, \
+        user_badges.awarded_at \
+    from user_badges \
+    inner join users on user_badges.user_id=users.id \
+    inner join badges on user_badges.badge_id=badges.id \
+    "
+
+
 # #############################################################################
 # Docker recipes
 # #############################################################################
