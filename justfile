@@ -206,6 +206,19 @@ vote email=(def_user) reply_id="" type="0":
     just request {{ FAST }} votes/submit_vote/{{ reply_id }} \
     POST '{\"user_id\":\"'$user_id'\", \"vote_type\": {{ type }} }' | jq
 
+# Get all rows from the `votes` table
+votes:
+    just exec "\
+        select \
+            users.email, \
+            votes.reply_id, \
+            votes.vote_type, \
+            votes.created_at, \
+            votes.updated_at \
+        from votes \
+        inner join users on votes.user_id=id \
+    "
+
 # #############################################################################
 # Direct database query recipes
 # #############################################################################
