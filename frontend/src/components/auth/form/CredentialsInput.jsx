@@ -120,7 +120,7 @@ const CredentialsInput = ({ action }) => {
             required
             value={credentials.email}
             onChange={handleCredentialsChange}
-            className="text-black border border-black rounded-md p-2"
+            className="text-gray-900 border border-purple-400 rounded-md p-2 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
           />
         </div>
         <div className="flex flex-col">
@@ -132,13 +132,13 @@ const CredentialsInput = ({ action }) => {
             required
             value={credentials.password}
             onChange={handleCredentialsChange}
-            className="border border-black rounded-md p-2"
+            className="text-gray-900 border border-purple-400 rounded-md p-2 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
           />
         </div>
       </div>
 
       {/* Error message display */}
-      {authError && <div className="text-red-600 text-center">{authError}</div>}
+      {authError && <div className="text-red-600 text-center font-semibold">{authError}</div>}
 
       {/* Action buttons */}
       <div className="flex gap-4 justify-center mt-4">

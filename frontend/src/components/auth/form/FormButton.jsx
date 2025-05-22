@@ -3,7 +3,7 @@ const FormButton = ({ text, func }) => {
     <button
       type="button"
       onClick={func}
-      className="bg-black text-white p-1 rounded-md hover:bg-blue-500 cursor-pointer"
+      className="bg-purple-600 text-white p-2 rounded-md hover:bg-purple-700 cursor-pointer transition-colors duration-200"
     >
       {text}
     </button>
