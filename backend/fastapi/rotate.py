@@ -3,17 +3,21 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
 from datetime import datetime, timezone
-from tables import DiscussionTopics
+from tables import DiscussionTopics, Replies
 
 
 def rotate_topics(db: Session, count: int = 5):
     """
-    This function rotates the daily topics by deactivating all topics and activating 5
-    new ones that have never been used
+    This function rotates the daily topics by deactivating all topics, deleting
+    all topic replies, and activating five new topics with a preference for
+    unused topics.
     """
 
     # deactivate all topics
     db.query(DiscussionTopics).update({DiscussionTopics.is_active: False})
+
+    # Empty `replies` table
+    db.query(Replies).delete()
 
     # Get topics that haven't been activated and randomly select 5
     new_topics = (
