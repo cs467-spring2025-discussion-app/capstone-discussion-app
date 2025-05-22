@@ -311,6 +311,20 @@ ubadges:
     inner join badges on user_badges.badge_id=badges.id \
     "
 
+# Run `watch` in .5 second intervals to check a user's badges by email
+[group('fastapi/reputation')]
+watchbadges email:
+    #!/usr/bin/env sh
+    query="select id from users where email='{{ email }}'"
+    user_id=$(docker exec app_db psql \
+        -U {{ db_user }} -d {{ db_name }} \
+        -t -A \
+        -c "$query")
+
+    watch -n 0.5 "curl --request POST --data '{\"user_id\": \"${user_id}\"}' \
+        --header 'Content-Type: application/json' \
+        {{ FAST }}/badges/user | jq"
+
 # ######
 # Reputation
 # ######
