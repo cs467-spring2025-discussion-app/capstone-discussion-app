@@ -12,8 +12,9 @@ export default function App() {
 
     return (
       <>
-        <div className="flex justify-between m-2">
+        <div className="flex m-2">
           {location.pathname !== "/" && <HomeLink />}
+          <div className="flex-grow"></div>
           <AuthMenu />
         </div>
         <Routes>
