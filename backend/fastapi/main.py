@@ -1,6 +1,7 @@
 import os
 from datetime import datetime, timezone
 
+import earn_badges
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import (
     CORSMiddleware,  # for the app.add_middleware function below
@@ -165,7 +166,7 @@ def activate_topic(topic_id: int, db: Session = Depends(get_db)):
         # need to set the activation time if this is the first time it is being activated
         if topic.activated_at is None:
             topic.activated_at = datetime.now(timezone.utc)
-            
+
         db.commit()
         return {"message": f"Topic with ID {topic_id} activated successfully."}
     except Exception as e:
@@ -383,8 +384,6 @@ def submit_vote(new_vote: NewVote, reply_id: int, db: Session = Depends(get_db))
             reply_id=reply_id
         ).first()
 
-        # TODO: update reputation of reply author
-
         if existing_vote:
             # If user is voting the same way again, unvote
             if existing_vote.vote_type == new_vote.vote_type:
@@ -403,10 +402,15 @@ def submit_vote(new_vote: NewVote, reply_id: int, db: Session = Depends(get_db))
             db.add(vote)
 
         db.commit()
+
+        # Check if this vote earns the author any badges
+        # TODO: add a second badge check
+        earn_badges.check_top_contributor(db, reply.user_id)
+
         return {"message": "Vote submitted successfully."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
+
 
 @app.get("/votes/get_vote_counts/{reply_id}")
 def get_vote_counts(reply_id: int, db: Session = Depends(get_db)):
