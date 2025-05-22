@@ -18,7 +18,7 @@ def rotate_topics(db: Session, count: int = 5):
     # Get topics that haven't been activated and randomly select 5
     new_topics = (
         db.query(DiscussionTopics)
-        .filter(DiscussionTopics.activated_at == None)
+        .filter(DiscussionTopics.activated_at is None)
         .order_by(func.random())
         .limit(count)
         .all()
@@ -43,7 +43,7 @@ def rotate_topics(db: Session, count: int = 5):
 
     # deliver an error if there are not 5 topics
     if len(new_topics) < count:
-        raise ValueError(f"Not enough topics available.")
+        raise ValueError("Not enough topics available.")
 
     # activate the topics in the new_topic set
     for topic in new_topics:
