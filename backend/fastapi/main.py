@@ -445,8 +445,8 @@ def submit_vote(new_vote: NewVote, reply_id: int, db: Session = Depends(get_db))
         db.commit()
 
         # Check if this vote earns the author any badges
-        # TODO: add a second badge check
         earn_badges.check_top_contributor(db, reply.user_id)
+        earn_badges.check_insightful(db, reply.user_id)
 
         return {"message": "Vote submitted successfully."}
     except Exception as e:
