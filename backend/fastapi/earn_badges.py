@@ -10,22 +10,16 @@ INSIGHTFUL_MIN_UPVOTES = 5
 
 
 def check_insightful(db: Session, user_id: Column):
-    # Get "Insightful" badge id
-    badge_id = db.execute(
-        select(Badges.id)
-        .select_from(Badges)
-        .where(Badges.name == INSIGHTFUL_BADGE_NAME)
-    ).scalar()
-
+    """
+    Calculate the user's up/downvote ratio from their reputation.
+    If their ratio is above the minimum, award the Insightful badge. This badge
+    can persist across topic resets.
+    """
+    user_badge, badge_id = get_badge_helper(db, user_id, INSIGHTFUL_BADGE_NAME)
+    # Did not find a valid badge with this name
     if badge_id is None:
         raise ValueError(f"'{INSIGHTFUL_BADGE_NAME}' is not a valid badge name")
 
-    userBadge = (
-        db.query(UserBadges).filter_by(user_id=user_id, badge_id=badge_id).first()
-    )
-
-    # Calculate the user's up/downvote ratio from their reputation
-    # If their ratio is above the minimum, award the Insightful badge
     reputation = db.query(UserReputation).filter_by(user_id=user_id).first()
 
     # Abort check if reputation hasn't been initialized yet
@@ -33,7 +27,7 @@ def check_insightful(db: Session, user_id: Column):
         return
 
     # Remove badge if user no longer meets conditions
-    if userBadge is not None and (
+    if user_badge is not None and (
         reputation.upvotes_received < INSIGHTFUL_MIN_UPVOTES
         or (
             reputation.downvotes_received > 0
@@ -41,7 +35,7 @@ def check_insightful(db: Session, user_id: Column):
             < INSIGHTFUL_MIN_RATIO
         )
     ):
-        db.delete(userBadge)
+        db.delete(user_badge)
         db.commit()
     # Grant badge if user meets conditions
     elif reputation.upvotes_received >= INSIGHTFUL_MIN_UPVOTES and (
@@ -49,11 +43,11 @@ def check_insightful(db: Session, user_id: Column):
         or reputation.upvotes_received / reputation.downvotes_received
         >= INSIGHTFUL_MIN_RATIO
     ):
-        if userBadge is None:
-            userBadge = UserBadges(user_id=user_id, badge_id=badge_id)
-        db.add(userBadge)
+        if user_badge is None:
+            user_badge = UserBadges(user_id=user_id, badge_id=badge_id)
+        db.add(user_badge)
         db.commit()
-        db.refresh(userBadge)
+        db.refresh(user_badge)
 
 
 def check_top_contributor(db: Session, user_id: Column):
@@ -63,18 +57,13 @@ def check_top_contributor(db: Session, user_id: Column):
     that can be earned or lost daily, encouraging frequent contributions.
     """
 
-    # Get "Top Contributor" badge id
-    badge_id = db.execute(
-        select(Badges.id)
-        .select_from(Badges)
-        .where(Badges.name == TOP_CONTRIBUTOR_BADGE_NAME)
-    ).scalar()
-
+    user_badge, badge_id = get_badge_helper(db, user_id, TOP_CONTRIBUTOR_BADGE_NAME)
+    # Did not find a valid badge with this name
     if badge_id is None:
         raise ValueError(f"'{TOP_CONTRIBUTOR_BADGE_NAME}' is not a valid badge name")
 
     # Try to find existing user badge
-    userBadge = (
+    user_badge = (
         db.query(UserBadges).filter_by(user_id=user_id, badge_id=badge_id).first()
     )
 
@@ -92,13 +81,32 @@ def check_top_contributor(db: Session, user_id: Column):
 
     # Award 'Top Contributor' badge if user does not already have it and user
     # has enough replies with at least one upvote
-    if userBadge is None and count is not None and count >= TOP_CONTRIBUTOR_MIN:
+    if user_badge is None and count is not None and count >= TOP_CONTRIBUTOR_MIN:
         user_badge = UserBadges(user_id=user_id, badge_id=badge_id)
         db.add(user_badge)
         db.commit()
         db.refresh(user_badge)
     # If user does have badge, and they are below reply threshold, remove badge
     # from user (effective daily reset)
-    elif userBadge is not None and count is not None and count < TOP_CONTRIBUTOR_MIN:
-        db.delete(userBadge)
+    elif user_badge is not None and count is not None and count < TOP_CONTRIBUTOR_MIN:
+        db.delete(user_badge)
         db.commit()
+
+
+def get_badge_helper(db: Session, user_id: Column, badge_name: str) -> tuple:
+    """
+    Get a badge and its id by name. Returns a tuple of a row in `badges`, which
+    could be `None, and the badge id. If no badge in the `badges` table matches
+    the given name, returns `(None, None)`.
+    """
+    badge_id = db.execute(
+        select(Badges.id).select_from(Badges).where(Badges.name == badge_name)
+    ).scalar()
+
+    # Did not find a badge with this name
+    if badge_id is None:
+        return None, None
+
+    return (
+        db.query(UserBadges).filter_by(user_id=user_id, badge_id=badge_id).first()
+    ), badge_id
