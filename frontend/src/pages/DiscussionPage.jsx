@@ -127,11 +127,11 @@ export default function DiscussionPage() {
                     !user
                       ? "Please log in to reply to this post"
                       : !hitReplyLimit
-                        ? "Share your thoughts...(280 chars max.)"
+                        ? "Share your thoughts...(1000 chars max.)"
                         : "You have hit the reply limit for this discussion today"
                   }
                   onChange={(e) => setText(e.target.value)}
-                  maxLength={280}
+                  maxLength={1000}
                   rows={4}
                   className={`font-normal mt-5 mb-2 p-2.5 w-full
                     text-gray-900 bg-gray-50 rounded-lg border border-gray-300
@@ -145,7 +145,7 @@ export default function DiscussionPage() {
                 />
               </label>
               <div className="flex justify-between pb-5 border-b border-gray-300">
-                <div className="text-sm text-gray-700">{text.length}/280</div>
+                <div className="text-sm text-gray-700">{text.length}/1000</div>
                 <div className="text-sm text-gray-700">
                   Responses limited to 10 per prompt
                 </div>

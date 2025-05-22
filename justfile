@@ -222,6 +222,12 @@ votes:
 # #############################################################################
 # Direct database query recipes
 # #############################################################################
+
+# Source a sql file from the db/init dir into the app database
+[group('sql')]
+source file:
+    docker exec -it app_db psql -U {{ db_user }} -d {{ db_name }} -f docker-entrypoint-initdb.d/{{ file }}
+
 # ######
 # Users
 # ######
@@ -287,6 +293,68 @@ topics:
         where replies.discussion_id = discussion_topics.id \
         ) \
     from discussion_topics"
+
+# ######
+# Badges
+# ######
+
+# Get all user badges
+[group('sql')]
+ubadges:
+    just exec "\
+    select \
+        users.email, \
+        badges.name, \
+        user_badges.awarded_at \
+    from user_badges \
+    inner join users on user_badges.user_id=users.id \
+    inner join badges on user_badges.badge_id=badges.id \
+    "
+
+# Run `watch` in .5 second intervals to check a user's badges by email
+[group('fastapi/reputation')]
+watchbadges email:
+    #!/usr/bin/env sh
+    query="select id from users where email='{{ email }}'"
+    user_id=$(docker exec app_db psql \
+        -U {{ db_user }} -d {{ db_name }} \
+        -t -A \
+        -c "$query")
+
+    watch -n 0.5 "curl --request POST --data '{\"user_id\": \"${user_id}\"}' \
+        --header 'Content-Type: application/json' \
+        {{ FAST }}/badges/user | jq"
+
+# ######
+# Reputation
+# ######
+
+# Get all user reputations listed by email
+[group('sql')]
+rep:
+    just exec "\
+    select \
+        users.email, \
+        user_reputation.upvotes_received, \
+        user_reputation.downvotes_received \
+    from user_reputation \
+    inner join users on user_reputation.user_id=users.id \
+    "
+
+# Run `watch` in .5 second intervals to check a user's reputation by email
+[group('fastapi/reputation')]
+watchrep email:
+    #!/usr/bin/env sh
+    query="select id from users where email='{{ email }}'"
+    user_id=$(docker exec app_db psql \
+        -U {{ db_user }} -d {{ db_name }} \
+        -t -A \
+        -c "$query")
+
+    watch -n 0.5 "curl --request POST --data '{\"user_id\": \"${user_id}\"}' \
+        --header 'Content-Type: application/json' \
+        {{ FAST }}/reputation/user | jq"
+
 
 # #############################################################################
 # Docker recipes

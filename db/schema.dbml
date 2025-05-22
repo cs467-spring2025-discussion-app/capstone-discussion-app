@@ -78,6 +78,7 @@ Table discussion_topics {
   created_at timestamp [not null, default: `now()`]
   last_shown timestamp
   is_active boolean [not null, default: false]
+  activated_at timestamp
   show_count integer [default: 0]
 
   indexes {

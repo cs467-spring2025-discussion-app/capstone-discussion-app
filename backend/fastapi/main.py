@@ -1,21 +1,33 @@
-from fastapi import FastAPI, HTTPException, Depends
-from sqlalchemy import create_engine, select, text, func
-from sqlalchemy.orm import Session, sessionmaker
-from tables import Base, DiscussionTopics, Replies, Votes
+import os
+from datetime import datetime, timezone
+
+import earn_badges
+from fastapi import Depends, FastAPI, HTTPException
+from fastapi.middleware.cors import (
+    CORSMiddleware,  # for the app.add_middleware function below
+)
 from models import (
-    NewTopic,
-    Topic,
-    TopicList,
     NewReply,
+    NewTopic,
+    NewVote,
     Reply,
     ReplyList,
-    NewVote,
+    Topic,
+    TopicList,
     User,
 )
-from datetime import datetime, timezone
-import os
-from fastapi.middleware.cors import CORSMiddleware  # for the app.add_middleware function below
 from rotate import rotate_topics
+from sqlalchemy import create_engine, func, select, text
+from sqlalchemy.orm import Session, sessionmaker
+from tables import (
+    Badges,
+    Base,
+    DiscussionTopics,
+    Replies,
+    UserBadges,
+    UserReputation,
+    Votes,
+)
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
@@ -162,7 +174,7 @@ def activate_topic(topic_id: int, db: Session = Depends(get_db)):
         # need to set the activation time if this is the first time it is being activated
         if topic.activated_at is None:
             topic.activated_at = datetime.now(timezone.utc)
-            
+
         db.commit()
         return {"message": f"Topic with ID {topic_id} activated successfully."}
     except Exception as e:
@@ -336,9 +348,48 @@ def get_reply_counts_by_topic(db: Session = Depends(get_db)):
 
 
 ################################################################################
+# Badge Endpoints
+################################################################################
+
+@app.post("/badges/user")
+def get_user_badges(user: User, db: Session = Depends(get_db)):
+    try:
+        results = (
+            db.query(UserBadges).filter_by(user_id=user.user_id).all()
+        )
+        badges: list[dict[str, str]] = []
+        for badge in results:
+            if badge_info := (
+                db.query(Badges).filter_by(id=badge.badge_id).first()
+            ):
+                badges.append(badge_info)
+        return {
+            "user_badges": badges
+        }
+
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting user badges: {e}")
+
+
+################################################################################
 # Vote Endpoints
 ################################################################################
 
+def get_user_reputation_helper(user_id: str, db: Session) -> UserReputation:
+    """
+    Helper function to get or initialize user's reputation from the
+    `user_reputation` table.
+    """
+    reputation = db.query(UserReputation).filter_by(user_id=user_id).first()
+    if reputation is None:
+        reputation = UserReputation(
+            user_id=user_id,
+            upvotes_received=0,
+            downvotes_received=0
+        )
+        db.add(reputation)
+    return reputation
 
 @app.post("/votes/submit_vote/{reply_id}")
 # Submit a vote for a reply
@@ -349,6 +400,15 @@ def submit_vote(new_vote: NewVote, reply_id: int, db: Session = Depends(get_db))
         if not reply:
             raise HTTPException(status_code=404, detail="Reply not found.")
 
+        # Get or initialize reply author's reputation
+        reputation: UserReputation = get_user_reputation_helper(reply.user_id, db)
+        # Track the changes to upvotes (1) or downvotes (-1)
+        rep_delta: dict[int, int] = {
+            1: 0,
+            0: 0,
+            -1: 0
+        }
+
         # Check if vote already exists
         existing_vote = db.query(Votes).filter_by(
             user_id=new_vote.user_id,
@@ -356,12 +416,16 @@ def submit_vote(new_vote: NewVote, reply_id: int, db: Session = Depends(get_db))
         ).first()
 
         if existing_vote:
+            # Track decrement of existing vote type from reputation
+            rep_delta[existing_vote.vote_type] -= 1
             # If user is voting the same way again, unvote
             if existing_vote.vote_type == new_vote.vote_type:
                 existing_vote.vote_type = 0
             else:
                 # Otherwise update to new vote type
                 existing_vote.vote_type = new_vote.vote_type
+                # Track increment of new vote type to reputation
+                rep_delta[new_vote.vote_type] += 1
             existing_vote.updated_at = datetime.now(timezone.utc)
         else:
             # Create new vote
@@ -371,12 +435,23 @@ def submit_vote(new_vote: NewVote, reply_id: int, db: Session = Depends(get_db))
                 vote_type=new_vote.vote_type
             )
             db.add(vote)
+            # Track increment of new vote type to reputation
+            rep_delta[new_vote.vote_type] += 1
+
+        # Update reputation according to rep_delta
+        reputation.upvotes_received += rep_delta.get(1) # pyright: ignore
+        reputation.downvotes_received += rep_delta.get(-1) # pyright: ignore
 
         db.commit()
+
+        # Check if this vote earns the author any badges
+        earn_badges.check_top_contributor(db, reply.user_id)
+        earn_badges.check_insightful(db, reply.user_id)
+
         return {"message": "Vote submitted successfully."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
+
 
 @app.get("/votes/get_vote_counts/{reply_id}")
 def get_vote_counts(reply_id: int, db: Session = Depends(get_db)):
@@ -395,6 +470,20 @@ def get_vote_counts(reply_id: int, db: Session = Depends(get_db)):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+################################################################################
+# Reputation
+################################################################################
+@app.post("/reputation/user")
+def get_user_reputation(user: User, db: Session = Depends(get_db)):
+    """
+    Get a user's reputation, with up and downvotes received.
+    """
+    try:
+        result = get_user_reputation_helper(str(user.user_id), db)
+        return {"user_reputation": result or {}}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting user reputation: {e}")
 
 
 ################################################################################
