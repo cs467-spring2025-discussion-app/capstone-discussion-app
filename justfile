@@ -222,6 +222,12 @@ votes:
 # #############################################################################
 # Direct database query recipes
 # #############################################################################
+
+# Source a sql file from the db/init dir into the app database
+[group('sql')]
+source file:
+    docker exec -it app_db psql -U {{ db_user }} -d {{ db_name }} -f docker-entrypoint-initdb.d/{{ file }}
+
 # ######
 # Users
 # ######
