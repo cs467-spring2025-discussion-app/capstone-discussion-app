@@ -327,6 +327,20 @@ rep:
     inner join users on user_reputation.user_id=users.id \
     "
 
+# Run `watch` in .5 second intervals to check a user's reputation by email
+[group('fastapi/reputation')]
+watchrep email:
+    #!/usr/bin/env sh
+    query="select id from users where email='{{ email }}'"
+    user_id=$(docker exec app_db psql \
+        -U {{ db_user }} -d {{ db_name }} \
+        -t -A \
+        -c "$query")
+
+    watch -n 0.5 "curl --request POST --data '{\"user_id\": \"${user_id}\"}' \
+        --header 'Content-Type: application/json' \
+        {{ FAST }}/reputation/user | jq"
+
 
 # #############################################################################
 # Docker recipes
