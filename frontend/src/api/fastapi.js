@@ -112,5 +112,47 @@ export async function GetUserReplyCount(discussionId, userId) {
   return await resp.json();
 }
 
+/**
+ * Submit a vote for a reply
+ * @param {number} replyId - ID of the reply to vote on
+ * @param {string} userId - UUID of the user submitting the vote
+ * @param {number} voteType - 1 for upvote, -1 for downvote, 0 to remove vote
+ * @returns {Promise<Object>} Response data
+ * @throws {Error} On vote submission failure
+ */
+export async function SubmitVote(replyId, userId, voteType) {
+  const resp = await fetch(`/fastapi/votes/submit_vote/${replyId}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ user_id: userId, vote_type: voteType }),
+  });
 
+  if (!resp.ok) {
+    const errorData = await resp.json();
+    throw new Error(
+      errorData.error || `votes/submit_vote/${replyId} failed`,
+    );
+  }
 
+  return await resp.json();
+}
+
+/**
+ * Get vote counts for a reply
+ * @param {number} replyId - ID of the reply
+ * @returns {Promise<Object>} { total_votes, upvotes, downvotes }
+ */
+export async function GetVoteCounts(replyId) {
+  const resp = await fetch(`/fastapi/votes/get_vote_counts/${replyId}`, {
+    method: "GET",
+  });
+
+  if (!resp.ok) {
+    const errorData = await resp.json();
+    throw new Error(errorData.error || `votes/get_vote_counts/${replyId} failed`);
+  }
+
+  return await resp.json();
+}

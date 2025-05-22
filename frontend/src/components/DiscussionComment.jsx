@@ -1,5 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import CommentFlair from "@/components/CommentFlair";
+import { useUser } from "@/hooks/useUser";
+import { SubmitVote, GetVoteCounts } from "@/api/fastapi";
 
 /**
  * Calculate the time elapsed since a given time
@@ -29,11 +31,40 @@ function calculateTimeElapsed(time) {
 
 export default function DiscussionComment({ comment, fadeIn }) {
   const [votes, setVotes] = useState(0);
-  const handleUpvote = () => {
-    setVotes((prev) => prev + 1);
+  const { user } = useUser();
+
+  useEffect(() => {
+    async function fetchVotes() {
+      try {
+        const data = await GetVoteCounts(comment.id);
+        setVotes(data.total_votes);
+      } catch (error) {
+        console.error("Failed to fetch vote count:", error);
+      }
+    }
+    fetchVotes();
+  }, [comment.id]);
+
+  const handleUpvote = async () => {
+    if (!user) return;
+    try {
+      await SubmitVote(comment.id, user.userID, 1);
+      const data = await GetVoteCounts(comment.id);
+      setVotes(data.total_votes);
+    } catch (error) {
+      console.error("Failed to upvote:", error);
+    }
   };
-  const handleDownvote = () => {
-    setVotes((prev) => (prev > 0 ? prev - 1 : 0));
+
+  const handleDownvote = async () => {
+    if (!user) return;
+    try {
+      await SubmitVote(comment.id, user.userID, -1);
+      const data = await GetVoteCounts(comment.id);
+      setVotes(data.total_votes);
+    } catch (error) {
+      console.error("Failed to downvote:", error);
+    }
   };
 
   const commentTimeElapsed = calculateTimeElapsed(comment.created_at);
@@ -113,3 +144,4 @@ export default function DiscussionComment({ comment, fadeIn }) {
     </div>
   );
 }
+

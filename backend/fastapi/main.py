@@ -12,7 +12,7 @@ from models import (
     NewVote,
     User,
 )
-from datetime import datetime
+from datetime import datetime, timezone
 import os
 from fastapi.middleware.cors import CORSMiddleware  # for the app.add_middleware function below
 from rotate import rotate_topics
@@ -161,7 +161,7 @@ def activate_topic(topic_id: int, db: Session = Depends(get_db)):
 
         # need to set the activation time if this is the first time it is being activated
         if topic.activated_at is None:
-            topic.activated_at = datetime.now()
+            topic.activated_at = datetime.now(timezone.utc)
             
         db.commit()
         return {"message": f"Topic with ID {topic_id} activated successfully."}
@@ -193,7 +193,7 @@ def show_topic(topic_id: int, db: Session = Depends(get_db)):
         if not topic:
             raise HTTPException(status_code=404, detail="Topic not found.")
         topic.show_count += 1
-        topic.last_shown = datetime.now()
+        topic.last_shown = datetime.now(timezone.utc)
         db.commit()
         return {"message": f"Topic with ID {topic_id} shown successfully."}
     except Exception as e:
@@ -213,6 +213,7 @@ def delete_topic(topic_id: int, db: Session = Depends(get_db)):
         return {"message": f"Topic with ID {topic_id} deleted successfully."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.post("/topics/user_reply_counts/{topic_id}")
 def get_user_reply_count_by_topic(user: User, topic_id: int, db: Session = Depends(get_db)):
@@ -309,7 +310,7 @@ def delete_reply(reply_id: int, db: Session = Depends(get_db)):
         # Instead of deleting, set content to null and mark as deleted
         reply.content = None
         reply.is_deleted = True
-        reply.deleted_at = datetime.now()
+        reply.deleted_at = datetime.now(timezone.utc)
         db.commit()
         return {"message": f"Reply with ID {reply_id} marked as deleted successfully."}
     except Exception as e:
@@ -338,6 +339,7 @@ def get_reply_counts_by_topic(db: Session = Depends(get_db)):
 # Vote Endpoints
 ################################################################################
 
+
 @app.post("/votes/submit_vote/{reply_id}")
 # Submit a vote for a reply
 def submit_vote(new_vote: NewVote, reply_id: int, db: Session = Depends(get_db)):
@@ -354,9 +356,13 @@ def submit_vote(new_vote: NewVote, reply_id: int, db: Session = Depends(get_db))
         ).first()
 
         if existing_vote:
-            # Update existing vote
-            existing_vote.vote_type = new_vote.vote_type
-            existing_vote.updated_at = datetime.now()
+            # If user is voting the same way again, unvote
+            if existing_vote.vote_type == new_vote.vote_type:
+                existing_vote.vote_type = 0
+            else:
+                # Otherwise update to new vote type
+                existing_vote.vote_type = new_vote.vote_type
+            existing_vote.updated_at = datetime.now(timezone.utc)
         else:
             # Create new vote
             vote = Votes(
@@ -371,15 +377,37 @@ def submit_vote(new_vote: NewVote, reply_id: int, db: Session = Depends(get_db))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
+
+@app.get("/votes/get_vote_counts/{reply_id}")
+def get_vote_counts(reply_id: int, db: Session = Depends(get_db)):
+    try:
+        # Total votes (sum of vote_type)
+        total_votes = db.query(func.coalesce(func.sum(Votes.vote_type), 0)).filter_by(reply_id=reply_id).scalar()
+        # Count of upvotes
+        upvotes = db.query(func.count()).filter(Votes.reply_id == reply_id, Votes.vote_type == 1).scalar()
+        # Count of downvotes
+        downvotes = db.query(func.count()).filter(Votes.reply_id == reply_id, Votes.vote_type == -1).scalar()
+
+        return {
+            "total_votes": total_votes,
+            "upvotes": upvotes,
+            "downvotes": downvotes
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 ################################################################################
 # Topic Rotation
 ################################################################################
+
 
 # function to test topic rotation
 @app.put("/topics/rotate")
 def rotate_active_topics(db: Session = Depends(get_db)):
     rotate_topics(db, 5)
     return {"message": "Operation successful"}
+
 
 if __name__ == "__main__":
     import uvicorn
