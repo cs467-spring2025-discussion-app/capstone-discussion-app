@@ -17,7 +17,7 @@ from models import (
     User,
 )
 from rotate import rotate_topics
-from sqlalchemy import Column, create_engine, func, select, text
+from sqlalchemy import create_engine, func, select, text
 from sqlalchemy.orm import Session, sessionmaker
 from tables import (
     Badges,
@@ -376,7 +376,7 @@ def get_user_badges(user: User, db: Session = Depends(get_db)):
 # Vote Endpoints
 ################################################################################
 
-def get_user_reputation_helper(user_id: Column, db: Session) -> UserReputation:
+def get_user_reputation_helper(user_id: str, db: Session) -> UserReputation:
     """
     Helper function to get or initialize user's reputation from the
     `user_reputation` table.
@@ -470,6 +470,20 @@ def get_vote_counts(reply_id: int, db: Session = Depends(get_db)):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+################################################################################
+# Reputation
+################################################################################
+@app.post("/reputation/user")
+def get_user_reputation(user: User, db: Session = Depends(get_db)):
+    """
+    Get a user's reputation, with up and downvotes received.
+    """
+    try:
+        result = get_user_reputation_helper(str(user.user_id), db)
+        return {"user_reputation": result or {}}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting user reputation: {e}")
 
 
 ################################################################################
