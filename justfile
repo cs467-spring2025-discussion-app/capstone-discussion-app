@@ -311,6 +311,22 @@ ubadges:
     inner join badges on user_badges.badge_id=badges.id \
     "
 
+# ######
+# Reputation
+# ######
+
+# Get all user reputations listed by email
+[group('sql')]
+rep:
+    just exec "\
+    select \
+        users.email, \
+        user_reputation.upvotes_received, \
+        user_reputation.downvotes_received \
+    from user_reputation \
+    inner join users on user_reputation.user_id=users.id \
+    "
+
 
 # #############################################################################
 # Docker recipes
