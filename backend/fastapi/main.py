@@ -1,21 +1,24 @@
-from fastapi import FastAPI, HTTPException, Depends
-from sqlalchemy import create_engine, select, text, func
-from sqlalchemy.orm import Session, sessionmaker
-from tables import Badges, UserBadges, Base, DiscussionTopics, Replies, Votes
+import os
+from datetime import datetime, timezone
+
+from fastapi import Depends, FastAPI, HTTPException
+from fastapi.middleware.cors import (
+    CORSMiddleware,  # for the app.add_middleware function below
+)
 from models import (
-    NewTopic,
-    Topic,
-    TopicList,
     NewReply,
+    NewTopic,
+    NewVote,
     Reply,
     ReplyList,
-    NewVote,
+    Topic,
+    TopicList,
     User,
 )
-from datetime import datetime, timezone
-import os
-from fastapi.middleware.cors import CORSMiddleware  # for the app.add_middleware function below
 from rotate import rotate_topics
+from sqlalchemy import create_engine, func, select, text
+from sqlalchemy.orm import Session, sessionmaker
+from tables import Badges, Base, DiscussionTopics, Replies, UserBadges, Votes
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
