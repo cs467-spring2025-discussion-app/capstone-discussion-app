@@ -2,7 +2,7 @@
 
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
-from datetime import datetime, timedelta
+from datetime import datetime, timezone
 from tables import DiscussionTopics
 
 
@@ -39,8 +39,7 @@ def rotate_topics(db: Session, count: int = 5):
     for topic in new_topics:
         topic.is_active = True
         if topic.activated_at is None:
-            topic.activated_at = datetime.now()
-
+            topic.activated_at = datetime.now(timezone.utc)
     db.commit()
 
     
