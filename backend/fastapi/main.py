@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, Depends
 from sqlalchemy import create_engine, select, text, func
 from sqlalchemy.orm import Session, sessionmaker
-from tables import Base, DiscussionTopics, Replies, Votes
+from tables import Badges, UserBadges, Base, DiscussionTopics, Replies, Votes
 from models import (
     NewTopic,
     Topic,
@@ -333,6 +333,31 @@ def get_reply_counts_by_topic(db: Session = Depends(get_db)):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error getting replies: {e}")
+
+
+################################################################################
+# Badge Endpoints
+################################################################################
+
+@app.post("/badges/user")
+def get_user_badges(user: User, db: Session = Depends(get_db)):
+    try:
+        results = (
+            db.query(UserBadges).filter_by(user_id=user.user_id).all()
+        )
+        badges: list[dict[str, str]] = []
+        for badge in results:
+            if badge_info := (
+                db.query(Badges).filter_by(id=badge.badge_id).first()
+            ):
+                badges.append(badge_info)
+        return {
+            "user_badges": badges
+        }
+
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting user badges: {e}")
 
 
 ################################################################################
