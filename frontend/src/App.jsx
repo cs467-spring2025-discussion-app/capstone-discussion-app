@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import DiscussionPage from "@/pages/DiscussionPage";
 import Home from "@/pages/Home";
 import HomeLink from "@/components/HomeLink";
@@ -7,23 +7,29 @@ import AuthMenu from "@/components/auth/AuthMenu";
 import AuthProvider from "@/contexts/AuthProvider";
 
 export default function App() {
-  return (
-    <AuthProvider>
-      <BrowserRouter>
+  function AppLayout() {
+    const location = useLocation();
+
+    return (
+      <>
         <div className="flex justify-between m-2">
-          <HomeLink />
+          {location.pathname !== "/" && <HomeLink />}
           <AuthMenu />
         </div>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route
-            path="/discussions/:discussionId"
-            element={<DiscussionPage />}
-          />
-
+          <Route path="/discussions/:discussionId" element={<DiscussionPage />} />
           <Route path="/not-found" element={<NotFound />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
+      </>
+    );
+  }
+
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <AppLayout />
       </BrowserRouter>
     </AuthProvider>
   );
