@@ -66,17 +66,16 @@ const AuthMenu = () => {
       {isCheckingStatus ? ( // waiting for logged-in check
         <span className="inline-block">&nbsp;</span>
       ) : !user ? ( // no user is logged in
-        <div className="bg-blue-300 rounded-lg shadow-lg font-bold">
+        <div className="bg-purple-100 text-purple-700 rounded-lg shadow-md font-semibold">
           <AuthButton action="login" />
         </div>
       ) : (
         // user is logged in
         <div className="relative" ref={dropdownRef}>
           <button
-            className="bg-blue-300 font-bold p-1
-              border-1 border-transparent rounded-md shadow-lg
-              cursor-pointer
-              hover:border-black"
+            className="bg-purple-500 text-white font-semibold px-3 py-1
+              border border-transparent rounded-md shadow-md
+            hover:bg-purple-600 transition-colors duration-200"
             type="button"
             onClick={toggleDropdown}
           >
@@ -85,9 +84,9 @@ const AuthMenu = () => {
           {dropdown && (
             <div
               id="authDropdown"
-              className="text-lg bg-blue-300 max-w-max 
-                border-1 rounded-md shadow-xl 
-                absolute right-0 mt-2 flex flex-col"
+              className="text-sm bg-purple-100 text-purple-800 max-w-max 
+                border border-purple-300 rounded-xl shadow-lg
+                absolute right-0 mt-2 flex flex-col overflow-hidden"
             >
               <AuthButton action="update" />
               <AuthButton action="logout" />
