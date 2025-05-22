@@ -108,7 +108,7 @@ export default function DiscussionPage() {
   } else {
     return (
       <div>
-        <div className="flex flex-col align-middle justify-center">
+        <div className="flex flex-col items-center justify-center">
           <div className="flex flex-col items-center w-full max-w-4xl p-4 text-center">
             <div className="w-full max-w-5xl border-t-15 border-t-purple-400 h-35 p-5 rounded-lg shadow-lg bg-white text-left mb-8">
               <h3 className="mt-2 mb-5 font-bold text-2xl">
