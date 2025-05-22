@@ -4,7 +4,7 @@ from tables import Badges, Replies, UserBadges, UserReputation, Votes
 
 TOP_CONTRIBUTOR_BADGE_NAME = "Top Contributor"  # Must match existing DB badge
 INSIGHTFUL_BADGE_NAME = "Insightful"  # Must match existing DB badge
-TOP_CONTRIBUTOR_MIN = 5
+TOP_CONTRIBUTOR_MIN = 7
 INSIGHTFUL_MIN_RATIO = 5
 INSIGHTFUL_MIN_UPVOTES = 5
 
