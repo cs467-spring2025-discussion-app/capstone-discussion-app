@@ -17,9 +17,17 @@ from models import (
     User,
 )
 from rotate import rotate_topics
-from sqlalchemy import create_engine, func, select, text
+from sqlalchemy import Column, create_engine, func, select, text
 from sqlalchemy.orm import Session, sessionmaker
-from tables import Badges, Base, DiscussionTopics, Replies, UserBadges, Votes
+from tables import (
+    Badges,
+    Base,
+    DiscussionTopics,
+    Replies,
+    UserBadges,
+    UserReputation,
+    Votes,
+)
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
@@ -368,6 +376,20 @@ def get_user_badges(user: User, db: Session = Depends(get_db)):
 # Vote Endpoints
 ################################################################################
 
+def get_user_reputation_helper(user_id: Column, db: Session) -> UserReputation:
+    """
+    Helper function to get or initialize user's reputation from the
+    `user_reputation` table.
+    """
+    reputation = db.query(UserReputation).filter_by(user_id=user_id).first()
+    if reputation is None:
+        reputation = UserReputation(
+            user_id=user_id,
+            upvotes_received=0,
+            downvotes_received=0
+        )
+        db.add(reputation)
+    return reputation
 
 @app.post("/votes/submit_vote/{reply_id}")
 # Submit a vote for a reply
@@ -378,6 +400,15 @@ def submit_vote(new_vote: NewVote, reply_id: int, db: Session = Depends(get_db))
         if not reply:
             raise HTTPException(status_code=404, detail="Reply not found.")
 
+        # Get or initialize reply author's reputation
+        reputation: UserReputation = get_user_reputation_helper(reply.user_id, db)
+        # Track the changes to upvotes (1) or downvotes (-1)
+        rep_delta: dict[int, int] = {
+            1: 0,
+            0: 0,
+            -1: 0
+        }
+
         # Check if vote already exists
         existing_vote = db.query(Votes).filter_by(
             user_id=new_vote.user_id,
@@ -385,12 +416,16 @@ def submit_vote(new_vote: NewVote, reply_id: int, db: Session = Depends(get_db))
         ).first()
 
         if existing_vote:
+            # Track decrement of existing vote type from reputation
+            rep_delta[existing_vote.vote_type] -= 1
             # If user is voting the same way again, unvote
             if existing_vote.vote_type == new_vote.vote_type:
                 existing_vote.vote_type = 0
             else:
                 # Otherwise update to new vote type
                 existing_vote.vote_type = new_vote.vote_type
+                # Track increment of new vote type to reputation
+                rep_delta[new_vote.vote_type] += 1
             existing_vote.updated_at = datetime.now(timezone.utc)
         else:
             # Create new vote
@@ -400,6 +435,12 @@ def submit_vote(new_vote: NewVote, reply_id: int, db: Session = Depends(get_db))
                 vote_type=new_vote.vote_type
             )
             db.add(vote)
+            # Track increment of new vote type to reputation
+            rep_delta[new_vote.vote_type] += 1
+
+        # Update reputation according to rep_delta
+        reputation.upvotes_received += rep_delta.get(1) # pyright: ignore
+        reputation.downvotes_received += rep_delta.get(-1) # pyright: ignore
 
         db.commit()
 
