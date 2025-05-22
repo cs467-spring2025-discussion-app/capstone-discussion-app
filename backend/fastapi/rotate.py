@@ -8,7 +8,7 @@ from tables import DiscussionTopics
 
 def rotate_topics(db: Session, count: int = 5):
     """
-    This function rotates the daily topics by deactivating all topics and activating 5 
+    This function rotates the daily topics by deactivating all topics and activating 5
     new ones that have never been used
     """
 
@@ -16,18 +16,28 @@ def rotate_topics(db: Session, count: int = 5):
     db.query(DiscussionTopics).update({DiscussionTopics.is_active: False})
 
     # Get topics that haven't been activated and randomly select 5
-    new_topics = db.query(DiscussionTopics).filter(DiscussionTopics.activated_at == None)\
-        .order_by(func.random()).limit(count).all()
-    
-    # if there aren't at least 5 new topics, then we can recycle 
+    new_topics = (
+        db.query(DiscussionTopics)
+        .filter(DiscussionTopics.activated_at == None)
+        .order_by(func.random())
+        .limit(count)
+        .all()
+    )
+
+    # if there aren't at least 5 new topics, then we can recycle
     if len(new_topics) < count:
         shortfall = count - len(new_topics)
         # get ids we already have so we don't duplicate
         exclude_these_ids = [i.id for i in new_topics]
 
         # query for additional topics
-        add_topics = db.query(DiscussionTopics).filter(DiscussionTopics.id.notin_(exclude_these_ids))\
-        .order_by(func.random()).limit(shortfall).all()
+        add_topics = (
+            db.query(DiscussionTopics)
+            .filter(DiscussionTopics.id.notin_(exclude_these_ids))
+            .order_by(func.random())
+            .limit(shortfall)
+            .all()
+        )
 
         new_topics += add_topics
 
@@ -41,8 +51,3 @@ def rotate_topics(db: Session, count: int = 5):
         if topic.activated_at is None:
             topic.activated_at = datetime.now(timezone.utc)
     db.commit()
-
-    
-
-    
-
