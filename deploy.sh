@@ -31,7 +31,7 @@ gcloud run deploy fastapi-service \
   --allow-unauthenticated
 
 # commands to deploy frontend
-echo "🎨 Deploying FRONTEND service..."
+echo "Deploying FRONTEND service..."
 
 # creates frontend Docker build and pushes to artifact registry
 docker buildx build \
@@ -49,7 +49,7 @@ gcloud run deploy frontend-app \
   --set-env-vars="VITE_FASTAPI_URL=https://fastapi-service-182441842390.$REGION.run.app,VITE_AUTH_API_URL=https://go-auth-service-182441842390.$REGION.run.app"
 
 # commands to deploy auth
-echo "🔐 Deploying AUTH service..."
+echo "Deploying AUTH service..."
 
 # creates auth docker and pushes to artifact registry
 docker buildx build \
