@@ -3,7 +3,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
 from datetime import datetime, timezone
-from tables import DiscussionTopics, Replies
+from tables import DiscussionTopics, Replies, Votes
 
 
 def rotate_topics(db: Session, count: int = 5):
@@ -16,6 +16,9 @@ def rotate_topics(db: Session, count: int = 5):
     # deactivate all topics
     db.query(DiscussionTopics).update({DiscussionTopics.is_active: False})
 
+    # Empty `votes` table
+    db.query(Votes).delete()
+    
     # Empty `replies` table
     db.query(Replies).delete()
 
