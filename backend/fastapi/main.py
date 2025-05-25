@@ -6,6 +6,12 @@ from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import (
     CORSMiddleware,  # for the app.add_middleware function below
 )
+from fastapi_cache import FastAPICache
+from fastapi_cache.decorator import cache
+from fastapi_cache.backends.redis import RedisBackend
+from redis.asyncio import Redis
+
+
 from models import (
     NewReply,
     NewTopic,
@@ -40,6 +46,12 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+
+# use this to initialize the cache used for serving up daily topics
+@app.on_event("startup")
+async def startup():
+    redis = Redis.from_url(os.getenv("REDIS_URL"), encoding="utf8", decode_responses=True)
+    FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache")
 
 def get_allowed_origins():
     """
@@ -106,6 +118,7 @@ def submit_topic(new_topic: NewTopic, db: Session = Depends(get_db)):
 
 
 @app.get("/topics/get_daily_topics", response_model=TopicList)
+@cache(expire=86200)        # expire the cache just before the 24 hr mark
 # Get the five topics of the day
 def get_daily_topics(db: Session = Depends(get_db)):
     try:
@@ -495,6 +508,10 @@ def get_user_reputation(user: User, db: Session = Depends(get_db)):
 @app.put("/topics/rotate")
 def rotate_active_topics(db: Session = Depends(get_db)):
     rotate_topics(db, 5)
+
+    # call the daily topics method to load the cache
+    get_daily_topics(db)
+
     return {"message": "Operation successful"}
 
 

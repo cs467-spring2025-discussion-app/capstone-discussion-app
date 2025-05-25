@@ -10,6 +10,7 @@ REGION="us-west2"
 REPO="quickstart-docker-repo"
 SQL_INSTANCE="$PROJECT_ID:$REGION:capstone-db"
 SERVICE_ACCOUNT="cloud-run-sa@$PROJECT_ID.iam.gserviceaccount.com"
+REDIS_URL=redis://default:AXRzAAIjcDE3ZGI2YmViMjMxNGQ0MGE0OGQyYTU5MGZhZjY0MTFiOXAxMA@dashing-gibbon-29811.upstash.io:6379
 
 # commands to deploy the fastapi service
 echo " Deploying FASTAPI service..."
@@ -27,7 +28,7 @@ gcloud run deploy fastapi-service \
   --region=$REGION \
   --add-cloudsql-instances=$SQL_INSTANCE \
   --service-account=$SERVICE_ACCOUNT \
-  --set-env-vars="DATABASE_URL=postgresql://postgres:alessandroleatherman@/capstone?host=/cloudsql/$SQL_INSTANCE,DISCUSSION_APP_SESSION_KEY=testsessionkey123456,CORS_ALLOWED_ORIGINS=https://frontend-app-182441842390.$REGION.run.app" \
+  --set-env-vars="DATABASE_URL=postgresql://postgres:alessandroleatherman@/capstone?host=/cloudsql/$SQL_INSTANCE,DISCUSSION_APP_SESSION_KEY=testsessionkey123456,CORS_ALLOWED_ORIGINS=https://frontend-app-182441842390.$REGION.run.app,REDIS_URL=$REDIS_URL" \
   --allow-unauthenticated
 
 # commands to deploy frontend
