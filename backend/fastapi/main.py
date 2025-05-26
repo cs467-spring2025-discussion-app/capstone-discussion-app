@@ -512,7 +512,7 @@ if __name__ == "__main__":
 ################################################################################
 
 @app.post("/replies/flag_reply/{reply_id}")
-def flag_reply(reply_id: int, flag: NewFlag, db: Session = Depends(getdb)):
+def flag_reply(reply_id: int, flag: NewFlag, db: Session = Depends(get_db)):
     try:
 
         # find the reply
