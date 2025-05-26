@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import CommentFlair from "@/components/CommentFlair";
 import { useUser } from "@/hooks/useUser";
-import { SubmitVote, GetVoteCounts, FlagComment } from "@/api/fastapi";
+import { SubmitVote, GetVoteCounts, FlagReply } from "@/api/fastapi";
 
 /**
  * Calculate the time elapsed since a given time

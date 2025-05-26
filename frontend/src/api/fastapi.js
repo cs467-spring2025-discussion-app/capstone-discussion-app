@@ -165,8 +165,8 @@ export async function GetVoteCounts(replyId) {
  * @returns {Promise<Object>} Response data
  * @throws {Error} On submission failure
  */
-export async function FlagReply(replyID, userID, reason) {
-  const response = await fetch (`/fastapi/flags/submit_flag/${replyId}`, {
+export async function FlagReply(replyId, userId, reason) {
+  const resp = await fetch (`/fastapi/replies/flag_reply/${replyId}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -177,7 +177,7 @@ export async function FlagReply(replyID, userID, reason) {
   if (!resp.ok) {
     const errorData = await resp.json();
     throw new Error(
-      errorData.error || `flags/submit_flag/${replyId} failed`,
+      errorData.error || `flag_reply/${replyId} failed`,
     );
   }
 
