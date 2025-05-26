@@ -156,3 +156,30 @@ export async function GetVoteCounts(replyId) {
 
   return await resp.json();
 }
+
+/**
+ * Flag a post
+ * @param {number} replyId - id of the post being flagged
+ * @param {number} userId - id of the user submitting the flag
+ * @param {string} reason - reason for the flagging
+ * @returns {Promise<Object>} Response data
+ * @throws {Error} On submission failure
+ */
+export async function FlagReply(replyID, userID, reason) {
+  const response = await fetch (`/fastapi/flags/submit_flag/${replyId}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ user_id: userId, reason }),
+  });
+
+  if (!resp.ok) {
+    const errorData = await resp.json();
+    throw new Error(
+      errorData.error || `flags/submit_flag/${replyId} failed`,
+    );
+  }
+
+  return await resp.json();
+}

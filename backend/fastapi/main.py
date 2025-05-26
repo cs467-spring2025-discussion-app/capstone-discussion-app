@@ -15,6 +15,7 @@ from models import (
     Topic,
     TopicList,
     User,
+    NewFlag
 )
 from rotate import rotate_topics
 from sqlalchemy import create_engine, func, select, text
@@ -27,6 +28,7 @@ from tables import (
     UserBadges,
     UserReputation,
     Votes,
+    FlaggedReplies
 )
 
 DATABASE_URL = os.getenv("DATABASE_URL")
@@ -504,3 +506,29 @@ if __name__ == "__main__":
     # use default port unless set in a variable (example: during GCP deployment)
     port = int(os.environ.get("PORT", 8080))
     uvicorn.run("main:app", host="0.0.0.0", port=port)
+
+################################################################################
+# Flagging Replies
+################################################################################
+
+@app.post("/replies/flag_reply/{reply_id}")
+def flag_reply(reply_id: int, flag: NewFlag, db: Session = Depends(getdb)):
+    try:
+
+        # find the reply
+        reply = db.query(Replies).filter_by(id=reply_id).first()
+        if not reply:
+            raise HTTPException(status_code=404, detail="Reply not found")
+        
+        # create flagged reply entry
+        flagged = FlaggedReplies(
+            reply_id=reply_id,
+            user_id=flag.user_id,
+            reason=flag.reason,
+        )
+        db.add(flagged)
+        db.commit()
+        return {"message": "Reply flagged for review"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+        
