@@ -104,12 +104,3 @@ class VoteList(BaseModel):
 class NewFlag(BaseModel):
     user_id: UUID
     reason: str
-
-class Flag(BaseModel):
-    model_config: ConfigDict(from_attributes=True)
-
-    id: int
-    reply_id: int
-    user_id: int
-    reason: Optional[str] = None
-    flagged_at: datetime
