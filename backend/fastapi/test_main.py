@@ -91,6 +91,24 @@ class TestDiscussionTopics:
         assert content.title == f"updated {title}"
         assert content.prompt == f"updated {prompt}"
 
+    def test_delete_topic(self, client):
+        """
+        Deleting a topic with a valid id returns 200 response with JSON of
+        topic data. Topic should no longer be in the database.
+        """
+        topic_id = 1
+        title, prompt = f"topic {topic_id}", f"prompt {topic_id}"
+        # Submit initial topic title and prompt
+        helper_submit_topic(client, title, prompt)
+        # Delete topic
+        response = helper_delete_topic(client, topic_id)
+        assert response.status_code == 200
+        assert response.json() == {
+            "message": f"Topic with ID {topic_id} deleted successfully."
+        }
+        # Check for deleted content in db via endpoint
+        response = helper_get_topic(client, topic_id)
+        assert response.status_code == 500
 
 def helper_submit_topic(client, title, prompt):
     return client.post(
@@ -112,4 +130,10 @@ def helper_update_topic(client, id, title, prompt):
             "title": title,
             "prompt": prompt,
         },
+    )
+
+
+def helper_delete_topic(client, id):
+    return client.delete(
+        f"/topics/delete_topic/{id}",
     )
