@@ -34,32 +34,62 @@ class TestDiscussionTopics:
         returns 200 response with JSON.
         """
 
-        for id in range(1, 10):
-            title, prompt = f"topic {id}", f"prompt {id}"
+        for topic_id in range(1, 10):
+            title, prompt = f"topic {topic_id}", f"prompt {topic_id}"
             response = helper_submit_topic(client, title, prompt)
 
             # Expect Status OK with properly formatted request
             assert response.status_code == 200
             assert response.json() == {
                 "message": "Topic submitted successfully.",
-                "id": id,
+                "id": topic_id,
             }
 
             # Expect topic row with id i in the database
-            topic = db_session.query(DiscussionTopics).filter_by(id=id).first()
+            topic = db_session.query(DiscussionTopics).filter_by(id=topic_id).first()
             assert topic.title == title
             assert topic.prompt == prompt
 
     def test_get_topic(self, client):
-        for id in range(1, 10):
-            title, prompt = f"topic {id}", f"prompt {id}"
+        """
+        Requesting a topic with a valid id returns 200 response with JSON of
+        topic data.
+        """
+        for topic_id in range(1, 10):
+            title, prompt = f"topic {topic_id}", f"prompt {topic_id}"
             helper_submit_topic(client, title, prompt)
-            response = helper_get_topic(client, id)
+            response = helper_get_topic(client, topic_id)
             content = Topic.model_validate_json(response.content)
             assert response.status_code == 200
-            assert content.id == id
+            assert content.id == topic_id
             assert content.title == title
             assert content.prompt == prompt
+
+    def test_update_topic(self, client):
+        """
+        Updating a topic with a valid id returns 200 response with JSON of
+        topic data. Topic content should be updated in the database.
+        """
+        topic_id = 1
+        title, prompt = f"topic {topic_id}", f"prompt {topic_id}"
+        # Submit initial topic title and prompt
+        helper_submit_topic(client, title, prompt)
+        # Submit topic updates
+        response = helper_update_topic(
+            client, topic_id, f"updated {title}", f"updated {prompt}"
+        )
+        assert response.status_code == 200
+        assert response.json() == {
+            "message": f"Topic with ID {topic_id} updated successfully."
+        }
+
+        # Check for updated content in db via endpoint
+        response = helper_get_topic(client, topic_id)
+        content = Topic.model_validate_json(response.content)
+        assert response.status_code == 200
+        assert content.id == topic_id
+        assert content.title == f"updated {title}"
+        assert content.prompt == f"updated {prompt}"
 
 
 def helper_submit_topic(client, title, prompt):
@@ -72,4 +102,14 @@ def helper_submit_topic(client, title, prompt):
 def helper_get_topic(client, id):
     return client.get(
         f"/topics/get_topic/{id}",
+    )
+
+
+def helper_update_topic(client, id, title, prompt):
+    return client.put(
+        f"/topics/update_topic/{id}",
+        json={
+            "title": title,
+            "prompt": prompt,
+        },
     )
