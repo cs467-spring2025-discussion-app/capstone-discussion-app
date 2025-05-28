@@ -35,11 +35,9 @@ class TestDiscussionTopics:
         """
 
         for topic_id in range(1, 10):
-            title, prompt = f"topic {topic_id}", f"prompt {topic_id}"
+            # Submit initial topics, check for matching ids
+            title, prompt = f"submit topic {topic_id}", f"submit prompt {topic_id}"
             response = helper_submit_topic(client, title, prompt)
-
-            # Expect Status OK with properly formatted request
-            assert response.status_code == 200
             assert response.json() == {
                 "message": "Topic submitted successfully.",
                 "id": topic_id,
@@ -56,8 +54,17 @@ class TestDiscussionTopics:
         topic data.
         """
         for topic_id in range(1, 10):
-            title, prompt = f"topic {topic_id}", f"prompt {topic_id}"
-            helper_submit_topic(client, title, prompt)
+            title, prompt = f"get topic {topic_id}", f"get prompt {topic_id}"
+
+            # Submit initial topics, check for matching ids
+            response = helper_submit_topic(client, title, prompt)
+            assert response.status_code == 200
+            assert response.json() == {
+                "message": "Topic submitted successfully.",
+                "id": topic_id,
+            }
+
+            # Get new topics
             response = helper_get_topic(client, topic_id)
             content = Topic.model_validate_json(response.content)
             assert response.status_code == 200
@@ -71,9 +78,16 @@ class TestDiscussionTopics:
         topic data. Topic content should be updated in the database.
         """
         topic_id = 1
-        title, prompt = f"topic {topic_id}", f"prompt {topic_id}"
-        # Submit initial topic title and prompt
-        helper_submit_topic(client, title, prompt)
+        title, prompt = f"update topic {topic_id}", f"update prompt {topic_id}"
+
+        # Submit initial topic, check for matching ids
+        response = helper_submit_topic(client, title, prompt)
+        assert response.status_code == 200
+        assert response.json() == {
+            "message": "Topic submitted successfully.",
+            "id": topic_id,
+        }
+
         # Submit topic updates
         response = helper_update_topic(
             client, topic_id, f"updated {title}", f"updated {prompt}"
@@ -97,9 +111,16 @@ class TestDiscussionTopics:
         topic data. Topic should no longer be in the database.
         """
         topic_id = 1
-        title, prompt = f"topic {topic_id}", f"prompt {topic_id}"
-        # Submit initial topic title and prompt
-        helper_submit_topic(client, title, prompt)
+        title, prompt = f"delete topic {topic_id}", f"delete prompt {topic_id}"
+
+        # Submit initial topic, check for matching ids
+        response = helper_submit_topic(client, title, prompt)
+        assert response.status_code == 200
+        assert response.json() == {
+            "message": "Topic submitted successfully.",
+            "id": topic_id,
+        }
+
         # Delete topic
         response = helper_delete_topic(client, topic_id)
         assert response.status_code == 200
@@ -109,6 +130,7 @@ class TestDiscussionTopics:
         # Check for deleted content in db via endpoint
         response = helper_get_topic(client, topic_id)
         assert response.status_code == 500
+
 
 def helper_submit_topic(client, title, prompt):
     return client.post(
