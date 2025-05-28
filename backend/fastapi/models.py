@@ -96,3 +96,12 @@ class VoteList(BaseModel):
 
     votes: list[Vote]
     total_count: int
+
+
+################################################################################
+# HTTP Response Models
+################################################################################
+
+class MessageIdResponse(BaseModel):
+    id: int
+    message: str

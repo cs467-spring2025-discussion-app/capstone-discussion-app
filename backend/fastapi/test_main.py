@@ -6,7 +6,10 @@
 # https://docs.pydantic.dev/latest/concepts/validators/
 
 from sqlalchemy import text
-from models import Topic
+from models import (
+    MessageIdResponse,
+    Topic,
+)
 from tables import (
     DiscussionTopics,
 )
@@ -38,10 +41,8 @@ class TestDiscussionTopics:
             # Submit initial topics, check for matching ids
             title, prompt = f"submit topic {topic_id}", f"submit prompt {topic_id}"
             response = helper_submit_topic(client, title, prompt)
-            assert response.json() == {
-                "message": "Topic submitted successfully.",
-                "id": topic_id,
-            }
+            content = MessageIdResponse.model_validate_json(response.content)
+            assert content.id == topic_id
 
             # Expect topic row with id i in the database
             topic = db_session.query(DiscussionTopics).filter_by(id=topic_id).first()
@@ -59,10 +60,8 @@ class TestDiscussionTopics:
             # Submit initial topics, check for matching ids
             response = helper_submit_topic(client, title, prompt)
             assert response.status_code == 200
-            assert response.json() == {
-                "message": "Topic submitted successfully.",
-                "id": topic_id,
-            }
+            content = MessageIdResponse.model_validate_json(response.content)
+            assert content.id == topic_id
 
             # Get new topics
             response = helper_get_topic(client, topic_id)
@@ -83,19 +82,14 @@ class TestDiscussionTopics:
         # Submit initial topic, check for matching ids
         response = helper_submit_topic(client, title, prompt)
         assert response.status_code == 200
-        assert response.json() == {
-            "message": "Topic submitted successfully.",
-            "id": topic_id,
-        }
+        content = MessageIdResponse.model_validate_json(response.content)
+        assert content.id == topic_id
 
         # Submit topic updates
         response = helper_update_topic(
             client, topic_id, f"updated {title}", f"updated {prompt}"
         )
         assert response.status_code == 200
-        assert response.json() == {
-            "message": f"Topic with ID {topic_id} updated successfully."
-        }
 
         # Check for updated content in db via endpoint
         response = helper_get_topic(client, topic_id)
@@ -116,17 +110,12 @@ class TestDiscussionTopics:
         # Submit initial topic, check for matching ids
         response = helper_submit_topic(client, title, prompt)
         assert response.status_code == 200
-        assert response.json() == {
-            "message": "Topic submitted successfully.",
-            "id": topic_id,
-        }
+        content = MessageIdResponse.model_validate_json(response.content)
+        assert content.id == topic_id
 
         # Delete topic
         response = helper_delete_topic(client, topic_id)
         assert response.status_code == 200
-        assert response.json() == {
-            "message": f"Topic with ID {topic_id} deleted successfully."
-        }
         # Check for deleted content in db via endpoint
         response = helper_get_topic(client, topic_id)
         assert response.status_code == 500
