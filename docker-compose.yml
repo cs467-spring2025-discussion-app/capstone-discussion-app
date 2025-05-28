@@ -1,7 +1,5 @@
----
-
 x-database-url: &db_url "postgresql://${POSTGRES_USER:-postgres_capstone_app}:${POSTGRES_PASSWORD:-capstone_app_password}@db:5432/${POSTGRES_DB:-capstone_app}"
-
+x-test-database-url: &test_db_url "postgresql://fastapi_test:fastapi_test@fastapi_test:5432/fastapi_test"
 services:
   react_app:
     build:
@@ -33,6 +31,7 @@ services:
         condition: service_healthy
     environment:
       DATABASE_URL: *db_url
+      TEST_DB_URL: *test_db_url
       CORS_ALLOWED_ORIGINS: "http://localhost:5173,http://localhost:4173"
     restart: always
     networks:
@@ -76,8 +75,32 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+  test_db:
+    image: postgres:15
+    container_name: test_db
+    restart: always
+    environment:
+      POSTGRES_USER: fastapi_test
+      POSTGRES_PASSWORD: fastapi_test
+      POSTGRES_DB: fastapi_test
+    volumes:
+      - test_postgres_data:/var/lib/postgresql/data
+      - ./testdb/init:/docker-entrypoint-initdb.d
+    networks:
+      - app_network
+    ports:
+      - "5433:5432"  # Using different port to avoid app db conflict
+    healthcheck:
+      test:
+        - "CMD-SHELL"
+        - "pg_isready -U fastapi_test -d fastapi_test"
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 networks:
   app_network:
     driver: bridge
 volumes:
   postgres_data:
+  test_postgres_data:
