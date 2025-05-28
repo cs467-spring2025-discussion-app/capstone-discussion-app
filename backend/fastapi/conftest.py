@@ -46,6 +46,29 @@ def db_session():
         session.close()
 
 
+@pytest.fixture(scope="function", autouse=True)
+def clean_db():
+    """Empty tables and reset ids between tests"""
+    engine = create_engine(TEST_DB_URL)
+
+    yield
+
+    with engine.begin() as conn:
+        conn.execute(
+            text("""
+            truncate table
+                votes,
+                user_badges,
+                user_reputation,
+                replies,
+                discussion_topics
+            restart identity cascade
+        """)
+        )
+
+    engine.dispose()
+
+
 @pytest.fixture(scope="function")
 def client():
     with TestClient(app) as test_client:
