@@ -7,8 +7,13 @@
 # https://docs.pytest.org/en/7.1.x/how-to/fixtures.html
 
 import uuid  # usage note: auth service uses v4
+from typing import List
 
 import pytest
+from fastapi.testclient import TestClient
+from httpx import Response
+from sqlalchemy.engine import Row
+from sqlalchemy.orm import Session
 from models import (
     MessageIdResponse,
     Topic,
@@ -25,31 +30,31 @@ class TestFastApi:
     Test database setup sanity checks
     """
 
-    def test_database_connection(self, db_session):
+    def test_database_connection(self, db_session: Session) -> None:
         result = db_session.execute(text("SELECT 1")).scalar()
         assert result == 1
 
-    def test_home(self, client):
+    def test_home(self, client: TestClient) -> None:
         response = client.get("/")
         assert response.status_code == 200
         assert response.json() == {"message": "Hello from PostgreSQL!"}
 
 
 class TestDiscussionTopics:
-    def test_submit_topic(self, db_session, fixture_topics):
+    def test_submit_topic(self, db_session: Session, fixture_topics: List[MessageIdResponse]) -> None:
         """
         Submitting a new topic successfully creates a topic in the database,
         returns 200 response with JSON.
         """
         topics = fixture_topics
         for topic_id, _ in enumerate(topics, start=1):
-            # Check that topic actually exists in database
             topic = db_session.query(DiscussionTopics).filter_by(id=topic_id).first()
+            assert topic is not None
             assert topic.id == topic_id
             assert topic.title == f"test topic {topic_id}"
             assert topic.prompt == f"test prompt {topic_id}"
 
-    def test_get_topic(self, client, fixture_topics):
+    def test_get_topic(self, client: TestClient, fixture_topics: List[MessageIdResponse]) -> None:
         """
         Requesting a topic with a valid id returns 200 response with JSON of
         topic data.
@@ -57,13 +62,13 @@ class TestDiscussionTopics:
         topics = fixture_topics
         for _, topic in enumerate(topics, start=1):
             response = helper_get_topic(client, topic.id)
-            content = Topic.model_validate_json(response.content)
+            content = Topic.model_validate(response.json())
             assert response.status_code == 200
             assert content.id == topic.id
             assert content.title == f"test topic {topic.id}"
             assert content.prompt == f"test prompt {topic.id}"
 
-    def test_update_topic(self, client, fixture_topic):
+    def test_update_topic(self, client: TestClient, fixture_topic: MessageIdResponse) -> None:
         """
         Updating a topic with a valid id returns 200 response with JSON of
         topic data. Topic content should be updated in the database.
@@ -77,19 +82,22 @@ class TestDiscussionTopics:
 
         # Submit topic updates
         response = helper_update_topic(
-            client, topic_id, new_title, new_prompt,
+            client,
+            topic_id,
+            new_title,
+            new_prompt,
         )
         assert response.status_code == 200
 
         # Check for updated content in db via endpoint
         response = helper_get_topic(client, topic_id)
-        content = Topic.model_validate_json(response.content)
+        content = Topic.model_validate(response.json())
         assert response.status_code == 200
         assert content.id == topic_id
         assert content.title == new_title
         assert content.prompt == new_prompt
 
-    def test_delete_topic(self, client, fixture_topic):
+    def test_delete_topic(self, client: TestClient, fixture_topic: MessageIdResponse) -> None:
         """
         Deleting a topic with a valid id returns 200 response with JSON of
         topic data. Topic should no longer be in the database.
@@ -114,16 +122,16 @@ class TestDiscussionTopics:
 
 
 @pytest.fixture
-def fixture_topic(client):
-    """Create a user for testing user endpoints"""
+def fixture_topic(client: TestClient) -> MessageIdResponse:
+    """Create a topic for testing topic endpoints"""
     response = helper_submit_topic(client, "test topic", "test prompt")
     assert response.status_code == 200
-    return MessageIdResponse.model_validate_json(response.content)
+    return MessageIdResponse.model_validate(response.json())
 
 
 @pytest.fixture
-def fixture_topics(db_session, client):
-    """Create a list of users for testing user endpoints"""
+def fixture_topics(client: TestClient) -> List[MessageIdResponse]:
+    """Create a list of topics for testing topic endpoints"""
     topics = []
     for topic_id in range(1, 10):
         response = helper_submit_topic(
@@ -132,26 +140,26 @@ def fixture_topics(db_session, client):
             f"test prompt {topic_id}",
         )
         assert response.status_code == 200
-        content = MessageIdResponse.model_validate_json(response.content)
+        content = MessageIdResponse.model_validate(response.json())
         assert content.id == topic_id
         topics.append(content)
     return topics
 
 
-def helper_submit_topic(client, title, prompt):
+def helper_submit_topic(client: TestClient, title: str, prompt: str) -> Response:
     return client.post(
         "/topics/submit_topic",
         json={"title": title, "prompt": prompt},
     )
 
 
-def helper_get_topic(client, id):
+def helper_get_topic(client: TestClient, id: int) -> Response:
     return client.get(
         f"/topics/get_topic/{id}",
     )
 
 
-def helper_update_topic(client, id, title, prompt):
+def helper_update_topic(client: TestClient, id: int, title: str, prompt: str) -> Response:
     return client.put(
         f"/topics/update_topic/{id}",
         json={
@@ -161,20 +169,18 @@ def helper_update_topic(client, id, title, prompt):
     )
 
 
-def helper_delete_topic(client, id):
+def helper_delete_topic(client: TestClient, id: int) -> Response:
     return client.delete(
         f"/topics/delete_topic/{id}",
     )
 
 
 class TestReplies:
-    def test_submit_reply(self, db_session, fixture_replies):
-        # Register user for a valid user id, submit topic for valid topic id
-        # (note, can't use fixture in a loop)
+    def test_submit_reply(self, db_session: Session, fixture_replies: List[MessageIdResponse]) -> None:
         replies = fixture_replies
         for reply_id, _ in enumerate(replies, start=1):
-            # Check that reply actually exists in database
             reply = db_session.query(Replies).filter_by(id=reply_id).first()
+            assert reply is not None
             assert reply.id == reply_id
             assert reply.content == f"test content {reply_id}"
 
@@ -185,11 +191,11 @@ class TestReplies:
 
 
 @pytest.fixture
-def fixture_replies(db_session, client):
+def fixture_replies(db_session: Session, client: TestClient) -> List[MessageIdResponse]:
     """Create a user and topic for testing reply end points"""
     user = helper_register_user(db_session, uuid.uuid4(), "test user", "test password")
     response = helper_submit_topic(client, "test topic", "test prompt")
-    topic = MessageIdResponse.model_validate_json(response.content)
+    topic = MessageIdResponse.model_validate(response.json())
     replies = []
     for reply_id in range(1, 10):
         content = f"test content {reply_id}"
@@ -200,20 +206,20 @@ def fixture_replies(db_session, client):
             content,
         )
         assert response.status_code == 200
-        content = MessageIdResponse.model_validate_json(response.content)
-        assert content.id == reply_id
-        replies.append(content)
+        reply_response = MessageIdResponse.model_validate(response.json())
+        assert reply_response.id == reply_id
+        replies.append(reply_response)
     return replies
 
 
-def helper_submit_reply(client, user_id, topic_id, content):
+def helper_submit_reply(client: TestClient, user_id: str, topic_id: int, content: str) -> Response:
     return client.post(
         f"/replies/submit_reply/{topic_id}",
         json={"user_id": user_id, "content": content},
     )
 
 
-def helper_register_user(db_session, id, email, password):
+def helper_register_user(db_session: Session, id: uuid.UUID, email: str, password: str) -> Row:
     """Register a user in order to get a valid user ID for making replies and
     votes"""
     data = {"id": id, "email": email, "password": password}
@@ -229,6 +235,7 @@ def helper_register_user(db_session, id, email, password):
         select id from users where id = :id
     """)
     result = db_session.execute(statement, data).first()
+    assert result is not None
     user_id = result.id
     assert isinstance(user_id, uuid.UUID)
     return result
