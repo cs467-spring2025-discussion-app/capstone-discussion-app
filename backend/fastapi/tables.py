@@ -153,6 +153,7 @@ class Votes(Base):
         Index("idx_votes_user_id", "user_id"),
     )
 
+
 class FlaggedReplies(Base):
     __tablename__ = "flagged_replies"
 

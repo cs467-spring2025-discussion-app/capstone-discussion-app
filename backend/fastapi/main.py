@@ -43,6 +43,7 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
+
 def get_allowed_origins():
     """
     Get CORS allowed origins from an environment variable
@@ -60,7 +61,7 @@ def get_allowed_origins():
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins= get_allowed_origins(),
+    allow_origins=get_allowed_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -335,15 +336,15 @@ def delete_reply(reply_id: int, db: Session = Depends(get_db)):
 def get_reply_counts_by_topic(db: Session = Depends(get_db)):
     try:
         results = (
-        db.query(Replies.discussion_id, func.count(Replies.id).label("reply_count"))
-        .group_by(Replies.discussion_id)
-        .all()
+            db.query(Replies.discussion_id, func.count(Replies.id).label("reply_count"))
+            .group_by(Replies.discussion_id)
+            .all()
         )
         return {
             "replies_counts": [
                 {"discussion_id": r.discussion_id, "reply_count": r.reply_count}
                 for r in results
-             ]
+            ]
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error getting replies: {e}")
@@ -362,7 +363,7 @@ def get_user_badges(user: User, db: Session = Depends(get_db)):
         badges: list[dict[str, str]] = []
         for badge in results:
             if badge_info := (
-                db.query(Badges).filter_by(id=badge.badge_id).first()
+                    db.query(Badges).filter_by(id=badge.badge_id).first()
             ):
                 badges.append(badge_info)
         return {
@@ -392,6 +393,7 @@ def get_user_reputation_helper(user_id: str, db: Session) -> UserReputation:
         )
         db.add(reputation)
     return reputation
+
 
 @app.post("/votes/submit_vote/{reply_id}")
 # Submit a vote for a reply
@@ -441,8 +443,8 @@ def submit_vote(new_vote: NewVote, reply_id: int, db: Session = Depends(get_db))
             rep_delta[new_vote.vote_type] += 1
 
         # Update reputation according to rep_delta
-        reputation.upvotes_received += rep_delta.get(1) # pyright: ignore
-        reputation.downvotes_received += rep_delta.get(-1) # pyright: ignore
+        reputation.upvotes_received += rep_delta.get(1)  # pyright: ignore
+        reputation.downvotes_received += rep_delta.get(-1)  # pyright: ignore
 
         db.commit()
 
@@ -473,9 +475,12 @@ def get_vote_counts(reply_id: int, db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 ################################################################################
 # Reputation
 ################################################################################
+
+
 @app.post("/reputation/user")
 def get_user_reputation(user: User, db: Session = Depends(get_db)):
     """
@@ -507,9 +512,11 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
     uvicorn.run("main:app", host="0.0.0.0", port=port)
 
+
 ################################################################################
 # Flagging Replies
 ################################################################################
+
 
 @app.post("/replies/flag_reply/{reply_id}")
 def flag_reply(reply_id: int, flag: NewFlag, db: Session = Depends(get_db)):
@@ -519,7 +526,7 @@ def flag_reply(reply_id: int, flag: NewFlag, db: Session = Depends(get_db)):
         reply = db.query(Replies).filter_by(id=reply_id).first()
         if not reply:
             raise HTTPException(status_code=404, detail="Reply not found")
-        
+
         # create flagged reply entry
         flagged = FlaggedReplies(
             reply_id=reply_id,
@@ -531,4 +538,3 @@ def flag_reply(reply_id: int, flag: NewFlag, db: Session = Depends(get_db)):
         return {"message": "Reply flagged for review"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-        
