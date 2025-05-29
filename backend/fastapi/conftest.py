@@ -57,6 +57,7 @@ def clean_db():
         conn.execute(
             text("""
             truncate table
+                users,
                 votes,
                 user_badges,
                 user_reputation,

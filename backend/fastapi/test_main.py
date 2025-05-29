@@ -16,6 +16,7 @@ from sqlalchemy.engine import Row
 from sqlalchemy.orm import Session
 from models import (
     MessageIdResponse,
+    Reply,
     Topic,
 )
 from sqlalchemy import text
@@ -184,6 +185,16 @@ class TestReplies:
             assert reply.id == reply_id
             assert reply.content == f"test content {reply_id}"
 
+    def test_get_reply(self, client, fixture_replies):
+        replies = fixture_replies
+        for reply_id, _ in enumerate(replies, start=1):
+            response = helper_get_reply(client, reply_id)
+            content = Reply.model_validate(response.json())
+            assert response.status_code == 200
+            assert content.id == reply_id
+            assert content.content == f"test content {reply_id}"
+
+
 
 ################################################################################
 # Reply helpers
@@ -216,6 +227,11 @@ def helper_submit_reply(client: TestClient, user_id: str, topic_id: int, content
     return client.post(
         f"/replies/submit_reply/{topic_id}",
         json={"user_id": user_id, "content": content},
+    )
+
+def helper_get_reply(client: TestClient, reply_id: int) -> Response:
+    return client.get(
+        f"/replies/get_reply/{reply_id}",
     )
 
 
