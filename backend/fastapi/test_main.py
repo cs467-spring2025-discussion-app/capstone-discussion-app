@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session
 from models import (
     MessageIdResponse,
     Reply,
+    ReplyList,
     Topic,
 )
 from sqlalchemy import text
@@ -42,7 +43,9 @@ class TestFastApi:
 
 
 class TestDiscussionTopics:
-    def test_submit_topic(self, db_session: Session, fixture_topics: List[MessageIdResponse]) -> None:
+    def test_submit_topic(
+        self, db_session: Session, fixture_topics: List[MessageIdResponse]
+    ) -> None:
         """
         Submitting a new topic successfully creates a topic in the database,
         returns 200 response with JSON.
@@ -55,7 +58,9 @@ class TestDiscussionTopics:
             assert topic.title == f"test topic {topic_id}"
             assert topic.prompt == f"test prompt {topic_id}"
 
-    def test_get_topic(self, client: TestClient, fixture_topics: List[MessageIdResponse]) -> None:
+    def test_get_topic(
+        self, client: TestClient, fixture_topics: List[MessageIdResponse]
+    ) -> None:
         """
         Requesting a topic with a valid id returns 200 response with JSON of
         topic data.
@@ -69,7 +74,9 @@ class TestDiscussionTopics:
             assert content.title == f"test topic {topic.id}"
             assert content.prompt == f"test prompt {topic.id}"
 
-    def test_update_topic(self, client: TestClient, fixture_topic: MessageIdResponse) -> None:
+    def test_update_topic(
+        self, client: TestClient, fixture_topic: MessageIdResponse
+    ) -> None:
         """
         Updating a topic with a valid id returns 200 response with JSON of
         topic data. Topic content should be updated in the database.
@@ -98,7 +105,9 @@ class TestDiscussionTopics:
         assert content.title == new_title
         assert content.prompt == new_prompt
 
-    def test_delete_topic(self, client: TestClient, fixture_topic: MessageIdResponse) -> None:
+    def test_delete_topic(
+        self, client: TestClient, fixture_topic: MessageIdResponse
+    ) -> None:
         """
         Deleting a topic with a valid id returns 200 response with JSON of
         topic data. Topic should no longer be in the database.
@@ -160,7 +169,9 @@ def helper_get_topic(client: TestClient, id: int) -> Response:
     )
 
 
-def helper_update_topic(client: TestClient, id: int, title: str, prompt: str) -> Response:
+def helper_update_topic(
+    client: TestClient, id: int, title: str, prompt: str
+) -> Response:
     return client.put(
         f"/topics/update_topic/{id}",
         json={
@@ -177,7 +188,9 @@ def helper_delete_topic(client: TestClient, id: int) -> Response:
 
 
 class TestReplies:
-    def test_submit_reply(self, db_session: Session, fixture_replies: List[MessageIdResponse]) -> None:
+    def test_submit_reply(
+        self, db_session: Session, fixture_replies: List[MessageIdResponse]
+    ) -> None:
         replies = fixture_replies
         for reply_id, _ in enumerate(replies, start=1):
             reply = db_session.query(Replies).filter_by(id=reply_id).first()
@@ -194,6 +207,15 @@ class TestReplies:
             assert content.id == reply_id
             assert content.content == f"test content {reply_id}"
 
+    def test_get_all_replies(self, client, fixture_replies):
+        replies = fixture_replies
+        response = helper_get_all_replies(client, 1)
+        content = ReplyList.model_validate(response.json())
+        assert response.status_code == 200
+        assert content.total_count == len(replies)
+        for id, reply in enumerate(content.replies):
+            assert reply.id == replies[id].id
+            assert reply.content == f"test content {replies[id].id}"
 
 
 ################################################################################
@@ -223,11 +245,14 @@ def fixture_replies(db_session: Session, client: TestClient) -> List[MessageIdRe
     return replies
 
 
-def helper_submit_reply(client: TestClient, user_id: str, topic_id: int, content: str) -> Response:
+def helper_submit_reply(
+    client: TestClient, user_id: str, topic_id: int, content: str
+) -> Response:
     return client.post(
         f"/replies/submit_reply/{topic_id}",
         json={"user_id": user_id, "content": content},
     )
+
 
 def helper_get_reply(client: TestClient, reply_id: int) -> Response:
     return client.get(
@@ -235,7 +260,13 @@ def helper_get_reply(client: TestClient, reply_id: int) -> Response:
     )
 
 
-def helper_register_user(db_session: Session, id: uuid.UUID, email: str, password: str) -> Row:
+def helper_get_all_replies(client: TestClient, discussion_id: int) -> Response:
+    return client.get(f"/replies/get_all_replies/{discussion_id}")
+
+
+def helper_register_user(
+    db_session: Session, id: uuid.UUID, email: str, password: str
+) -> Row:
     """Register a user in order to get a valid user ID for making replies and
     votes"""
     data = {"id": id, "email": email, "password": password}
