@@ -103,3 +103,12 @@ class VoteList(BaseModel):
 class NewFlag(BaseModel):
     user_id: UUID
     reason: str
+
+
+################################################################################
+# HTTP Response Models
+################################################################################
+
+class MessageIdResponse(BaseModel):
+    id: int
+    message: str
