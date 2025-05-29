@@ -362,8 +362,8 @@ watchrep email:
 
 # Stop the app_db service and delete the database volume
 [group('docker')]
-empty:
-    docker compose down -v {{ db_volume }}
+empty volume:
+    docker compose down -v {{ volume }}
 
 # Rebuild services from scratch and start
 [group('docker')]

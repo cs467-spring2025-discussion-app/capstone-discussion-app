@@ -35,7 +35,13 @@ from tables import (
     Votes,
 )
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+TEST_DB_URL = (
+    os.getenv("TEST_DB_URL")
+    or "postgresql://fastapi_test:fastapi_test@localhost:5433/fastapi_test"  # Use localhost:5433
+)
+
+DATABASE_URL = os.getenv("DATABASE_URL") or TEST_DB_URL
+
 if not DATABASE_URL:
     raise ValueError("DATABASE_URL environment variable is not set.")
 
