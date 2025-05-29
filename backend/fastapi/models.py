@@ -62,14 +62,12 @@ class ReplyList(BaseModel):
     total_count: int
 
 
-
 class User(BaseModel):
     """
     Attributes
         user_id (UUID): a user's id
     """
     user_id: UUID
-
 
 
 ################################################################################
@@ -96,6 +94,15 @@ class VoteList(BaseModel):
 
     votes: list[Vote]
     total_count: int
+
+
+################################################################################
+# Flagged Reply Models
+################################################################################
+
+class NewFlag(BaseModel):
+    user_id: UUID
+    reason: str
 
 
 ################################################################################

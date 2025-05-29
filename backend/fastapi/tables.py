@@ -152,3 +152,20 @@ class Votes(Base):
         Index("idx_votes_reply_id", "reply_id"),
         Index("idx_votes_user_id", "user_id"),
     )
+
+
+class FlaggedReplies(Base):
+    __tablename__ = "flagged_replies"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    reply_id = Column(Integer, nullable=False)
+    user_id = Column(UUID(as_uuid=True), nullable=False)
+    reason = Column(String, nullable=True)
+    flagged_at = Column(TIMESTAMP, server_default=text("CURRENT_TIMESTAMP"), nullable=False)
+
+    __tableargs__ = (
+        ForeignKeyConstraint(["reply_id"], ["replies.id"], ondelete="CASCADE"),
+        ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
+        Index("idx_flagged_replies_reply_id", "reply_id"),
+        Index("idx_flagged_replies_user_id", "user_id"),
+    )
