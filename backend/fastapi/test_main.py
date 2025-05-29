@@ -4,6 +4,7 @@
 # https://www.python-httpx.org/api/
 # https://fastapi.tiangolo.com/reference/response/
 # https://docs.pydantic.dev/latest/concepts/validators/
+# https://docs.pytest.org/en/7.1.x/how-to/fixtures.html
 
 from sqlalchemy import text
 from models import (
@@ -71,7 +72,7 @@ class TestDiscussionTopics:
             assert content.title == title
             assert content.prompt == prompt
 
-    def test_update_topic(self, client):
+    def test_update_topic(self, client, fixture_users):
         """
         Updating a topic with a valid id returns 200 response with JSON of
         topic data. Topic content should be updated in the database.
@@ -80,10 +81,8 @@ class TestDiscussionTopics:
         title, prompt = f"update topic {topic_id}", f"update prompt {topic_id}"
 
         # Submit initial topic, check for matching ids
-        response = helper_submit_topic(client, title, prompt)
-        assert response.status_code == 200
-        content = MessageIdResponse.model_validate_json(response.content)
-        assert content.id == topic_id
+        topic = fixture_users
+        assert topic.id == topic_id
 
         # Submit topic updates
         response = helper_update_topic(
@@ -99,19 +98,16 @@ class TestDiscussionTopics:
         assert content.title == f"updated {title}"
         assert content.prompt == f"updated {prompt}"
 
-    def test_delete_topic(self, client):
+    def test_delete_topic(self, client, fixture_users):
         """
         Deleting a topic with a valid id returns 200 response with JSON of
         topic data. Topic should no longer be in the database.
         """
         topic_id = 1
-        title, prompt = f"delete topic {topic_id}", f"delete prompt {topic_id}"
 
         # Submit initial topic, check for matching ids
-        response = helper_submit_topic(client, title, prompt)
-        assert response.status_code == 200
-        content = MessageIdResponse.model_validate_json(response.content)
-        assert content.id == topic_id
+        topic = fixture_users
+        assert topic.id == topic_id
 
         # Delete topic
         response = helper_delete_topic(client, topic_id)
@@ -119,6 +115,20 @@ class TestDiscussionTopics:
         # Check for deleted content in db via endpoint
         response = helper_get_topic(client, topic_id)
         assert response.status_code == 500
+
+
+
+################################################################################
+# Topic helpers
+################################################################################
+
+
+@pytest.fixture
+def fixture_users(client):
+    """Create a user and topic for testing replies"""
+    response = helper_submit_topic(client, "test topic", "test prompt")
+    assert response.status_code == 200
+    return MessageIdResponse.model_validate_json(response.content)
 
 
 def helper_submit_topic(client, title, prompt):
