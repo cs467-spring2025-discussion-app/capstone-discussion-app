@@ -8,7 +8,7 @@
 
 import uuid  # usage note: auth service uses v4
 from typing import List
-
+import json
 import pytest
 from fastapi.testclient import TestClient
 from httpx import Response
@@ -125,6 +125,28 @@ class TestDiscussionTopics:
         response = helper_get_topic(client, topic_id)
         assert response.status_code == 500
 
+    def test_get_user_reply_count_by_topic(
+        self, client: TestClient, db_session, fixture_topic
+    ):
+        topic = fixture_topic
+        # Register test user
+        user = helper_register_user(
+            db_session, uuid.uuid4(), "test user", "test password"
+        )
+
+        total_replies = 10
+        for reply_id in range(1, total_replies + 1):  # +1 for 10 total replies
+            helper_submit_reply(client, str(user.id), topic.id, f"content {reply_id}")
+
+        response = helper_get_user_reply_counts(
+            client,
+            str(user.id),
+            topic.id,
+        )
+        assert response.status_code == 200
+        content = json.loads(response.content)
+        assert content["reply_count"] == total_replies
+
 
 ################################################################################
 # Topic helpers
@@ -184,6 +206,17 @@ def helper_update_topic(
 def helper_delete_topic(client: TestClient, id: int) -> Response:
     return client.delete(
         f"/topics/delete_topic/{id}",
+    )
+
+
+def helper_get_user_reply_counts(
+    client: TestClient, user_id: str, topic_id: int
+) -> Response:
+    return client.post(
+        f"/topics/user_reply_counts/{topic_id}",
+        json={
+            "user_id": user_id,
+        },
     )
 
 
