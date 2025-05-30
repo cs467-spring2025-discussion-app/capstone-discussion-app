@@ -1,5 +1,7 @@
 x-database-url: &db_url "postgresql://${POSTGRES_USER:-postgres_capstone_app}:${POSTGRES_PASSWORD:-capstone_app_password}@db:5432/${POSTGRES_DB:-capstone_app}"
 x-test-database-url: &test_db_url "postgresql://fastapi_test:fastapi_test@fastapi_test:5432/fastapi_test"
+x-redis-url: &redis_url "redis://redis:6379"
+
 services:
   react_app:
     build:
@@ -32,6 +34,7 @@ services:
     environment:
       DATABASE_URL: *db_url
       TEST_DB_URL: *test_db_url
+      REDIS_URL: *redis_url
       CORS_ALLOWED_ORIGINS: "http://localhost:5173,http://localhost:4173"
     restart: always
     networks:
@@ -98,6 +101,14 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+  redis:
+    image: redis:7-alpine
+    container_name: redis_cache
+    ports:
+      - "6379:6379"
+    networks:
+      - app_network
+
 networks:
   app_network:
     driver: bridge
