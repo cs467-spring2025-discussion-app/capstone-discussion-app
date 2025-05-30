@@ -401,6 +401,8 @@ logs *flags:
 flogs service='':
     just logs {{ service }} -f --timestamps
 
+# Run tests for the fastapi service using the test database
+[group('docker')]
 fastapitest:
     DATABASE_URL={{ test_db_url }} docker-compose exec fastapi_app pytest -vv
 
