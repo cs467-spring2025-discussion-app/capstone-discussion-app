@@ -1,10 +1,10 @@
 import psycopg2
 
 conn = psycopg2.connect(
-    dbname="capstone",
-    user="postgres",
-    password="alessandroleatherman",
-    host="/tmp/cloudsql/capstone-457718:us-west2:capstone-db"
+    dbname="DB_NAME",
+    user="DB_USER",
+    password="DB_PASSWORD",
+    host="DB_HOST"
 )
 
 cur = conn.cursor()
