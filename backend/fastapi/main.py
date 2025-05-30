@@ -37,12 +37,7 @@ from tables import (
     FlaggedReplies
 )
 
-TEST_DB_URL = (
-    os.getenv("TEST_DB_URL")
-    or "postgresql://fastapi_test:fastapi_test@localhost:5433/fastapi_test"  # Use localhost:5433
-)
-
-DATABASE_URL = os.getenv("DATABASE_URL") or TEST_DB_URL
+DATABASE_URL = os.getenv("DATABASE_URL", "")
 
 if not DATABASE_URL:
     raise ValueError("DATABASE_URL environment variable is not set.")
@@ -58,7 +53,7 @@ app = FastAPI()
 # use this to initialize the cache used for serving up daily topics
 @app.on_event("startup")
 async def startup():
-    redis = Redis.from_url(os.getenv("REDIS_URL"), encoding="utf8", decode_responses=True)
+    redis = Redis.from_url(os.getenv("REDIS_URL", ""), encoding="utf8", decode_responses=True)
     FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache")
 
 
