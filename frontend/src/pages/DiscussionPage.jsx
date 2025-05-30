@@ -18,6 +18,7 @@ export default function DiscussionPage() {
 
   const [replyCount, setReplyCount] = useState(0);
   const [hitReplyLimit, setHitReplyLimit] = useState(false);
+  const [replyError, setReplyError] = useState("");
 
   // Check if user hit reply limit
   useEffect(() => {
@@ -79,6 +80,19 @@ export default function DiscussionPage() {
   async function handleSubmit() {
     if (!text.trim()) return;
 
+    // Check if comment contains restricted strings (url or hashtag)
+    // Early return to prevent reply submission
+    if (/https?:\/\//.test(text) || /^www\./.test(text)) {
+      setReplyError("Replies may not contain a URL");
+      return;
+    } else if (/#.+/.test(text)) {
+      setReplyError("Replies may not contain a hash tag");
+      return;
+    } else {
+      // Reset error if text contains no restrictions
+      setReplyError("");
+    }
+
     try {
       const resp = await fastapiService.SubmitReply(
         discussionId,
@@ -118,7 +132,10 @@ export default function DiscussionPage() {
             </div>
             <div className="border-t-5 border-t-purple-400 p-5 rounded-lg shadow-lg w-full max-w-5xl bg-white text-left mb-8">
               <label htmlFor={postTextAreaId} className="font-semibold">
-                Join the discussion:
+                <div className="flex justify-between">
+                  <span>Join the discussion:</span>
+                  <span className="text-red-400 font-bold">{replyError}</span>
+                </div>
                 <textarea
                   name="postContent"
                   value={text}
@@ -136,10 +153,9 @@ export default function DiscussionPage() {
                   className={`font-normal mt-5 mb-2 p-2.5 w-full
                     text-gray-900 bg-gray-50 rounded-lg border border-gray-300
                     focus:ring-blue-500 focus:border-blue-500
-                    ${
-                      !user || hitReplyLimit
-                        ? "cursor-not-allowed opacity-75"
-                        : "cursor-text"
+                    ${!user || hitReplyLimit
+                      ? "cursor-not-allowed opacity-75"
+                      : "cursor-text"
                     }`}
                   disabled={!user || hitReplyLimit} // If not logged in or user's hit reply limit, disable text box
                 />
@@ -154,10 +170,9 @@ export default function DiscussionPage() {
                 <button
                   className={`ml-2 flex bg-purple-600 
                     rounded-full px-5 py-2 font-bold text-sm text-white
-                    ${
-                      !user || hitReplyLimit
-                        ? "cursor-not-allowed opacity-75"
-                        : "hover:bg-purple-700"
+                    ${!user || hitReplyLimit
+                      ? "cursor-not-allowed opacity-75"
+                      : "hover:bg-purple-700"
                     }`}
                   onClick={handleSubmit}
                   disabled={!user || hitReplyLimit}
