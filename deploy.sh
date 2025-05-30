@@ -28,7 +28,8 @@ gcloud run deploy fastapi-service \
   --region=$REGION \
   --add-cloudsql-instances=$SQL_INSTANCE \
   --service-account=$SERVICE_ACCOUNT \
-  --set-env-vars="DATABASE_URL=postgresql://postgres:alessandroleatherman@/capstone?host=/cloudsql/$SQL_INSTANCE,DISCUSSION_APP_SESSION_KEY=testsessionkey123456,CORS_ALLOWED_ORIGINS=https://frontend-app-182441842390.$REGION.run.app,REDIS_URL=$REDIS_URL" \
+  --set-secrets="DATABASE_URL=DATABASE_URL:latest,SESSION_KEY=SESSION_KEY:latest,REDIS_URL=REDIS_URL:latest" \
+  --set-env-vars="CORS_ALLOWED_ORIGINS=https://frontend-app-182441842390.$REGION.run.app" \
   --allow-unauthenticated
 
 # commands to deploy frontend
@@ -65,7 +66,8 @@ gcloud run deploy go-auth-service \
   --region=$REGION \
   --add-cloudsql-instances=$SQL_INSTANCE \
   --service-account=$SERVICE_ACCOUNT \
-  --set-env-vars="DATABASE_URL=postgresql://postgres:alessandroleatherman@/capstone?host=/cloudsql/$SQL_INSTANCE,DISCUSSION_APP_SESSION_KEY=testsessionkey123456,CORS_ALLOWED_ORIGINS=https://frontend-app-182441842390.$REGION.run.app" \
+  --set-secrets="DATABASE_URL=DATABASE_URL:latest,SESSION_KEY=SESSION_KEY:latest" \
+  --set-env-vars="CORS_ALLOWED_ORIGINS=https://frontend-app-182441842390.$REGION.run.app" \
   --allow-unauthenticated
 
 echo "All services deployed"
