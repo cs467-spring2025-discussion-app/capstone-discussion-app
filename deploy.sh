@@ -66,7 +66,7 @@ gcloud run deploy go-auth-service \
   --region=$REGION \
   --add-cloudsql-instances=$SQL_INSTANCE \
   --service-account=$SERVICE_ACCOUNT \
-  --set-secrets="DATABASE_URL=DATABASE_URL:latest,SESSION_KEY=SESSION_KEY:latest" \
+  --set-secrets="DATABASE_URL=DATABASE_URL:latest,DISCUSSION_APP_SESSION_KEY=SESSION_KEY:latest" \
   --set-env-vars="CORS_ALLOWED_ORIGINS=https://frontend-app-182441842390.$REGION.run.app" \
   --allow-unauthenticated
 
