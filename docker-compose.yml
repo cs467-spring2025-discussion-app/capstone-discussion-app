@@ -1,5 +1,5 @@
 x-database-url: &db_url "postgresql://${POSTGRES_USER:-postgres_capstone_app}:${POSTGRES_PASSWORD:-capstone_app_password}@db:5432/${POSTGRES_DB:-capstone_app}"
-x-test-database-url: &test_db_url "postgresql://fastapi_test:fastapi_test@fastapi_test:5432/fastapi_test"
+x-test-database-url: &test_db_url "postgresql://fastapi_test:fastapi_test@test_db:5432/fastapi_test"
 x-redis-url: &redis_url "redis://redis:6379"
 
 services:

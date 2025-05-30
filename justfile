@@ -9,11 +9,19 @@
 
 set quiet := true
 
+# Database
+
 db_user := "postgres_capstone_app"
 db_name := "capstone_app"
-db_volume := "db"
+test_db_url := "postgresql://fastapi_test:fastapi_test@test_db:5432/fastapi_test"
+
+# Services
+
 FAST := "localhost:8080"
 AUTH := "localhost:3001"
+
+# Default values
+
 def_user := "bob@just.com"
 def_pw := "s+r0nGpw0rd"
 
@@ -355,7 +363,6 @@ watchrep email:
         --header 'Content-Type: application/json' \
         {{ FAST }}/reputation/user | jq"
 
-
 # #############################################################################
 # Docker recipes
 # #############################################################################
@@ -364,6 +371,7 @@ watchrep email:
 [group('docker')]
 empty volume:
     docker compose down -v {{ volume }}
+    docker network prune -f
 
 # Rebuild services from scratch and start
 [group('docker')]
@@ -392,6 +400,9 @@ logs *flags:
 [group('docker')]
 flogs service='':
     just logs {{ service }} -f --timestamps
+
+fastapitest:
+    DATABASE_URL={{ test_db_url }} docker-compose exec fastapi_app pytest -vv
 
 # #############################################################################
 # Misc recipes

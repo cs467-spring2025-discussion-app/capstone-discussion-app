@@ -3,7 +3,7 @@
 
 import pytest
 from fastapi.testclient import TestClient
-from main import TEST_DB_URL, app
+from main import DATABASE_URL, app
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from tables import Base
@@ -12,7 +12,7 @@ from tables import Base
 @pytest.fixture(scope="session", autouse=True)
 def setup_test_db():
     """Setup and teardown test database schema"""
-    engine = create_engine(TEST_DB_URL)
+    engine = create_engine(DATABASE_URL)
 
     # Setup (reset tables)
     with engine.begin() as conn:
@@ -36,7 +36,7 @@ def setup_test_db():
 @pytest.fixture(scope="function")
 def db_session():
     """Set up test session"""
-    engine = create_engine(TEST_DB_URL)
+    engine = create_engine(DATABASE_URL)
     SessionLocal = sessionmaker(bind=engine)
     session = SessionLocal()
 
@@ -49,7 +49,7 @@ def db_session():
 @pytest.fixture(scope="function", autouse=True)
 def clean_db():
     """Empty tables and reset ids between tests"""
-    engine = create_engine(TEST_DB_URL)
+    engine = create_engine(DATABASE_URL)
 
     yield
 
