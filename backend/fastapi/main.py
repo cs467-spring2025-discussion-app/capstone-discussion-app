@@ -11,7 +11,6 @@ from fastapi_cache.decorator import cache
 from fastapi_cache.backends.redis import RedisBackend
 from redis.asyncio import Redis
 
-
 from models import (
     NewReply,
     NewTopic,
@@ -22,10 +21,12 @@ from models import (
     TopicList,
     User,
     NewFlag,
-    UserTagList,
     Tag,
-    UserTag
+    TagList,
+    UserTag,
+    UserTagList
 )
+
 from rotate import rotate_topics
 from sqlalchemy import create_engine, func, select, text
 from sqlalchemy.orm import Session, sessionmaker
@@ -574,8 +575,8 @@ def get_user_tags(user: User, db: Session = Depends(get_db)):
         # Get all tags associated with the user
         user_tags = (
             db.query(Tags)
-            .join(UserTags, Tags.id == UserTags.tag_id)
-            .filter(UserTags.user_id == user.user_id)
+            .join(UserTags)
+            .filter_by(user_id=user.user_id)
             .all()
         )
         return UserTagList(tags=user_tags, total_count=len(user_tags))
