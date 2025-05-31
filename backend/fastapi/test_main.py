@@ -19,12 +19,21 @@ from models import (
     Reply,
     ReplyList,
     Topic,
+    Tag,
+    TagList,
+    UserTagList,
 )
 from sqlalchemy import text
 from tables import (
     DiscussionTopics,
     Replies,
+    Tags,
+    UserTags,
 )
+
+################################################################################
+# Base tests
+################################################################################
 
 
 class TestFastApi:
@@ -41,6 +50,10 @@ class TestFastApi:
         assert response.status_code == 200
         assert response.json() == {"message": "Hello from PostgreSQL!"}
 
+
+################################################################################
+# Topic tests
+################################################################################
 
 class TestDiscussionTopics:
     def test_submit_topic(
@@ -220,6 +233,10 @@ def helper_get_user_reply_counts(
     )
 
 
+################################################################################
+# Reply tests
+################################################################################
+
 class TestReplies:
     def test_submit_reply(
         self, db_session: Session, fixture_replies: List[MessageIdResponse]
@@ -296,6 +313,10 @@ def helper_get_reply(client: TestClient, reply_id: int) -> Response:
 def helper_get_all_replies(client: TestClient, discussion_id: int) -> Response:
     return client.get(f"/replies/get_all_replies/{discussion_id}")
 
+################################################################################
+# User helpers
+################################################################################
+
 
 def helper_register_user(
     db_session: Session, id: uuid.UUID, email: str, password: str
@@ -319,3 +340,171 @@ def helper_register_user(
     user_id = result.id
     assert isinstance(user_id, uuid.UUID)
     return result
+
+
+@pytest.fixture
+def fixture_user(db_session: Session) -> Row:
+    """Create a test user for testing user-related endpoints"""
+    user = helper_register_user(
+        db_session,
+        uuid.uuid4(),
+        "test@example.com",
+        "sufficientlycomplexpassword&3"
+    )
+    return user
+
+
+################################################################################
+# Tag tests
+################################################################################
+
+class TestTags:
+    def test_get_all_tags(self, client: TestClient, fixture_tags: List[Tag]) -> None:
+        """
+        Getting all tags returns 200 response with JSON of all tags.
+        """
+        response = helper_get_all_tags(client)
+        content = TagList.model_validate(response.json())
+        assert response.status_code == 200
+        assert content.total_count == len(fixture_tags)
+        for tag in content.tags:
+            assert tag.id in [t.id for t in fixture_tags]
+            assert tag.name in [t.name for t in fixture_tags]
+            assert tag.description in [t.description for t in fixture_tags]
+
+    def test_get_user_tags(
+        self, client: TestClient, fixture_user_tags: List[Tag], fixture_user: Row
+    ) -> None:
+        """
+        Getting user tags returns 200 response with JSON of user's tags.
+        """
+        response = helper_get_user_tags(client, str(fixture_user.id))
+        content = UserTagList.model_validate(response.json())
+        assert response.status_code == 200
+        assert content.total_count == len(fixture_user_tags)
+        for tag in content.tags:
+            assert tag.id in [t.id for t in fixture_user_tags]
+            assert tag.name in [t.name for t in fixture_user_tags]
+            assert tag.description in [t.description for t in fixture_user_tags]
+
+    def test_toggle_user_tag_add(
+        self, client: TestClient, fixture_user: Row, fixture_tag: Tag
+    ) -> None:
+        """
+        Adding a tag to a user returns 200 response with success message.
+        """
+        response = helper_toggle_user_tag(client, str(fixture_user.id), fixture_tag.id)
+        assert response.status_code == 200
+        assert response.json()["message"] == f"Tag with ID {fixture_tag.id} added to user"
+
+        # Verify tag was added
+        user_tags = helper_get_user_tags(client, str(fixture_user.id))
+        content = UserTagList.model_validate(user_tags.json())
+        assert fixture_tag.id in [tag.id for tag in content.tags]
+
+    def test_toggle_user_tag_remove(
+        self, client: TestClient, fixture_user: Row, fixture_tag: Tag
+    ) -> None:
+        """
+        Removing a tag from a user returns 200 response with success message.
+        """
+        # First add the tag
+        helper_toggle_user_tag(client, str(fixture_user.id), fixture_tag.id)
+        
+        # Then remove it
+        response = helper_toggle_user_tag(client, str(fixture_user.id), fixture_tag.id)
+        assert response.status_code == 200
+        assert response.json()["message"] == f"Tag with ID {fixture_tag.id} removed from user"
+
+        # Verify tag was removed
+        user_tags = helper_get_user_tags(client, str(fixture_user.id))
+        content = UserTagList.model_validate(user_tags.json())
+        assert fixture_tag.id not in [tag.id for tag in content.tags]
+
+    def test_toggle_nonexistent_tag(
+        self, client: TestClient, fixture_user: Row
+    ) -> None:
+        """
+        Attempting to toggle a nonexistent tag returns 404 error.
+        """
+        nonexistent_tag_id = 99999
+        response = helper_toggle_user_tag(client, str(fixture_user.id), nonexistent_tag_id)
+        assert response.status_code == 404
+        assert response.json()["detail"] == "Tag not found"
+
+
+################################################################################
+# Tag helpers
+################################################################################
+
+
+@pytest.fixture
+def fixture_tag(db_session: Session) -> Tag:
+    """Create a tag for testing tag endpoints"""
+    unique_name = f"test tag {uuid.uuid4().hex[:8]}"  # Add unique suffix
+    tag = Tags(
+        name=unique_name,
+        description="test description",
+        is_custom_tag=False
+    )
+    db_session.add(tag)
+    db_session.commit()
+    db_session.refresh(tag)
+    return tag
+
+
+@pytest.fixture
+def fixture_tags(db_session: Session) -> List[Tag]:
+    """Create a list of tags for testing tag endpoints"""
+    tags = []
+    for i in range(1, 4):  # Create 3 tags
+        unique_name = f"test tag {i} {uuid.uuid4().hex[:8]}"  # Add unique suffix
+        tag = Tags(
+            name=unique_name,
+            description=f"test description {i}",
+            is_custom_tag=False
+        )
+        db_session.add(tag)
+        tags.append(tag)
+    db_session.commit()
+    for tag in tags:
+        db_session.refresh(tag)
+    return tags
+
+
+@pytest.fixture
+def fixture_user_tags(
+    db_session: Session, fixture_user: Row, fixture_tags: List[Tag]
+) -> List[Tag]:
+    """Create user tags for testing user tag endpoints"""
+    user_tags = []
+    for tag in fixture_tags[:2]:  # Associate first 2 tags with user
+        user_tag = UserTags(
+            user_id=fixture_user.id,
+            tag_id=tag.id
+        )
+        db_session.add(user_tag)
+        user_tags.append(tag)
+    db_session.commit()
+    return user_tags
+
+
+def helper_get_all_tags(client: TestClient) -> Response:
+    return client.get("/tags/get_all_tags")
+
+
+def helper_get_user_tags(client: TestClient, user_id: str) -> Response:
+    return client.post(
+        "/user_tags/user",
+        json={"user_id": user_id}
+    )
+
+
+def helper_toggle_user_tag(client: TestClient, user_id: str, tag_id: int) -> Response:
+    return client.post(
+        "/user_tags/toggle_tag",
+        json={
+            "user_id": user_id,
+            "tag_id": tag_id
+        }
+    )
