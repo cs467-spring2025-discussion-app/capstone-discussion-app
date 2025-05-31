@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import CommentFlair from "@/components/CommentFlair";
 import { useUser } from "@/hooks/useUser";
-import { SubmitVote, GetVoteCounts, FlagReply, GetUserTags } from "@/api/fastapi";
+import { SubmitVote, GetVoteCounts, FlagReply, GetUserTags, GetUserBadges } from "@/api/fastapi";
 
 /**
  * Calculate the time elapsed since a given time
@@ -34,7 +34,7 @@ export default function DiscussionComment({ comment, fadeIn }) {
   const { user } = useUser();
   const [showFlagDialog, setShowFlagDialog] = useState(false);
   const [flagReason, setFlagReason] = useState("");
-  const [userTags, setUserTags] = useState([]);
+  const [flairs, setFlairs] = useState([]);
 
 
   useEffect(() => {
@@ -50,16 +50,26 @@ export default function DiscussionComment({ comment, fadeIn }) {
   }, [comment.id]);
 
   useEffect(() => {
-    async function fetchUserTags() {
+    async function fetchUserFlairs() {
       try {
-        const tags = await GetUserTags(comment.user_id);
-        setUserTags(tags);
+        const [tags, badges] = await Promise.all([
+          GetUserTags(comment.user_id),
+          GetUserBadges(comment.user_id),
+        ]);
+
+        const combinedFlairs = [
+          ...tags.user_tags.map(tag => ({ type: "tag", ...tag })),
+          ...badges.user_badges.map(badge => ({ type: "badge", ...badge })),
+        ];
+
+        setFlairs(combinedFlairs);
       } catch (error) {
-        console.error("Failed to fetch user tags:", error);
+        console.error("Failed to fetch user flairs:", error);
       }
     }
-  fetchUserTags();
-}, [comment.user_id]);
+
+    fetchUserFlairs();
+  }, [comment.user_id]);
 
   const handleUpvote = async () => {
     if (!user) return;
@@ -106,11 +116,15 @@ export default function DiscussionComment({ comment, fadeIn }) {
           ${fadeIn ? "opacity-0 animate-fade-in" : ""}
           `}
       >
-        <div className="flex flex-wrap gap-2">
-          {userTags.map((tag) => (
-            <CommentFlair key={tag.id} tagName={tag.name} />
-          ))}
-        </div>
+      <div className="flex flex-wrap gap-2">
+        {flairs.map((flair) => (
+          <CommentFlair
+            key={`${flair.type}-${flair.id}`}
+            tagName={flair.name}
+            type={flair.type}  // in case we want to style badges/tags differently in the future
+          />
+        ))}
+      </div>
 
         <p className="mt-2">{comment.content}</p>
         <div className="w-full flex justify-between items-center text-sm text-gray-500 my-5 pr-5">
