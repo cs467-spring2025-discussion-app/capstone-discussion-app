@@ -106,6 +106,34 @@ class NewFlag(BaseModel):
 
 
 ################################################################################
+# Tag Models
+################################################################################
+
+class Tag(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+    description: str
+    is_custom_tag: bool
+    created_at: datetime
+
+
+class UserTag(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    user_id: UUID
+    tag_id: int
+
+
+class UserTagList(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    tags: list[Tag]
+    total_count: int
+
+
+################################################################################
 # HTTP Response Models
 ################################################################################
 
