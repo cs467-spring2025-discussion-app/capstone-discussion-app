@@ -568,6 +568,14 @@ def flag_reply(reply_id: int, flag: NewFlag, db: Session = Depends(get_db)):
 # User Tags
 ################################################################################
 
+@app.get("/tags/get_all_tags", response_model=TagList)
+def get_all_tags(db: Session = Depends(get_db)):
+    try:
+        tags = db.query(Tags).all()
+        return TagList(tags=tags, total_count=len(tags))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.post("/user_tags/user", response_model=UserTagList)
 def get_user_tags(user: User, db: Session = Depends(get_db)):
