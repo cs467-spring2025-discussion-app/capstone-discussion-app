@@ -23,8 +23,8 @@ from models import (
     User,
     NewFlag,
     UserTagList,
-    UserTag,
-    Tag
+    Tag,
+    UserTag
 )
 from rotate import rotate_topics
 from sqlalchemy import create_engine, func, select, text
@@ -37,7 +37,9 @@ from tables import (
     UserBadges,
     UserReputation,
     Votes,
-    FlaggedReplies
+    FlaggedReplies,
+    Tags,
+    UserTags
 )
 
 DATABASE_URL = os.getenv("DATABASE_URL", "")
@@ -566,14 +568,14 @@ def flag_reply(reply_id: int, flag: NewFlag, db: Session = Depends(get_db)):
 ################################################################################
 
 
-@app.get("/user_tags/user", response_model=UserTagList)
+@app.post("/user_tags/user", response_model=UserTagList)
 def get_user_tags(user: User, db: Session = Depends(get_db)):
     try:
         # Get all tags associated with the user
         user_tags = (
-            db.query(Tag)
-            .join(UserTag, Tag.id == UserTag.tag_id)
-            .filter(UserTag.user_id == user.user_id)
+            db.query(Tags)
+            .join(UserTags, Tags.id == UserTags.tag_id)
+            .filter(UserTags.user_id == user.user_id)
             .all()
         )
         return UserTagList(tags=user_tags, total_count=len(user_tags))
