@@ -21,7 +21,10 @@ from models import (
     Topic,
     TopicList,
     User,
-    NewFlag
+    NewFlag,
+    UserTagList,
+    UserTags,
+    Tags
 )
 from rotate import rotate_topics
 from sqlalchemy import create_engine, func, select, text
@@ -554,5 +557,25 @@ def flag_reply(reply_id: int, flag: NewFlag, db: Session = Depends(get_db)):
         db.add(flagged)
         db.commit()
         return {"message": "Reply flagged for review"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+################################################################################
+# User Tags
+################################################################################
+
+
+@app.get("/user_tags/user", response_model=UserTagList)
+def get_user_tags(user: User, db: Session = Depends(get_db)):
+    try:
+        # Get all tags associated with the user
+        user_tags = (
+            db.query(Tags)
+            .join(UserTags, Tags.id == UserTags.tag_id)
+            .filter(UserTags.user_id == user.user_id)
+            .all()
+        )
+        return UserTagList(tags=user_tags, total_count=len(user_tags))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
