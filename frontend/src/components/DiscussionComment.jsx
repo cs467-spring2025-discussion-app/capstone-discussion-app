@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import CommentFlair from "@/components/CommentFlair";
 import { useUser } from "@/hooks/useUser";
-import { SubmitVote, GetVoteCounts, FlagReply } from "@/api/fastapi";
+import { SubmitVote, GetVoteCounts, FlagReply, GetUserTags } from "@/api/fastapi";
 
 /**
  * Calculate the time elapsed since a given time
@@ -34,6 +34,8 @@ export default function DiscussionComment({ comment, fadeIn }) {
   const { user } = useUser();
   const [showFlagDialog, setShowFlagDialog] = useState(false);
   const [flagReason, setFlagReason] = useState("");
+  const [userTags, setUserTags] = useState([]);
+
 
   useEffect(() => {
     async function fetchVotes() {
@@ -46,6 +48,18 @@ export default function DiscussionComment({ comment, fadeIn }) {
     }
     fetchVotes();
   }, [comment.id]);
+
+  useEffect(() => {
+    async function fetchUserTags() {
+      try {
+        const tags = await GetUserTags(comment.user_id);
+        setUserTags(tags);
+      } catch (error) {
+        console.error("Failed to fetch user tags:", error);
+      }
+    }
+  fetchUserTags();
+}, [comment.user_id]);
 
   const handleUpvote = async () => {
     if (!user) return;
@@ -92,9 +106,12 @@ export default function DiscussionComment({ comment, fadeIn }) {
           ${fadeIn ? "opacity-0 animate-fade-in" : ""}
           `}
       >
-        <CommentFlair />
-        <CommentFlair />
-        <CommentFlair />
+        <div className="flex flex-wrap gap-2">
+          {userTags.map((tag) => (
+            <CommentFlair key={tag.id} tagName={tag.name} />
+          ))}
+        </div>
+
         <p className="mt-2">{comment.content}</p>
         <div className="w-full flex justify-between items-center text-sm text-gray-500 my-5 pr-5">
           <div className="">{commentTimeElapsed}</div>

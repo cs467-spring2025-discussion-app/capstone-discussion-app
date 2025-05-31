@@ -183,3 +183,22 @@ export async function FlagReply(replyId, userId, reason) {
 
   return await resp.json();
 }
+
+/**
+ * Get tags for a user
+ * @param {number} userId - id of the user whose tags to fetch
+ * @returns {Promise<Object>} Response data
+ * @throws {Error} On get failure
+ */
+export async function GetUserTags(userId) {
+  const resp = await fetch(`/fastapi/user_tags/${userId}`, {
+    method: "GET",
+  });
+
+  if (!resp.ok) {
+    const errorData = await resp.json();
+    throw new Error(errorData.error || `users/get_user_tags/${userId} failed`);
+  }
+
+  return await resp.json();
+}
