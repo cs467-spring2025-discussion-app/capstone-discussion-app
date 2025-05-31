@@ -15,6 +15,9 @@ db_user := "postgres_capstone_app"
 db_name := "capstone_app"
 test_db_url := "postgresql://fastapi_test:fastapi_test@test_db:5432/fastapi_test"
 
+db_service := "db"
+test_db_service := "test_db"
+
 # Services
 
 FAST := "localhost:8080"
@@ -377,9 +380,10 @@ empty volume:
 [group('docker')]
 fresh:
     docker compose down
+    docker compose down -v db
+    docker compose down -v test_db
     docker network prune -f
     docker compose build --no-cache
-    docker compose up
 
 # Start all services, rebuild if necessary
 [group('docker')]
