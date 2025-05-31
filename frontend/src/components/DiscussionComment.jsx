@@ -58,7 +58,7 @@ export default function DiscussionComment({ comment, fadeIn }) {
         ]);
 
         const combinedFlairs = [
-          ...tags.user_tags.map(tag => ({ type: "tag", ...tag })),
+          ...tags.tags.map(tag => ({ type: "tag", ...tag })),
           ...badges.user_badges.map(badge => ({ type: "badge", ...badge })),
         ];
 
