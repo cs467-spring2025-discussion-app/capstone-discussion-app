@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import CommentFlair from "@/components/CommentFlair";
 import { useUser } from "@/hooks/useUser";
-import { SubmitVote, GetVoteCounts, FlagReply } from "@/api/fastapi";
+import { SubmitVote, GetVoteCounts, FlagReply, GetUserTags, GetUserBadges } from "@/api/fastapi";
 
 /**
  * Calculate the time elapsed since a given time
@@ -34,6 +34,8 @@ export default function DiscussionComment({ comment, fadeIn }) {
   const { user } = useUser();
   const [showFlagDialog, setShowFlagDialog] = useState(false);
   const [flagReason, setFlagReason] = useState("");
+  const [flairs, setFlairs] = useState([]);
+
 
   useEffect(() => {
     async function fetchVotes() {
@@ -46,6 +48,28 @@ export default function DiscussionComment({ comment, fadeIn }) {
     }
     fetchVotes();
   }, [comment.id]);
+
+  useEffect(() => {
+    async function fetchUserFlairs() {
+      try {
+        const [tags, badges] = await Promise.all([
+          GetUserTags(comment.user_id),
+          GetUserBadges(comment.user_id),
+        ]);
+
+        const combinedFlairs = [
+          ...tags.tags.map(tag => ({ type: "tag", ...tag })),
+          ...badges.user_badges.map(badge => ({ type: "badge", ...badge })),
+        ];
+
+        setFlairs(combinedFlairs);
+      } catch (error) {
+        console.error("Failed to fetch user flairs:", error);
+      }
+    }
+
+    fetchUserFlairs();
+  }, [comment.user_id]);
 
   const handleUpvote = async () => {
     if (!user) return;
@@ -92,9 +116,16 @@ export default function DiscussionComment({ comment, fadeIn }) {
           ${fadeIn ? "opacity-0 animate-fade-in" : ""}
           `}
       >
-        <CommentFlair />
-        <CommentFlair />
-        <CommentFlair />
+      <div className="flex flex-wrap gap-2">
+        {flairs.map((flair) => (
+          <CommentFlair
+            key={`${flair.type}-${flair.id}`}
+            tagName={flair.name}
+            type={flair.type}  // in case we want to style badges/tags differently in the future
+          />
+        ))}
+      </div>
+
         <p className="mt-2">{comment.content}</p>
         <div className="w-full flex justify-between items-center text-sm text-gray-500 my-5 pr-5">
           <div className="">{commentTimeElapsed}</div>
