@@ -590,3 +590,36 @@ def get_user_tags(user: User, db: Session = Depends(get_db)):
         return UserTagList(tags=user_tags, total_count=len(user_tags))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/user_tags/toggle_tag")
+def toggle_user_tag(user_tag: UserTag, db: Session = Depends(get_db)):
+    try:
+        # Check if tag exists
+        tag = db.query(Tags).filter_by(id=user_tag.tag_id).first()
+        if not tag:
+            raise HTTPException(status_code=404, detail="Tag not found")
+
+        # Check if user already has this tag
+        existing_tag = (
+            db.query(UserTags)
+            .filter_by(user_id=user_tag.user_id, tag_id=user_tag.tag_id)
+            .first()
+        )
+
+        if existing_tag:
+            # Remove the tag if user has it
+            db.delete(existing_tag)
+            db.commit()
+            return {"message": f"Tag with ID {user_tag.tag_id} removed from user"}
+        else:
+            # Add the tag if user doesn't have it
+            user_tag = UserTags(
+                user_id=user_tag.user_id,
+                tag_id=user_tag.tag_id
+            )
+            db.add(user_tag)
+            db.commit()
+            return {"message": f"Tag with ID {user_tag.tag_id} added to user"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
