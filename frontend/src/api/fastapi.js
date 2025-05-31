@@ -191,7 +191,7 @@ export async function FlagReply(replyId, userId, reason) {
  * @throws {Error} On get failure
  */
 export async function GetUserTags(userId) {
-  const resp = await fetch(`/fastapi/user_tags/user}`, {
+  const resp = await fetch(`/fastapi/user_tags/user`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
