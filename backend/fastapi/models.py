@@ -119,6 +119,13 @@ class Tag(BaseModel):
     created_at: datetime
 
 
+class TagList(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    tags: list[Tag]
+    total_count: int
+
+
 class UserTag(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
