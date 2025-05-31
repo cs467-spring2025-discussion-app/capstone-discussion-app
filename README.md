@@ -6,14 +6,18 @@ App To Be Named
 
 Our application was developed locally using interacting Docker services. We used a `docker-compose` configuration to set up the services the services to communicate over an app network.
 
+The latest build of our app uses the following minimal Docker versions:
+
 ```
-Docker version 28.1.1, build 4eba377327
+Docker version 28.1.1
+Docker Compose version 2.36.1
 ```
 
-Check your docker version with:
+Check your docker versions with:
 
 ```bash
 docker --version
+docker compose version
 ```
 
 If you have Docker > `28.1.1` installed on your system, you can run:
@@ -36,9 +40,11 @@ to see a local build for your app.
 
 ### Install the latest version of docker
 
+General installation instructions can be found at [https://docs.docker.com/get-started/get-docker/](https://docs.docker.com/get-started/get-docker/)
+
 #### Linux
 
-(Recommended) Use the convenience script provided by Docker to install the latest version:
+We generally recommend the convenience script provided by Docker to install the latest version:
 
 ```bash
 # Install curl if you don't already have it
@@ -48,6 +54,18 @@ curl -fsSL https://get.docker.com -o get-docker.sh
 # Run the script
 sudo sh test-docker.sh
 ```
+
+Or use your distribution's package manager.
+
+```bash
+# Arch Linux
+pacman -Syu
+pacman -S docker
+```
+
+For distibutions using `apt`, we recommend following the official installation instructions to guarantee the latest stable build:
+
+[https://docs.docker.com/engine/install/debian/#install-using-the-repository](https://docs.docker.com/engine/install/debian/#install-using-the-repository)
 
 #### macOS:
 
