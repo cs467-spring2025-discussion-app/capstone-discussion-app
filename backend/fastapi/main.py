@@ -23,8 +23,8 @@ from models import (
     User,
     NewFlag,
     UserTagList,
-    UserTags,
-    Tags
+    UserTag,
+    Tag
 )
 from rotate import rotate_topics
 from sqlalchemy import create_engine, func, select, text
@@ -571,9 +571,9 @@ def get_user_tags(user: User, db: Session = Depends(get_db)):
     try:
         # Get all tags associated with the user
         user_tags = (
-            db.query(Tags)
-            .join(UserTags, Tags.id == UserTags.tag_id)
-            .filter(UserTags.user_id == user.user_id)
+            db.query(Tag)
+            .join(UserTag, Tag.id == UserTag.tag_id)
+            .filter(UserTag.user_id == user.user_id)
             .all()
         )
         return UserTagList(tags=user_tags, total_count=len(user_tags))
