@@ -51,11 +51,12 @@ export default function Attributes() {
         const tagId = getTagIdByName(attr);
         if (!tagId) return;
         try {
-            await ToggleUserTag({ user_id: user.user_id, tag_id: tagId });
             if (selected.includes(attr)) {
                 setSelected(selected.filter((a) => a !== attr)); // remove attribute
+                await ToggleUserTag({ user_id: user.userID, tag_id: tagId });
             } else if (selected.length < 5) {
                 setSelected([...selected, attr]); // Add attribute
+                await ToggleUserTag({ user_id: user.userID, tag_id: tagId });
             }
         } catch (error) {
         console.error("Error toggling tag:", error);
