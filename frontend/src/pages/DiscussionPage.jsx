@@ -80,13 +80,39 @@ export default function DiscussionPage() {
   async function handleSubmit() {
     if (!text.trim()) return;
 
-    // Check if comment contains restricted strings (url or hashtag)
+    // Check if comment contains restricted strings (emoji, url, or hashtag)
     // Early return to prevent reply submission
+
+    // Regex source: https://www.unicode.org/reports/tr51/
+    // See section 1.4.9 EBNF and Regex
+    // Specification updated 2024-08-15
+    const emojiPattern = `
+      \\p{RI} \\p{RI}
+      | \\p{Emoji}
+        ( \\p{EMod}
+        | \\u{FE0F} \\u{20E3}?
+        | [\\u{E0020}-\\u{E007E}]+ \\u{E007F}
+        )?
+        (\\u{200D}
+          ( \\p{RI} \\p{RI}
+          | \\p{Emoji}
+            ( \\p{EMod}
+            | \\u{FE0F} \\u{20E3}?
+            | [\\u{E0020}-\\u{E007E}]+ \\u{E007F}
+            )?
+          )
+        )*
+      `;
+    const emojiRegex = new RegExp(emojiPattern.replace(/\s+/g, ""), "gu");
+
     if (/https?:\/\//.test(text) || /^www\./.test(text)) {
       setReplyError("Replies may not contain a URL");
       return;
     } else if (/#.+/.test(text)) {
       setReplyError("Replies may not contain a hash tag");
+      return;
+    } else if (emojiRegex.test(text)) {
+      setReplyError("Replies may not contain emojis");
       return;
     } else {
       // Reset error if text contains no restrictions
@@ -168,7 +194,7 @@ export default function DiscussionPage() {
               </div>
               <div className="flex justify-end mt-2">
                 <button
-                  className={`ml-2 flex bg-purple-600 
+                  className={`ml-2 flex bg-purple-600
                     rounded-full px-5 py-2 font-bold text-sm text-white
                     ${!user || hitReplyLimit
                       ? "cursor-not-allowed opacity-75"
