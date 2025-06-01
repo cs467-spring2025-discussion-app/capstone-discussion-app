@@ -183,3 +183,49 @@ export async function FlagReply(replyId, userId, reason) {
 
   return await resp.json();
 }
+
+/**
+ * Get tags for a user
+ * @param {number} userId - id of the user whose tags to fetch
+ * @returns {Promise<Object>} Response data
+ * @throws {Error} On get failure
+ */
+export async function GetUserTags(userId) {
+  const resp = await fetch(`/fastapi/user_tags/user`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ user_id: userId }),
+  });
+
+  if (!resp.ok) {
+    const errorData = await resp.json();
+    throw new Error(errorData.error || `tags/user failed`);
+  }
+
+  return await resp.json();
+}
+
+/**
+ * Get badges for a user
+ * @param {number} userId - ID of the user
+ * @returns {Promise<Object>} Response data
+ * @throws {Error} On fetch failure
+ */
+export async function GetUserBadges(userId) {
+  const resp = await fetch(`/fastapi/badges/user`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ user_id: userId }),
+  });
+
+  if (!resp.ok) {
+    const errorData = await resp.json();
+    throw new Error(errorData.detail || `badges/user failed`);
+  }
+
+  return await resp.json();
+}

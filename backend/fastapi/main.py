@@ -11,7 +11,6 @@ from fastapi_cache.decorator import cache
 from fastapi_cache.backends.redis import RedisBackend
 from redis.asyncio import Redis
 
-
 from models import (
     NewReply,
     NewTopic,
@@ -21,8 +20,13 @@ from models import (
     Topic,
     TopicList,
     User,
-    NewFlag
+    NewFlag,
+    Tag,
+    TagList,
+    UserTag,
+    UserTagList,
 )
+
 from rotate import rotate_topics
 from sqlalchemy import create_engine, func, select, text
 from sqlalchemy.orm import Session, sessionmaker
@@ -34,7 +38,9 @@ from tables import (
     UserBadges,
     UserReputation,
     Votes,
-    FlaggedReplies
+    FlaggedReplies,
+    Tags,
+    UserTags,
 )
 
 DATABASE_URL = os.getenv("DATABASE_URL", "")
@@ -50,10 +56,13 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
+
 # use this to initialize the cache used for serving up daily topics
 @app.on_event("startup")
 async def startup():
-    redis = Redis.from_url(os.getenv("REDIS_URL", ""), encoding="utf8", decode_responses=True)
+    redis = Redis.from_url(
+        os.getenv("REDIS_URL", ""), encoding="utf8", decode_responses=True
+    )
     FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache")
 
 
@@ -68,7 +77,11 @@ def get_allowed_origins():
     cors_allowed_origins = os.environ.get("CORS_ALLOWED_ORIGINS", "")
     if not cors_allowed_origins:
         return ["http://localhost:5173", "http://localhost:4173"]
-    origins = [origin.strip() for origin in cors_allowed_origins.split(",") if origin.strip()]
+    origins = [
+        origin.strip()
+        for origin in cors_allowed_origins.split(",")
+        if origin.strip()
+    ]
     return origins
 
 
@@ -111,7 +124,7 @@ def submit_topic(new_topic: NewTopic, db: Session = Depends(get_db)):
         topic = DiscussionTopics(
             title=new_topic.title,
             prompt=new_topic.prompt,
-            is_active=False  # All new topics are inactive by default
+            is_active=False,  # All new topics are inactive by default
         )
         db.add(topic)
         db.commit()
@@ -122,16 +135,20 @@ def submit_topic(new_topic: NewTopic, db: Session = Depends(get_db)):
 
 
 @app.get("/topics/get_daily_topics", response_model=TopicList)
-@cache(expire=86200)        # expire the cache just before the 24 hr mark
+@cache(expire=86200)  # expire the cache just before the 24 hr mark
 # Get the five topics of the day
 def get_daily_topics(db: Session = Depends(get_db)):
     try:
         stmt = select(DiscussionTopics).where(DiscussionTopics.is_active)
         daily_topics = db.execute(stmt).scalars().fetchmany(5)
         if not daily_topics:
-            raise HTTPException(status_code=404, detail="No active topic found.")
+            raise HTTPException(
+                status_code=404, detail="No active topic found."
+            )
         if len(daily_topics) < 5:
-            raise HTTPException(status_code=404, detail="Less than 5 active topics found.")
+            raise HTTPException(
+                status_code=404, detail="Less than 5 active topics found."
+            )
         return TopicList(topics=daily_topics)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -163,7 +180,9 @@ def get_all_topics(db: Session = Depends(get_db)):
 
 @app.put("/topics/update_topic/{topic_id}")
 # Update a topic by its ID
-def update_topic(topic_id: int, updated_topic: NewTopic, db: Session = Depends(get_db)):
+def update_topic(
+    topic_id: int, updated_topic: NewTopic, db: Session = Depends(get_db)
+):
     try:
         topic = db.query(DiscussionTopics).filter_by(id=topic_id).first()
         if not topic:
@@ -185,7 +204,9 @@ def activate_topic(topic_id: int, db: Session = Depends(get_db)):
         if not topic:
             raise HTTPException(status_code=404, detail="Topic not found.")
         if topic.is_active:
-            raise HTTPException(status_code=400, detail="Topic is already active.")
+            raise HTTPException(
+                status_code=400, detail="Topic is already active."
+            )
         topic.is_active = True
 
         # need to set the activation time if this is the first time it is being activated
@@ -206,10 +227,14 @@ def deactivate_topic(topic_id: int, db: Session = Depends(get_db)):
         if not topic:
             raise HTTPException(status_code=404, detail="Topic not found.")
         if not topic.is_active:
-            raise HTTPException(status_code=400, detail="Topic is already inactive.")
+            raise HTTPException(
+                status_code=400, detail="Topic is already inactive."
+            )
         topic.is_active = False
         db.commit()
-        return {"message": f"Topic with ID {topic_id} deactivated successfully."}
+        return {
+            "message": f"Topic with ID {topic_id} deactivated successfully."
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -245,7 +270,9 @@ def delete_topic(topic_id: int, db: Session = Depends(get_db)):
 
 
 @app.post("/topics/user_reply_counts/{topic_id}")
-def get_user_reply_count_by_topic(user: User, topic_id: int, db: Session = Depends(get_db)):
+def get_user_reply_count_by_topic(
+    user: User, topic_id: int, db: Session = Depends(get_db)
+):
     """
     Get the number of replies a user has made to a given topic.
     """
@@ -253,7 +280,7 @@ def get_user_reply_count_by_topic(user: User, topic_id: int, db: Session = Depen
         result = (
             db.query(
                 Replies.discussion_id,
-                func.count(Replies.id).label("user_reply_count")
+                func.count(Replies.id).label("user_reply_count"),
             )
             .filter(Replies.user_id == user.user_id)
             .filter(Replies.discussion_id == topic_id)
@@ -264,7 +291,9 @@ def get_user_reply_count_by_topic(user: User, topic_id: int, db: Session = Depen
             return {"reply_count": 0}
         return {"reply_count": result.user_reply_count}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error getting user reply count: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Error getting user reply count: {e}"
+        )
 
 
 ################################################################################
@@ -274,12 +303,14 @@ def get_user_reply_count_by_topic(user: User, topic_id: int, db: Session = Depen
 
 @app.post("/replies/submit_reply/{discussion_id}")
 # Submit a new reply to a discussion
-def submit_reply(new_reply: NewReply, discussion_id: int, db: Session = Depends(get_db)):
+def submit_reply(
+    new_reply: NewReply, discussion_id: int, db: Session = Depends(get_db)
+):
     try:
         reply = Replies(
             discussion_id=discussion_id,
             user_id=new_reply.user_id,
-            content=new_reply.content
+            content=new_reply.content,
         )
         db.add(reply)
         db.commit()
@@ -293,7 +324,9 @@ def submit_reply(new_reply: NewReply, discussion_id: int, db: Session = Depends(
 # Get all replies for a discussion
 def get_all_replies(discussion_id: int, db: Session = Depends(get_db)):
     try:
-        replies = db.query(Replies).filter_by(discussion_id=discussion_id).all()
+        replies = (
+            db.query(Replies).filter_by(discussion_id=discussion_id).all()
+        )
         if not replies:
             raise HTTPException(status_code=404, detail="No replies found.")
         return ReplyList(replies=replies, total_count=len(replies))
@@ -315,7 +348,9 @@ def get_reply(reply_id: int, db: Session = Depends(get_db)):
 
 @app.put("/replies/update_reply/{reply_id}")
 # Update a reply by its ID
-def update_reply(reply_id: int, updated_reply: NewReply, db: Session = Depends(get_db)):
+def update_reply(
+    reply_id: int, updated_reply: NewReply, db: Session = Depends(get_db)
+):
     try:
         reply = db.query(Replies).filter_by(id=reply_id).first()
         if not reply:
@@ -341,7 +376,9 @@ def delete_reply(reply_id: int, db: Session = Depends(get_db)):
         reply.is_deleted = True
         reply.deleted_at = datetime.now(timezone.utc)
         db.commit()
-        return {"message": f"Reply with ID {reply_id} marked as deleted successfully."}
+        return {
+            "message": f"Reply with ID {reply_id} marked as deleted successfully."
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -350,48 +387,55 @@ def delete_reply(reply_id: int, db: Session = Depends(get_db)):
 def get_reply_counts_by_topic(db: Session = Depends(get_db)):
     try:
         results = (
-            db.query(Replies.discussion_id, func.count(Replies.id).label("reply_count"))
+            db.query(
+                Replies.discussion_id,
+                func.count(Replies.id).label("reply_count"),
+            )
             .group_by(Replies.discussion_id)
             .all()
         )
         return {
             "replies_counts": [
-                {"discussion_id": r.discussion_id, "reply_count": r.reply_count}
+                {
+                    "discussion_id": r.discussion_id,
+                    "reply_count": r.reply_count,
+                }
                 for r in results
             ]
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error getting replies: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Error getting replies: {e}"
+        )
 
 
 ################################################################################
 # Badge Endpoints
 ################################################################################
 
+
 @app.post("/badges/user")
 def get_user_badges(user: User, db: Session = Depends(get_db)):
     try:
-        results = (
-            db.query(UserBadges).filter_by(user_id=user.user_id).all()
-        )
+        results = db.query(UserBadges).filter_by(user_id=user.user_id).all()
         badges: list[dict[str, str]] = []
         for badge in results:
             if badge_info := (
-                    db.query(Badges).filter_by(id=badge.badge_id).first()
+                db.query(Badges).filter_by(id=badge.badge_id).first()
             ):
                 badges.append(badge_info)
-        return {
-            "user_badges": badges
-        }
-
+        return {"user_badges": badges}
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error getting user badges: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Error getting user badges: {e}"
+        )
 
 
 ################################################################################
 # Vote Endpoints
 ################################################################################
+
 
 def get_user_reputation_helper(user_id: str, db: Session) -> UserReputation:
     """
@@ -401,9 +445,7 @@ def get_user_reputation_helper(user_id: str, db: Session) -> UserReputation:
     reputation = db.query(UserReputation).filter_by(user_id=user_id).first()
     if reputation is None:
         reputation = UserReputation(
-            user_id=user_id,
-            upvotes_received=0,
-            downvotes_received=0
+            user_id=user_id, upvotes_received=0, downvotes_received=0
         )
         db.add(reputation)
     return reputation
@@ -411,7 +453,9 @@ def get_user_reputation_helper(user_id: str, db: Session) -> UserReputation:
 
 @app.post("/votes/submit_vote/{reply_id}")
 # Submit a vote for a reply
-def submit_vote(new_vote: NewVote, reply_id: int, db: Session = Depends(get_db)):
+def submit_vote(
+    new_vote: NewVote, reply_id: int, db: Session = Depends(get_db)
+):
     try:
         # Check if reply exists
         reply = db.query(Replies).filter_by(id=reply_id).first()
@@ -419,19 +463,18 @@ def submit_vote(new_vote: NewVote, reply_id: int, db: Session = Depends(get_db))
             raise HTTPException(status_code=404, detail="Reply not found.")
 
         # Get or initialize reply author's reputation
-        reputation: UserReputation = get_user_reputation_helper(reply.user_id, db)
+        reputation: UserReputation = get_user_reputation_helper(
+            reply.user_id, db
+        )
         # Track the changes to upvotes (1) or downvotes (-1)
-        rep_delta: dict[int, int] = {
-            1: 0,
-            0: 0,
-            -1: 0
-        }
+        rep_delta: dict[int, int] = {1: 0, 0: 0, -1: 0}
 
         # Check if vote already exists
-        existing_vote = db.query(Votes).filter_by(
-            user_id=new_vote.user_id,
-            reply_id=reply_id
-        ).first()
+        existing_vote = (
+            db.query(Votes)
+            .filter_by(user_id=new_vote.user_id, reply_id=reply_id)
+            .first()
+        )
 
         if existing_vote:
             # Track decrement of existing vote type from reputation
@@ -450,7 +493,7 @@ def submit_vote(new_vote: NewVote, reply_id: int, db: Session = Depends(get_db))
             vote = Votes(
                 user_id=new_vote.user_id,
                 reply_id=reply_id,
-                vote_type=new_vote.vote_type
+                vote_type=new_vote.vote_type,
             )
             db.add(vote)
             # Track increment of new vote type to reputation
@@ -475,16 +518,28 @@ def submit_vote(new_vote: NewVote, reply_id: int, db: Session = Depends(get_db))
 def get_vote_counts(reply_id: int, db: Session = Depends(get_db)):
     try:
         # Total votes (sum of vote_type)
-        total_votes = db.query(func.coalesce(func.sum(Votes.vote_type), 0)).filter_by(reply_id=reply_id).scalar()
+        total_votes = (
+            db.query(func.coalesce(func.sum(Votes.vote_type), 0))
+            .filter_by(reply_id=reply_id)
+            .scalar()
+        )
         # Count of upvotes
-        upvotes = db.query(func.count()).filter(Votes.reply_id == reply_id, Votes.vote_type == 1).scalar()
+        upvotes = (
+            db.query(func.count())
+            .filter(Votes.reply_id == reply_id, Votes.vote_type == 1)
+            .scalar()
+        )
         # Count of downvotes
-        downvotes = db.query(func.count()).filter(Votes.reply_id == reply_id, Votes.vote_type == -1).scalar()
+        downvotes = (
+            db.query(func.count())
+            .filter(Votes.reply_id == reply_id, Votes.vote_type == -1)
+            .scalar()
+        )
 
         return {
             "total_votes": total_votes,
             "upvotes": upvotes,
-            "downvotes": downvotes
+            "downvotes": downvotes,
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -504,7 +559,9 @@ def get_user_reputation(user: User, db: Session = Depends(get_db)):
         result = get_user_reputation_helper(str(user.user_id), db)
         return {"user_reputation": result or {}}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error getting user reputation: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Error getting user reputation: {e}"
+        )
 
 
 ################################################################################
@@ -554,5 +611,65 @@ def flag_reply(reply_id: int, flag: NewFlag, db: Session = Depends(get_db)):
         db.add(flagged)
         db.commit()
         return {"message": "Reply flagged for review"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+################################################################################
+# User Tags
+################################################################################
+
+
+@app.get("/tags/get_all_tags", response_model=TagList)
+def get_all_tags(db: Session = Depends(get_db)):
+    try:
+        tags = db.query(Tags).all()
+        return TagList(tags=tags, total_count=len(tags))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/user_tags/user", response_model=UserTagList)
+def get_user_tags(user: User, db: Session = Depends(get_db)):
+    try:
+        # Get all tags associated with the user
+        user_tags = (
+            db.query(Tags).join(UserTags).filter_by(user_id=user.user_id).all()
+        )
+        return UserTagList(tags=user_tags, total_count=len(user_tags))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/user_tags/toggle_tag")
+def toggle_user_tag(user_tag: UserTag, db: Session = Depends(get_db)):
+    try:
+        # Check if tag exists
+        tag = db.query(Tags).filter_by(id=user_tag.tag_id).first()
+        if not tag:
+            raise HTTPException(status_code=404, detail="Tag not found")
+
+        # Check if user already has this tag
+        existing_tag = (
+            db.query(UserTags)
+            .filter_by(user_id=user_tag.user_id, tag_id=user_tag.tag_id)
+            .first()
+        )
+
+        if existing_tag:
+            # Remove the tag if user has it
+            db.delete(existing_tag)
+            db.commit()
+            return {
+                "message": f"Tag with ID {user_tag.tag_id} removed from user"
+            }
+        else:
+            # Add the tag if user doesn't have it
+            user_tag = UserTags(
+                user_id=user_tag.user_id, tag_id=user_tag.tag_id
+            )
+            db.add(user_tag)
+            db.commit()
+            return {"message": f"Tag with ID {user_tag.tag_id} added to user"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
