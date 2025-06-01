@@ -248,7 +248,7 @@ export async function ToggleUserTag(userTag) {
 }
 
 export async function GetAllTags() {
-  const resp = await fetch(`/tags/get_all_tags`, {
+  const resp = await fetch(`/fastapi/tags/get_all_tags`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
