@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useUser } from "@/hooks/useUser";
+import { GetUserTags, GetUserBadges } from "@/api/fastapi";
 
 const ATTRIBUTE_CATEGORIES = {
   'Political Leaning': ['Progressive', 'Liberal', 'Moderate', 'Conservative', 'Libertarian'],
@@ -10,6 +12,23 @@ const ATTRIBUTE_CATEGORIES = {
 export default function Attributes() {
     const [selected, setSelected] = useState([]);
     const [customAttr, setCustomAttr] = useState('');
+    const { user } = useUser();
+
+    useEffect(() => {
+        if (!user) return;
+
+        const fetchTags = async () => {
+        try {
+            const data = await GetUserTags(user.user_id);
+            const tagNames = data.tags.map(tag => tag.name);
+            setSelected(tagNames);
+        } catch (error) {
+            console.error('Error fetching user tags:', error);
+        }
+        };
+
+        fetchTags();
+    }, [user]);
 
     const toggleAttribute = (attr) => {
         if (selected.includes(attr)) {
