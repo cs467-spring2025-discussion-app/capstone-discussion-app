@@ -35,7 +35,6 @@ from tables import (
 # Base tests
 ################################################################################
 
-
 class TestFastApi:
     """
     Test database setup sanity checks
@@ -165,7 +164,6 @@ class TestDiscussionTopics:
 # Topic helpers
 ################################################################################
 
-
 @pytest.fixture
 def fixture_topic(client: TestClient) -> MessageIdResponse:
     """Create a topic for testing topic endpoints"""
@@ -267,11 +265,17 @@ class TestReplies:
             assert reply.id == replies[id].id
             assert reply.content == f"test content {replies[id].id}"
 
+    def test_delete_reply(self, client, fixture_replies):
+        replies = fixture_replies
+        response = helper_delete_reply(client, 1)
+        assert response.status_code == 200
+        response = helper_get_reply(client, 1)
+        assert response.status_code == 404
+
 
 ################################################################################
 # Reply helpers
 ################################################################################
-
 
 @pytest.fixture
 def fixture_replies(db_session: Session, client: TestClient) -> List[MessageIdResponse]:
@@ -313,10 +317,14 @@ def helper_get_reply(client: TestClient, reply_id: int) -> Response:
 def helper_get_all_replies(client: TestClient, discussion_id: int) -> Response:
     return client.get(f"/replies/get_all_replies/{discussion_id}")
 
+
+def helper_delete_reply(client: TestClient, reply_id: int) -> Response:
+    return client.delete(f"/replies/delete_reply/{reply_id}")
+
+
 ################################################################################
 # User helpers
 ################################################################################
-
 
 def helper_register_user(
     db_session: Session, id: uuid.UUID, email: str, password: str
@@ -436,7 +444,6 @@ class TestTags:
 ################################################################################
 # Tag helpers
 ################################################################################
-
 
 @pytest.fixture
 def fixture_tag(db_session: Session) -> Tag:
