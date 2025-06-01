@@ -46,8 +46,8 @@ class Reply(BaseModel):
 
     id: int
     discussion_id: int
-    user_id: Optional[UUID] = None  # Nullable for deleted users
-    content: Optional[str] = None  # Nullable for deleted replies
+    user_id: UUID
+    content: str
     created_at: datetime
     is_deleted: bool
     deleted_at: Optional[datetime] = None
@@ -82,7 +82,7 @@ class NewVote(BaseModel):
 class Vote(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    user_id: Optional[UUID] = None  # Nullable for deleted users
+    user_id: UUID
     reply_id: int
     vote_type: int
     created_at: datetime

@@ -103,10 +103,10 @@ Table replies {
     user_id
   }
 }
-Ref:replies.user_id > users.id [delete: set null]
+Ref: replies.user_id > users.id [delete: cascade]
 
 Table votes {
-  user_id uuid [null]
+  user_id uuid [not null]
   reply_id smallint [not null, ref: > replies.id, delete: cascade]
   // Positive int for upvote (e.g. 1), negative for downvote (e.g. -1), 0 if a user cancels their up/downvote
   vote_type integer [not null, note: 'Must be -1, 0, or 1']
@@ -119,4 +119,4 @@ Table votes {
     user_id
   }
 }
-Ref: votes.user_id > users.id [delete: set null]
+Ref: votes.user_id > users.id [delete: cascade]
