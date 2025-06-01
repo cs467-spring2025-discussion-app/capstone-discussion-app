@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useUser } from "@/hooks/useUser";
-import { GetUserTags, GetUserBadges } from "@/api/fastapi";
+import { GetUserTags, GetUserBadges, GetAllTags } from "@/api/fastapi";
 
 const ATTRIBUTE_CATEGORIES = {
   'Political Leaning': ['Progressive', 'Liberal', 'Moderate', 'Conservative', 'Libertarian'],
@@ -13,28 +13,52 @@ export default function Attributes() {
     const [selected, setSelected] = useState([]);
     const [customAttr, setCustomAttr] = useState('');
     const { user } = useUser();
+    const [allTags, setAllTags] = useState([]);
+
+    useEffect(() => {
+        const fetchAllTags = async () => {
+        try {
+            const data = await GetAllTags();
+            setAllTags(data.tags);
+        } catch (error) {
+            console.error("Error fetching all tags:", error);
+        }
+        };
+        fetchAllTags();
+    }, []);
 
     useEffect(() => {
         if (!user) return;
-
-        const fetchTags = async () => {
+        const fetchUserTags = async () => {
         try {
             const data = await GetUserTags(user.user_id);
-            const tagNames = data.tags.map(tag => tag.name);
+            const tagNames = data.tags.map((tag) => tag.name);
             setSelected(tagNames);
         } catch (error) {
-            console.error('Error fetching user tags:', error);
+            console.error("Error fetching user tags:", error);
         }
         };
-
-        fetchTags();
+        fetchUserTags();
     }, [user]);
 
-    const toggleAttribute = (attr) => {
-        if (selected.includes(attr)) {
-        setSelected(selected.filter(a => a !== attr)); // "untoggle" attribute
-        } else if (selected.length < 5) {
-        setSelected([...selected, attr]);
+    const getTagIdByName = (name) => {
+        const tag = allTags.find((t) => t.name === name);
+        return tag ? tag.id : null;
+    };
+
+    const toggleAttribute = async (attr) => {
+        if (!user) return;
+        const tagId = getTagIdByName(attr);
+        if (!tagId) return;
+        try {
+            await ToggleUserTag({ user_id: user.user_id, tag_id: tagId });
+            if (selected.includes(attr)) {
+                setSelected(selected.filter((a) => a !== attr)); // remove attribute
+            } else if (selected.length < 5) {
+                setSelected([...selected, attr]); // Add attribute
+            }
+        } catch (error) {
+        console.error("Error toggling tag:", error);
         }
     };
 
@@ -45,6 +69,7 @@ export default function Attributes() {
         setCustomAttr('');
         }
     };
+
     return (
         <div className="max-w-md mt-15 mx-auto p-5 bg-white border-solid border-gray-700 border-t-4 border-t-purple-500 rounded-lg shadow-md">
             <h2 className="text-xl font-semibold mb-1">My Attributes</h2>

@@ -229,3 +229,36 @@ export async function GetUserBadges(userId) {
 
   return await resp.json();
 }
+
+export async function ToggleUserTag(userTag) {
+  const resp = await fetch(`/fastapi/user_tags/toggle_tag`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(userTag),
+  });
+
+  if (!resp.ok) {
+    const errorData = await resp.json();
+    throw new Error(errorData.detail || "Failed to toggle user tag");
+  }
+
+  return await resp.json();
+}
+
+export async function GetAllTags() {
+  const resp = await fetch(`/tags/get_all_tags`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!resp.ok) {
+    const errorData = await resp.json();
+    throw new Error(errorData.detail || "Failed to fetch all tags");
+  }
+
+  return await resp.json();  // returns { tags: [...], total_count: number }
+}
