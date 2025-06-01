@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useUser } from "@/hooks/useUser";
-import { GetUserTags, GetUserBadges, GetAllTags } from "@/api/fastapi";
+import { GetUserTags, GetUserBadges, GetAllTags, ToggleUserTag } from "@/api/fastapi";
 
 const ATTRIBUTE_CATEGORIES = {
   'Political Leaning': ['Progressive', 'Liberal', 'Moderate', 'Conservative', 'Libertarian'],
@@ -17,12 +17,12 @@ export default function Attributes() {
 
     useEffect(() => {
         const fetchAllTags = async () => {
-        try {
-            const data = await GetAllTags();
-            setAllTags(data.tags);
-        } catch (error) {
-            console.error("Error fetching all tags:", error);
-        }
+            try {
+                const data = await GetAllTags();
+                setAllTags(data.tags);
+            } catch (error) {
+                console.error("Error fetching all tags:", error);
+            }
         };
         fetchAllTags();
     }, []);
@@ -30,13 +30,13 @@ export default function Attributes() {
     useEffect(() => {
         if (!user) return;
         const fetchUserTags = async () => {
-        try {
-            const data = await GetUserTags(user.user_id);
-            const tagNames = data.tags.map((tag) => tag.name);
-            setSelected(tagNames);
-        } catch (error) {
-            console.error("Error fetching user tags:", error);
-        }
+            try {
+                const data = await GetUserTags(user.userID);
+                const tagNames = data.tags.map((tag) => tag.name);
+                setSelected(tagNames);
+            } catch (error) {
+                console.error("Error fetching user tags:", error);
+            }
         };
         fetchUserTags();
     }, [user]);
