@@ -92,6 +92,8 @@ export default function Attributes() {
                 )}
         </div>
 
+{/*     This code is for custom attributes but not really sure it's a good idea without more extensive monitoring in place given the value prop
+of our application
         <div className="flex gap-2 mb-6">
             <input
             type="text"
@@ -106,7 +108,7 @@ export default function Attributes() {
             >
             + Add
             </button>
-        </div>
+        </div> */}
 
         {Object.entries(ATTRIBUTE_CATEGORIES).map(([category, items]) => (
             <div key={category} className="mb-5">
