@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from "react";
+import { useUser } from "@/hooks/useUser";
 
-export default function Badges({ userId }) {
+export default function Badges() {
+
+    const { user } = useUser();
+
     const [badges, setBadges] = useState([]);
 
     useEffect(() => {
@@ -12,10 +16,10 @@ export default function Badges({ userId }) {
                     fetch("/fastapi/badges/user", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ user_id: userId }),
+                        body: JSON.stringify({ user_id: user.userID }),
                     }),
                 ]);
-                
+
                 // parse the response
                 const all = await allRes.json();
                 const { user_badges } = await userRes.json();
@@ -32,20 +36,20 @@ export default function Badges({ userId }) {
                 setBadges(merged);
             } catch (err) {
                 console.error("Failed to load badges:", err);
-            } 
+            }
         }
         loadBadges();
-    }, [userId]);
+    }, [user.userID]);
 
     return (
         <div>
             <div className="max-w-md mt-15 mx-auto p-5 bg-white border-solid border-gray-700 border-t-4 border-t-purple-500 rounded-lg shadow-md">
                 <h2 className="text-lg font-semibold text-gray-800 mb-2">My Badges</h2>
                 <p className="text-sm text-gray-600 mb-4">Badges are earned based on your participation and contribution quality.</p>
-                
+
                 <div className="flex flex-wrap gap-2">
                     {badges.map(badge => (
-                        <span 
+                        <span
                             key={badge.id}
                             className={`flex text-sm font-medium px-3 py-1 rounded-full ${
                                 badge.unlocked
