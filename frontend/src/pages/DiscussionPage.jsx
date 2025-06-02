@@ -151,11 +151,11 @@ export default function DiscussionPage() {
         <div className="flex flex-col items-center justify-center">
           <img src="/openforum.png" alt="OpenForum logo" className="h-40 w-40 mb-2" />
           <div className="flex flex-col items-center w-full max-w-4xl p-4 text-center">
-            <div className="w-full max-w-5xl border-t-15 border-t-purple-400 h-35 p-5 rounded-lg shadow-lg bg-white text-left mb-8">
+            <div className="w-full max-w-5xl border-t-15 border-t-purple-400 p-5 pb-8 rounded-lg shadow-lg bg-white text-left mb-8">
               <h3 className="mt-2 mb-5 font-bold text-2xl">
                 {discussion.title}
               </h3>
-              <p>{discussion.prompt}</p>
+              <p className="mb-2">{discussion.prompt}</p>
             </div>
             <div className="border-t-5 border-t-purple-400 p-5 rounded-lg shadow-lg w-full max-w-5xl bg-white text-left mb-8">
               <label htmlFor={postTextAreaId} className="font-semibold">
