@@ -16,7 +16,7 @@ export default function Home() {
     useEffect(() => {
         //fetch asynchronously
         Promise.all([
-            fetch("/fastapi/topics/get_daily_topics").then(res => res.json()),
+            fetch("/fastapi/topics/get_daily_topics", { cache: "no-store" }).then(res => res.json()),
             fetch("/fastapi/replies/counts").then(res => res.json())
         ])
         .then(([topicsData, repliesData]) => {
