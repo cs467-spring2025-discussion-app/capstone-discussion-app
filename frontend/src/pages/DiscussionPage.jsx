@@ -149,6 +149,7 @@ export default function DiscussionPage() {
     return (
       <div>
         <div className="flex flex-col items-center justify-center">
+          <img src="/openforum.png" alt="OpenForum logo" className="h-40 w-40 mb-2" />
           <div className="flex flex-col items-center w-full max-w-4xl p-4 text-center">
             <div className="w-full max-w-5xl border-t-15 border-t-purple-400 h-35 p-5 rounded-lg shadow-lg bg-white text-left mb-8">
               <h3 className="mt-2 mb-5 font-bold text-2xl">

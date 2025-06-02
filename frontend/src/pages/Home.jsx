@@ -45,7 +45,9 @@ export default function Home() {
     return (
         <div className="flex justify-center">
             <div className='flex flex-col items-center w-full max-w-screen p-4 text-center'>
-                <h1 className="text-4xl font-bold mb-5">Daily Discussion</h1>
+                <h1 className="text-4xl font-bold mb-5">
+                    <img src="/openforum.png" alt="OpenForum logo" className="h-40 w-40 mb-2" />
+                </h1>
                 <h3 className="font-light mb-3">Join the conversation, anonymously.</h3>
                 <div className="flex justify-around w-xs mb-5">
                     <div className="text-purple-600 font-bold bg-purple-100 rounded-lg px-3 py-1">
@@ -62,7 +64,7 @@ export default function Home() {
                     {activeTab === 'daily' && (
                     <div>
                         <p className='font-light mt-3 mb-5'>
-                        Select a prompt to join the discussion. All discussions reset at midnight.
+                        Select a prompt to join the discussion. All discussions reset at midnight Central Time. 
                         </p>
                         {errorMessage && (
                         <div className="text-red-600 bg-red-100 rounded-lg p-2 mb-4 max-w-md">
