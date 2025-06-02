@@ -419,10 +419,13 @@ def get_user_badges(user: User, db: Session = Depends(get_db)):
         results = db.query(UserBadges).filter_by(user_id=user.user_id).all()
         badges: list[dict[str, str]] = []
         for badge in results:
-            if badge_info := (
-                db.query(Badges).filter_by(id=badge.badge_id).first()
-            ):
-                badges.append(badge_info)
+            badge_info = db.query(Badges).filter_by(id=badge.badge_id).first()
+            if badge_info:
+                badges.append({
+                    "id": badge_info.id,
+                    "name": badge_info.name,
+                    "description": badge_info.description
+                })
         return {"user_badges": badges}
 
     except Exception as e:
@@ -430,6 +433,25 @@ def get_user_badges(user: User, db: Session = Depends(get_db)):
             status_code=500, detail=f"Error getting user badges: {e}"
         )
 
+@app.get("/badges")
+def get_all_badges(db: Session = Depends(get_db)):
+    try:
+        # get all available badges
+        all_badges = db.query(Badges).all()
+
+        return [
+            {
+                "id": badge.id,
+                "name": badge.name,
+                "description": badge.description
+            }
+            for badge in all_badges
+      ]
+    
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error retrieving all badges: {e}"
+        )
 
 ################################################################################
 # Vote Endpoints
