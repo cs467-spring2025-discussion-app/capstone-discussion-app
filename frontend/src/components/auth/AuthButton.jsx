@@ -14,6 +14,7 @@ const AuthButton = ({ action }) => {
       try {
         await authService.Logout();
         setUser(null);
+        window.location.href="/";
       } catch (error) {
         console.error("Logout error:", error);
       }
