@@ -108,7 +108,7 @@ Start the daemon (assumes your Linux distro is using systemd)
 sudo systemctl start docker
 ```
 
-#### macOS
+#### macOS/Windows
 
 Open the Docker app to ensure the services are running in the background.
 
