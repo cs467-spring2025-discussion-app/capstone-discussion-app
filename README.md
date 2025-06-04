@@ -70,7 +70,7 @@ pacman -Syu
 pacman -S docker
 ```
 
-For distibutions using `apt`, we recommend following the official installation instructions to guarantee the latest stable build:
+For distributions using `apt`, we recommend following the official installation instructions to guarantee the latest stable build:
 
 [https://docs.docker.com/engine/install/debian/#install-using-the-repository](https://docs.docker.com/engine/install/debian/#install-using-the-repository)
 
@@ -88,6 +88,18 @@ or use the Homebrew package manager: [https://brew.sh/](https://brew.sh/)
 brew install --cask docker
 ```
 
+
+#### Windows
+
+On Windows, we recommend installing Docker Desktop:
+
+[https://docs.docker.com/desktop/setup/install/windows-install/](https://docs.docker.com/desktop/setup/install/windows-install/)
+
+This requires Windows Subsystem For Linux (WSL)
+
+[https://learn.microsoft.com/en-us/windows/wsl/install](https://learn.microsoft.com/en-us/windows/wsl/install)
+
+
 ### Start Docker
 
 #### Linux
@@ -98,7 +110,7 @@ Start the daemon (assumes your Linux distro is using systemd)
 sudo systemctl start docker
 ```
 
-#### macOS
+#### macOS/Windows
 
 Open the Docker app to ensure the services are running in the background.
 
