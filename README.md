@@ -70,7 +70,7 @@ pacman -Syu
 pacman -S docker
 ```
 
-For distibutions using `apt`, we recommend following the official installation instructions to guarantee the latest stable build:
+For distributions using `apt`, we recommend following the official installation instructions to guarantee the latest stable build:
 
 [https://docs.docker.com/engine/install/debian/#install-using-the-repository](https://docs.docker.com/engine/install/debian/#install-using-the-repository)
 
@@ -83,6 +83,16 @@ Follow the download links here:
 [docs.docker.com/desktop/setup/install/mac-install](docs.docker.com/desktop/setup/install/mac-install)
 
 or use the Homebrew package manager: [https://brew.sh/](https://brew.sh/)
+
+#### Windows
+
+On Windows, we recommend installing Docker Desktop:
+
+[https://docs.docker.com/desktop/setup/install/windows-install/](https://docs.docker.com/desktop/setup/install/windows-install/)
+
+This requires Windows Subsystem For Linux (WSL)
+
+[https://learn.microsoft.com/en-us/windows/wsl/install](https://learn.microsoft.com/en-us/windows/wsl/install)
 
 ```bash
 brew install --cask docker
