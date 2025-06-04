@@ -1,6 +1,13 @@
-# capstone-discussion-app
+# OpenForum
 
-App To Be Named
+A project submitted to fulfill the Oregon State University CS467 Capstone Project course requirements.
+
+## Team members:
+
+- Alessandro Ceserani
+- Samuel Hoover
+- Joseph Keehnast
+- Adam Leatherman
 
 # Quickstart
 
